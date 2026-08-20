@@ -27,15 +27,16 @@ corrigido assim que deixou de ser verdade.
 | **Especificado, por escrever** | Existe como critério de aceitação, sem código de teste | ⬜ |
 
 **Resumo antecipado:** os quatro tipos de teste exigidos pelo enunciado correm hoje.
-**127 testes, 274 asserções, 0 falhas** — unitários (script autónomo + Pest), arquitectura,
-integração da base de dados (Fase 2) e integração da API (agora construída: Models,
-autenticação, e 14 controladores ligados ao domínio já testado na Fase 4). A cobertura de
-código mede-se pela primeira vez ao nível do sistema inteiro, não só do domínio, e cumpre a
-meta do RNF-24: **81,8% global** (≥ 70% exigido). Os testes funcionais, no sentido estrito de
-"um caso de uso com todos os fluxos alternativos", continuam por escrever como artefacto
-formal — mas os testes de integração da API já cobrem, na prática, o caminho principal e os
-principais desvios de quase todos os casos de uso. A secção 8.4 lista, sem rodeios, o que
-ainda falta.
+**148 testes, 327 asserções, 0 falhas** — unitários (script autónomo + Pest), arquitectura,
+integração da base de dados (Fase 2) e integração da API (Models, autenticação com bloqueio
+de conta e recuperação de palavra-passe por e-mail, e 16 controladores ligados ao domínio já
+testado na Fase 4 — incluindo agora ano lectivo/períodos, o painel do Coordenador, o
+agendador de notificações de período, e exportação em PDF/CSV de pautas e relatórios). A
+cobertura de código cumpre a meta do RNF-24: **83,7% global** (≥ 70% exigido). Os testes
+funcionais, no sentido estrito de "um caso de uso com todos os fluxos alternativos", continuam
+por escrever como artefacto formal — mas os testes de integração da API já cobrem, na prática,
+o caminho principal e os principais desvios de quase todos os casos de uso. A secção 8.4 lista,
+sem rodeios, o que ainda falta — hoje uma lista bem mais curta do que nas versões anteriores.
 
 ---
 
@@ -66,9 +67,9 @@ A fase apoia-se em quatro decisões já tomadas, e todas continuam válidas:
 - **Fase 2** verificou o `schema.sql` com 11 cenários positivos e negativos.
 - **Fase 3** fixou a meta de cobertura (RNF-24: ≥ 70% global, ≥ 90% no domínio) e escolheu Pest.
 - **Fase 4**, nesta entrega, deixou de ser "implementação parcial": os Models Eloquent, a
-  autenticação Sanctum e 14 controladores HTTP foram construídos sobre o domínio e o schema
-  já existentes, precisamente para que esta fase pudesse testar um sistema real, não só regras
-  isoladas.
+  autenticação Sanctum (com bloqueio de conta e recuperação de palavra-passe por e-mail) e 16
+  controladores HTTP foram construídos sobre o domínio e o schema já existentes, precisamente
+  para que esta fase pudesse testar um sistema real, não só regras isoladas.
 
 ---
 
@@ -85,7 +86,7 @@ A fase apoia-se em quatro decisões já tomadas, e todas continuam válidas:
                ╱         ╲    — por escrever como artefacto formal (secção 5)
               ╱───────────╲
              ╱             ╲  Integração (API + domínio + Postgres real)
-            ╱───────────────╲ — 14 controladores, 85 testes, sem simulação
+            ╱───────────────╲ — 16 controladores, 106 testes, sem simulação
            ╱                 ╲
           ╱───────────────────╲ Unitários (domínio puro + arquitectura)
          ╱_____________________╲ — 56 + 42 testes, rápidos, sem I/O
@@ -101,11 +102,11 @@ construir — não por bloqueio, desta vez, mas porque é o próximo passo natur
 
 | Camada | Ferramenta | Estado |
 |---|---|---|
-| Unitários e integração (PHP) | **Pest 4** sobre PHPUnit 12 | Em uso, 127 testes |
+| Unitários e integração (PHP) | **Pest 4** sobre PHPUnit 12 | Em uso, 148 testes |
 | Arquitectura | **Pest Arch** (`tests/Arquitectura/CamadasTest.php`) | Em uso — apanhou dois erros de camadas nos controladores novos (secção 4.4) |
-| Cobertura | **pcov** + `pest --coverage` | Em uso, 81,8% |
+| Cobertura | **pcov** + `pest --coverage` | Em uso, 83,7% |
 | Frontend | **Vitest** | Configurado, sem testes escritos ainda |
-| API | **Pest + `pest-plugin-laravel`** (`getJson`, `postJson`, `actingAs`) | Em uso em 14 ficheiros `tests/Feature/*ApiTest.php` |
+| API | **Pest + `pest-plugin-laravel`** (`getJson`, `postJson`, `actingAs`) | Em uso em 19 ficheiros `tests/Feature/*ApiTest.php` |
 | Verificação sem ambiente | **`verificar-dominio.php`** | Continua útil para validar o domínio em segundos, sem Docker |
 
 ### 2.3 e 2.4 — inalteradas desde a versão anterior
@@ -143,11 +144,11 @@ o Postgres do `docker compose` (22 tabelas migradas). Ver Fase 2 para o detalhe 
 
 A tabela seguinte substitui a da versão anterior: já não há uma única linha "bloqueada".
 
-| Ficheiro | Testes | O que cobre |
+| Ficheiro | Casos | O que cobre |
 |---|---|---|
 | `InscricaoApiTest.php` (Fase 4, já existia) | 8 | Inscrição, RN-02, RN-04, RNF-12, autenticação obrigatória, 405 na auditoria |
 | `InscricaoExtraApiTest.php` | 7 | Anulação (UC16), inscrição administrativa (UC17), dispensa de pré-requisitos com auditoria (UC18) |
-| `AuthApiTest.php` | 7 | Login, credenciais inválidas, `/auth/me`, logout com invalidação real do token, recuperação de palavra-passe |
+| `AuthApiTest.php` | 13 | Login, bloqueio de conta ao fim de 5 tentativas (US-01, 423), `/auth/me`, logout com invalidação real do token, recuperação e redefinição de palavra-passe por e-mail real (US-04) |
 | `EstudanteApiTest.php` | 11 | CRUD, pesquisa (RNF-01), criação da conta associada (RF-09), eliminação lógica vs. física (RF-12), aproveitamento com RNF-12 (próprio / coordenador / administrador) |
 | `CursoApiTest.php` | 6 | CRUD, plano curricular, limites do ano curricular (US-09) |
 | `DisciplinaApiTest.php` | 7 | CRUD, pré-requisitos, **detecção de ciclos directos e indirectos** (US-10) |
@@ -156,16 +157,19 @@ A tabela seguinte substitui a da versão anterior: já não há uma única linha
 | `AvaliacaoApiTest.php` | 7 | Definir avaliação, autorização do docente responsável (US-17), soma dos pesos, lançar classificações (RF-38), **publicar — cálculo completo de frequência/situação/final (RN-06 a RN-12) via HTTP**, notificação assíncrona, 409 em publicação incompleta (US-18) |
 | `RectificacaoApiTest.php` | 5 | Solicitar, aprovar (com auditoria), recusar (com motivo obrigatório), autorização do Coordenador (US-19) |
 | `PautaApiTest.php` | 3 | Emissão provisória, homologação, bloqueio com estudantes incompletos |
-| `RelatorioApiTest.php` | 1 | Taxa de aprovação por disciplina (UC29) |
+| `PautaPdfApiTest.php` | 1 | Emissão em PDF (`formato=pdf`, UC26) |
+| `RelatorioApiTest.php` | 3 | Taxa de aprovação por disciplina em JSON, PDF e CSV (UC29) |
 | `NotificacaoApiTest.php` | 4 | Listagem, filtro por não lidas, marcar como lida, isolamento entre utilizadores |
 | `UtilizadorApiTest.php` | 5 | Gestão de utilizadores e perfis, restrita ao Administrador |
 | `AuditoriaApiTest.php` | 3 | Listagem, filtros, acesso restrito |
-| `PainelApiTest.php` | 3 | Indicadores por perfil (Estudante, Docente, Administrador) |
-| **Total** | **85** | |
+| `PainelApiTest.php` | 4 | Indicadores por perfil (Estudante, Docente, Administrador, e cursos coordenados — US-23) |
+| `AnoLectivoApiTest.php` | 8 | CRUD, activação com a unicidade da Fase 2 convertida em 409, encerramento, períodos (US-12) |
+| `NotificarPeriodosProximosTest.php` | 3 | Comando agendado (US-30): notifica, é idempotente, respeita a janela pedida |
+| **Total** | **106** | |
 
 ```
 $ docker compose exec api ./vendor/bin/pest tests/Feature
-Tests: 85 passed
+Tests: 106 passed
 ```
 
 ### 4.3. Prova por HTTP real, não só pelo cliente de testes do Pest
@@ -193,6 +197,8 @@ genuínos no código escrito nesta mesma entrega, todos corrigidos antes de fech
 | 3 | `AvaliacaoController::publicar` | Atribuir `regulamento_avaliacao` como propriedade dinâmica ao model Eloquent `Avaliacao` marcava-a como "suja"; o `update()` seguinte tentava gravá-la numa coluna inexistente | `AvaliacaoApiTest` (publicação) |
 | 4 | `UtilizadorController::store` | Devolvia sempre HTTP 200 em vez de 201 ao criar um recurso (comportamento por omissão do Laravel ao devolver um `JsonResource` directamente) | `UtilizadorApiTest` |
 | 5 | `AppServiceProvider` | `JsonResource` envolvia as respostas num `{"data": ...}` que `docs/openapi.yaml` não define | Comparação manual da resposta real de `/auth/me` com o schema `Utilizador` |
+| 6 | `AuthController::redefinirPalavraPasse` | O `PasswordBroker` do Laravel só reconhece a chave literal `password`; `palavra_passe` (o nome usado em toda a API) entrava na *query* de procura do utilizador como mais uma coluna a comparar, em vez de ser tratada como a senha nova | `AuthApiTest` (redefinição com token válido) |
+| 7 | `PautaController::show` (PDF) | O número da pauta (`PAUTA/2026/0042`) tem `/`, inválido num nome de ficheiro / cabeçalho `Content-Disposition` | `PautaPdfApiTest` |
 
 Nenhum destes defeitos estava nas regras de domínio da Fase 4 (essas continuam a 100%) — são
 todos da camada HTTP escrita nesta entrega, e é exactamente para os apanhar que esta fase
@@ -226,10 +232,10 @@ Tradução literal de cada critério Dado/Quando/Então da Fase 1 em código exe
 
 | User Story | Estado |
 |---|---|
-| US-01 Autenticação | ✅ login/logout/me/recuperação cobertos; ⬜ bloqueio após 5 tentativas (423) não implementado |
+| US-01 Autenticação | ✅ **completo** — login/logout/me/recuperação, e bloqueio de conta por 15 min após 5 tentativas (423) |
 | US-02 Gestão de contas | ✅ `UtilizadorApiTest` |
 | US-03 Atribuição de perfis | ✅ `UtilizadorApiTest` |
-| US-04 Recuperação de palavra-passe | 🟡 aceita o pedido (202); envio real de e-mail por fazer |
+| US-04 Recuperação de palavra-passe | ✅ **completo** — e-mail real (Mailpit em dev), token, redefinição |
 | US-05 Cadastro de estudante | ✅ `EstudanteApiTest` |
 | US-06 Pesquisa de estudantes | ✅ `EstudanteApiTest` |
 | US-07 Cadastro de docente | ✅ `DocenteApiTest` |
@@ -237,7 +243,7 @@ Tradução literal de cada critério Dado/Quando/Então da Fase 1 em código exe
 | US-09 Plano curricular | ✅ `CursoApiTest` |
 | US-10 Pré-requisitos | ✅ `DisciplinaApiTest`, incluindo ciclos |
 | US-11 Criação de turmas | ✅ `TurmaApiTest` |
-| US-12 Ano lectivo | 🟡 modelo e restrição de unicidade (só um `ACTIVO`) na base de dados; sem controlador/CRUD dedicado ainda |
+| US-12 Ano lectivo | ✅ `AnoLectivoApiTest` — CRUD, activação com a restrição de unicidade convertida em 409, períodos |
 | US-13 Inscrição do estudante | ✅ **6 de 6** — `InscricaoApiTest` + `InscricaoExtraApiTest`; só a concorrência (A7) falta |
 | US-14 Anulação de inscrição | ✅ `InscricaoExtraApiTest` |
 | US-15 Inscrição administrativa | ✅ `InscricaoExtraApiTest` |
@@ -248,20 +254,21 @@ Tradução literal de cada critério Dado/Quando/Então da Fase 1 em código exe
 | US-20 Cálculo automático da frequência | ✅ domínio + API |
 | US-21 Classificação final e média | ✅ domínio + API |
 | US-22 Consulta do aproveitamento | ✅ `EstudanteApiTest` |
-| US-23 Acompanhamento pelo Coordenador | 🟡 o Coordenador já acede ao aproveitamento dos seus estudantes; painel dedicado por fazer |
+| US-23 Acompanhamento pelo Coordenador | ✅ `PainelApiTest` — indicadores agregados por curso coordenado |
 | US-24 Emissão de pauta | ✅ `PautaApiTest` |
 | US-25 Homologação de pauta | ✅ `PautaApiTest` |
 | US-26 Relatório de aproveitamento | ✅ `RelatorioApiTest` |
 | US-27 Painel inicial | ✅ `PainelApiTest`, indicadores mínimos por perfil |
 | US-28 Registo de auditoria | ✅ `AuditoriaApiTest` |
 | US-29 Notificação de publicação | ✅ coberta indirectamente em `AvaliacaoApiTest` + `NotificacaoApiTest` |
-| US-30 Notificação de período | ⬜ depende de um agendador, por construir |
+| US-30 Notificação de período | ✅ `NotificarPeriodosProximosTest` — comando agendado, idempotente |
 
-**Contagem:** de 137 critérios de aceitação, a esmagadora maioria das 30 User Stories já tem
-pelo menos um teste executável e a passar — uma mudança substancial face aos 24 críterios (4
-USs) da versão anterior deste documento. As excepções genuínas (⬜/🟡) estão listadas acima,
-sem arredondamento: bloqueio de conta, e-mail real, CRUD de ano lectivo, painel dedicado do
-Coordenador, agendador de notificações de período, e a concorrência em UC14-A7.
+**Contagem:** das 30 User Stories, todas têm hoje pelo menos um teste executável e a passar.
+As excepções que a versão anterior deste documento listava — US-01 (bloqueio de conta), US-04
+(e-mail real), US-12 (ano lectivo), US-23 (painel do Coordenador) e US-30 (agendador) — foram
+todas fechadas nesta entrega. A única lacuna que resta ao nível de critério individual é a
+concorrência em UC14-A7 (duas inscrições simultâneas na última vaga, secção 7.3, defeito #2),
+um único critério dentro de uma US-13 já coberta nos restantes cinco.
 
 ---
 
@@ -275,13 +282,13 @@ Coordenador, agendador de notificações de período, e a concorrência em UC14-
 | Unitários (domínio, Pest) | 35 | 35 (100%) |
 | Arquitectura (Pest Arch) | 7 | 7 (100%) |
 | Integração (BD, Fase 2) | 11 | 11 (100%) |
-| Integração (API) | 85 | 85 (100%) |
-| **Total Pest** | **127** (274 asserções) | **127 (100%)** |
+| Integração (API) | 106 | 106 (100%) |
+| **Total Pest** | **148** (327 asserções) | **148 (100%)** |
 | Funcionais (artefacto formal) | 0 | — (secção 5) |
 | Aceitação (critérios com teste executável) | ≈120 de 137 | 100% dos executáveis |
 
 **Nenhum teste falha.** Não porque se tenha evitado testar o que é difícil — pelo contrário,
-os cinco defeitos da secção 4.4 só apareceram porque se testou a sério — mas porque, uma vez
+os sete defeitos da secção 4.4 só apareceram porque se testou a sério — mas porque, uma vez
 encontrados, foram corrigidos antes de fechar a fase.
 
 ### 7.2. Evidência de execução (reproduzível)
@@ -293,12 +300,12 @@ docker compose up -d --build                            # ambiente completo
 docker compose exec api composer install
 docker compose exec api php artisan migrate --seed
 
-docker compose exec api ./vendor/bin/pest                # 127 passed (274 assertions)
-docker compose exec api ./vendor/bin/pest --coverage --min=70   # passa: 81,8%
+docker compose exec api ./vendor/bin/pest                # 148 passed (327 assertions)
+docker compose exec api ./vendor/bin/pest --coverage --min=70   # passa: 83,7%
 ```
 
 Confirmado em instalação limpa nesta entrega: `docker compose down`, remoção do volume da
-base de dados, `make instalar` do zero — os 127 testes continuam verdes, sem qualquer ajuste
+base de dados, `make instalar` do zero — os 148 testes continuam verdes, sem qualquer ajuste
 manual.
 
 ### 7.3. Defeitos conhecidos e não corrigidos
@@ -308,7 +315,6 @@ manual.
 | 1 | `RegulamentoPadraoESCN::calcularClassificacaoFinal` usa média simples (50/50) frequência/exame | Alta | Peso ainda não confirmado com o Coordenador — em aberto desde a Fase 2 |
 | 2 | Sem teste de concorrência real (UC14-A7) | Média | Requer duas ligações à base de dados em paralelo; nenhuma prioridade maior a adiar |
 | 3 | Sem teste do recálculo em cascata numa rectificação que afecta um pré-requisito já validado | Média | A própria regra de negócio continua por decidir (Fase 2, secção 13) |
-| 4 | Bloqueio de conta após 5 tentativas falhadas (US-01, resposta 423) | Baixa | Especificado no `openapi.yaml`, ainda não implementado no `AuthController` |
 
 ---
 
@@ -318,7 +324,7 @@ manual.
 
 ```
 $ docker compose exec api ./vendor/bin/pest --coverage --min=70
-Total: 81.8 %                                            ← passa (meta: 70%)
+Total: 83.7 %                                            ← passa (meta: 70%)
 ```
 
 | Camada | Cobertura | Observação |
@@ -328,6 +334,7 @@ Total: 81.8 %                                            ← passa (meta: 70%)
 | 2 — Interface (API) | Maioria dos controladores entre 77% e 100% | `InscricaoController` fica a 41% — o mais complexo, com ramos de erro ainda não todos exercitados |
 | 1 — Apresentação (React) | Sem testes | Vitest configurado, nada escrito |
 | 5 — Infra-estrutura | `RepositorioInscricaoEloquent` 87,5%, `RepositorioClassificacaoEloquent` 100% | |
+| — | `Notifications/RedefinirPalavraPasse` 100% | Novo nesta entrega |
 
 O meta-critério da Fase 3 (RNF-24: ≥ 90% no domínio, ≥ 70% global) está cumprido em ambas as
 partes pela primeira vez nesta fase — não só no domínio isolado, como nas duas versões
@@ -337,10 +344,11 @@ anteriores deste documento relatavam.
 
 - Componentes React (`Login.tsx`, `Painel.tsx`, `Inscricoes.tsx`) — Vitest configurado, sem
   testes escritos.
-- CRUD de `AnoLectivo`/`PeriodoLectivo` — só a restrição de unicidade na base de dados está
-  coberta (Fase 2); não há controlador nem teste dedicados.
-- Geração de PDF (pautas, relatórios) — `laravel-dompdf` instalado, não usado.
-- Agendador de notificações de período (US-30).
+- Os 11 endpoints construídos nesta entrega que ainda não têm ecrã correspondente no frontend
+  (cadastros, avaliações, rectificações, pautas, relatórios, ano lectivo, notificações,
+  auditoria, utilizadores) — a API existe e está testada, a interface não.
+- `phpstan`/Larastan — `make lint` continua a referir-se a uma ferramenta não instalada
+  (gap identificado na Fase 4, ainda não fechado).
 
 ### 8.3. Por que a lacuna restante é aceitável nesta entrega
 
@@ -352,15 +360,14 @@ ponta, testados.
 
 ### 8.4. Risco para a defesa, revisto
 
-Ao contrário da versão anterior deste documento, já não há uma User Story central sem teste
-executável para demonstrar ao vivo. Se for pedido um teste de aceitação de ponta-a-ponta —
-autenticação, inscrição, publicação de notas, rectificação, pauta — a resposta já não é "está
-escrito mas não corre": é `docker compose exec api ./vendor/bin/pest --filter=<nome>`, ao
-vivo, com o resultado real. O risco que resta é mais estreito: US-01 (bloqueio de conta),
-US-04 (e-mail real), US-12 (CRUD de ano lectivo) e US-30 (agendador) continuam a não ter
-demonstração — e a resposta preparada para essas é a mesma de sempre: prioridade dada ao
-núcleo académico (cadastro → inscrição → avaliação → publicação → aproveitamento), que é onde
-está o risco de negócio real, antes de fechar as pontas administrativas.
+Já não há uma única User Story sem teste executável para demonstrar ao vivo. Se for pedido um
+teste de aceitação de ponta-a-ponta — autenticação (incluindo o bloqueio de conta), inscrição,
+publicação de notas, rectificação, pauta em PDF, ano lectivo, painel do Coordenador — a
+resposta é `docker compose exec api ./vendor/bin/pest --filter=<nome>`, ao vivo, com o
+resultado real. O risco que resta mudou de natureza: já não é "falta construir", é "falta
+interface" — o frontend React só cobre 3 dos 16 grupos de endpoints testados (secção 8.2), e é
+aí que uma pergunta na defesa sobre "mostra-me isto a funcionar no ecrã" encontraria o limite
+actual do trabalho.
 
 ---
 
@@ -373,7 +380,7 @@ sga/
 └── backend/
     ├── app/
     │   ├── Models/                                 (19 models Eloquent, novos)
-    │   ├── Http/Controllers/Api/V1/                (14 controladores, novos)
+    │   ├── Http/Controllers/Api/V1/                (16 controladores, novos)
     │   ├── Infraestrutura/Repositorios/*Eloquent.php (novos)
     │   └── Servicos/ServicoAvaliacao.php            (acrescentado: calcularMediaCurso)
     ├── database/seeders/CenarioAcademicoSeeder.php  (cenário desenhado para os testes)
@@ -381,7 +388,7 @@ sga/
     └── tests/
         ├── Unit/            (35 testes — inalterado)
         ├── Arquitectura/    (7 testes — inalterado)
-        └── Feature/         (16 ficheiros, 85 testes — 15 novos nesta entrega)
+        └── Feature/         (19 ficheiros, 106 casos — 3 ficheiros e ~21 casos novos nesta entrega)
 ```
 
 **Reproduzir:**
@@ -401,14 +408,13 @@ docker compose exec api ./vendor/bin/pest --coverage --min=70
 1. **Testes funcionais formais**, organizados por caso de uso (secção 5), reaproveitando a
    lógica já validada nos testes de integração.
 2. **UC14-A7**: teste de concorrência real (duas transacções simultâneas na última vaga).
-3. **`AnoLectivoController`/`PeriodoLectivoController`** — únicos cadastros estruturantes
-   ainda sem API (US-12).
-4. **Bloqueio de conta** após 5 tentativas falhadas (US-01) e **envio real de e-mail** de
-   recuperação (US-04).
-5. **Testes de componentes React** (Vitest) para `Login`, `Painel`, `Inscricoes`, à medida que
-   o frontend ganhar os ecrãs que faltam para os outros 11 endpoints já construídos.
-6. **PDF** para pautas e relatórios, usando o `laravel-dompdf` já instalado.
-7. **Agendador** para as notificações de período (US-30).
+3. **Ecrãs de frontend** (React) para os 13 grupos de endpoints que só têm API: cadastros,
+   avaliações, rectificações, pautas, relatórios, ano lectivo, notificações, auditoria,
+   utilizadores — hoje só Login, Painel e Inscrições têm interface.
+4. **Testes de componentes React** (Vitest), a par do ponto 3.
+5. **`phpstan`/Larastan**, para `make lint` deixar de se referir a uma ferramenta ausente.
+6. Recálculo em cascata numa rectificação que afecta um pré-requisito já validado — depende de
+   uma regra de negócio ainda por decidir (Fase 2, secção 13).
 
 ---
 
@@ -419,6 +425,7 @@ docker compose exec api ./vendor/bin/pest --coverage --min=70
 | 1.0 | 2026-10-XX | Grupo 2 | Versão inicial — só o domínio corria |
 | 1.1 | 2026-08-20 | Grupo 2 | Ambiente Docker corrigido; testes de arquitectura e de integração da API passaram a correr (e a falhar por falta da camada HTTP) |
 | 1.2 | 2026-08-20 | Grupo 2 | Camada HTTP construída (Models, Auth, 14 controladores); suite completa passou de 50 para 127 testes, todos verdes; cobertura mede 81,8%, acima da meta de 70% do RNF-24; cinco defeitos reais encontrados e corrigidos durante a escrita dos testes |
+| 1.3 | 2026-08-20 | Grupo 2 | Fechadas as últimas lacunas administrativas: bloqueio de conta (US-01), e-mail real via Mailpit (US-04), CRUD de ano lectivo/períodos (US-12), painel do Coordenador (US-23), agendador de notificações (US-30), exportação PDF/CSV de pautas e relatórios; repositório Git inicializado e pipeline de CI (GitHub Actions) criado; suite cresceu de 127 para 148 testes (83,7% de cobertura); mais dois defeitos reais corrigidos (integração com o `PasswordBroker`, nome de ficheiro do PDF) |
 
 **Documento anterior:** Fase 4 — Implementação
 **Documento seguinte:** Fase 6 — DevOps e Segurança (20/10 – 29/10, em paralelo)
