@@ -19,6 +19,7 @@ import { AnoLectivo } from '@/paginas/AnoLectivo'
 import { Notificacoes } from '@/paginas/Notificacoes'
 import { Auditoria } from '@/paginas/Auditoria'
 import { Utilizadores } from '@/paginas/Utilizadores'
+import { Perfis } from '@/paginas/Perfis'
 
 /**
  * Árvore de rotas. Tudo o que exige sessão vive dentro de <RotaProtegida>,
@@ -54,6 +55,7 @@ export function App() {
                 <Route path="/disciplinas" element={<Disciplinas />} />
                 <Route path="/ano-lectivo" element={<AnoLectivo />} />
                 <Route path="/utilizadores" element={<Utilizadores />} />
+                <Route path="/perfis" element={<Perfis />} />
               </Route>
 
               <Route path="/turmas" element={<Turmas />} />

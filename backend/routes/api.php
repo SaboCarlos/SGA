@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\V1\InscricaoController;
 use App\Http\Controllers\Api\V1\NotificacaoController;
 use App\Http\Controllers\Api\V1\PainelController;
 use App\Http\Controllers\Api\V1\PautaController;
+use App\Http\Controllers\Api\V1\PerfilController;
+use App\Http\Controllers\Api\V1\PermissaoController;
 use App\Http\Controllers\Api\V1\RectificacaoController;
 use App\Http\Controllers\Api\V1\RelatorioController;
 use App\Http\Controllers\Api\V1\TurmaController;
@@ -87,6 +89,15 @@ Route::prefix('v1')->group(function (): void {
         Route::match(['post', 'put', 'patch', 'delete'], '/auditoria', [AuditoriaController::class, 'metodoNaoPermitido']);
 
         Route::apiResource('utilizadores', UtilizadorController::class)->parameters(['utilizadores' => 'utilizador']);
+
+        Route::get('/permissoes', [PermissaoController::class, 'index']);
+        Route::post('/permissoes', [PermissaoController::class, 'store']);
+
+        Route::get('/perfis', [PerfilController::class, 'index']);
+        Route::post('/perfis', [PerfilController::class, 'store']);
+        Route::put('/perfis/{perfil}', [PerfilController::class, 'update']);
+        Route::post('/perfis/{perfil}/permissoes', [PerfilController::class, 'atribuirPermissao']);
+        Route::delete('/perfis/{perfil}/permissoes/{permissao}', [PerfilController::class, 'retirarPermissao']);
 
         Route::apiResource('anos-lectivos', AnoLectivoController::class)->only(['index', 'store', 'show'])->parameters(['anos-lectivos' => 'anoLectivo']);
         Route::post('/anos-lectivos/{anoLectivo}/activar', [AnoLectivoController::class, 'activar']);

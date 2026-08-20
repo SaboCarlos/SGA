@@ -229,6 +229,24 @@ export interface Notificacao {
   lida_em: string | null
 }
 
+export interface PermissaoCatalogo {
+  id: number
+  codigo: string
+  descricao: string | null
+}
+
+/**
+ * O perfil como recurso geríve (catálogo + permissões atribuídas) — distinto
+ * do tipo `Perfil` acima, que é só a etiqueta usada para filtrar a interface
+ * por perfil do utilizador autenticado.
+ */
+export interface PerfilDetalhe {
+  id: number
+  nome: string
+  descricao: string | null
+  permissoes: Array<{ id: number; codigo: string }>
+}
+
 export interface Aproveitamento {
   estudante: string
   numero_estudante: string

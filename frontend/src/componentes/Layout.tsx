@@ -21,6 +21,7 @@ const ITENS_NAV: ItemNav[] = [
   { rota: '/notificacoes', rotulo: 'Notificações' },
   { rota: '/auditoria', rotulo: 'Auditoria', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
   { rota: '/utilizadores', rotulo: 'Utilizadores', perfis: ['ADMINISTRADOR'] },
+  { rota: '/perfis', rotulo: 'Perfis e permissões', perfis: ['ADMINISTRADOR'] },
 ]
 
 /**
