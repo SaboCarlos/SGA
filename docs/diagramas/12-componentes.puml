@@ -1,0 +1,72 @@
+@startuml componentes
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam ArrowColor #2C3E50
+skinparam ComponentBorderColor #2C3E50
+skinparam ComponentBackgroundColor #F8FAFC
+skinparam DatabaseBorderColor #2C3E50
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title SGA - Diagrama de componentes (visao de contentores)
+
+actor "Estudante /\nDocente /\nCoordenador /\nAdministrador" as USER
+
+node "Navegador" {
+  component "sga-frontend\nSPA React" as FE
+}
+
+node "Contentor Docker: sga-api" {
+  component "Gateway HTTP\n(Nginx + PHP-FPM)" as WEB
+  component "Modulo Acesso\n(auth, perfis, permissoes)" as M1
+  component "Modulo Academico\n(cursos, disciplinas, planos)" as M2
+  component "Modulo Inscricoes" as M3
+  component "Modulo Avaliacao\n(notas, medias, pautas)" as M4
+  component "Modulo Relatorios" as M5
+  component "Modulo Auditoria" as M6
+  component "Modulo Notificacoes" as M7
+}
+
+node "Contentor Docker: sga-worker" {
+  component "Processador de fila\n(notificacoes, PDF, e-mail)" as WK
+}
+
+database "Contentor Docker:\nsga-db\nPostgreSQL" as DB
+database "Contentor Docker:\nsga-cache\nRedis" as REDIS
+component "Servidor SMTP\n(externo)" as SMTP
+
+USER --> FE
+FE --> WEB : HTTPS / JSON\n(Bearer token)
+WEB --> M1
+WEB --> M2
+WEB --> M3
+WEB --> M4
+WEB --> M5
+WEB --> M6
+WEB --> M7
+
+M3 ..> M1 : autorizacao
+M3 ..> M2 : plano curricular\ne pre-requisitos
+M4 ..> M3 : inscricoes da turma
+M4 ..> M6 : registo de auditoria
+M3 ..> M6 : registo de auditoria
+M4 ..> M7 : evento notas publicadas
+M5 ..> M4 : dados agregados
+
+M1 --> DB
+M2 --> DB
+M3 --> DB
+M4 --> DB
+M5 --> DB
+M6 --> DB
+M7 --> REDIS : enfileira
+WK --> REDIS : consome
+WK --> DB
+WK --> SMTP
+
+note right of M4
+  Modulo com maior concentracao
+  de regras de negocio: encapsula
+  o Strategy do regulamento de
+  avaliacao.
+end note
+@enduml

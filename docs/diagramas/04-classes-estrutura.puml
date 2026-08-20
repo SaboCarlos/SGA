@@ -1,0 +1,127 @@
+@startuml classes-estrutura
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowColor #2C3E50
+skinparam ClassBorderColor #2C3E50
+skinparam ClassBackgroundColor #F8FAFC
+skinparam ClassAttributeIconSize 0
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title SGA - Classes (1/2): acesso, pessoas e estrutura curricular
+
+package "Acesso" {
+  class Utilizador {
+    -id: UUID
+    -nome: String
+    -email: String
+    -palavraPasseHash: String
+    -activo: Boolean
+    -ultimoAcesso: DateTime
+    +temPerfil(nome: String): Boolean
+    +podeExecutar(permissao: String): Boolean
+    +desactivar(): void
+  }
+  class Perfil {
+    -id: Integer
+    -nome: String
+    -descricao: String
+  }
+  class Permissao {
+    -id: Integer
+    -codigo: String
+    -descricao: String
+  }
+  Utilizador "*" -- "*" Perfil
+  Perfil "*" -- "*" Permissao
+}
+
+package "Pessoas" {
+  class Estudante {
+    -id: UUID
+    -numeroEstudante: String
+    -nomeCompleto: String
+    -documentoIdentificacao: String
+    -dataNascimento: Date
+    -sexo: Sexo
+    -telefone: String
+    -anoIngresso: Integer
+    -estado: EstadoEstudante
+    +mediaDoCurso(): Decimal
+    +creditosObtidos(): Integer
+    +temAprovacao(d: Disciplina): Boolean
+  }
+  class Docente {
+    -id: UUID
+    -codigo: String
+    -nomeCompleto: String
+    -grauAcademico: String
+    -categoria: String
+    -areaCientifica: String
+    -estado: EstadoGenerico
+    +turmasDoPeriodo(p: PeriodoLectivo): List<Turma>
+  }
+}
+
+package "Estrutura Curricular" {
+  class Curso {
+    -id: Integer
+    -designacao: String
+    -codigo: String
+    -grau: String
+    -duracaoAnos: Integer
+    -totalCreditos: Integer
+    -regulamentoAvaliacao: String
+    -activo: Boolean
+  }
+  class PlanoCurricular {
+    -id: Integer
+    -versao: String
+    -anoInicioVigencia: Integer
+    -activo: Boolean
+  }
+  class ItemPlanoCurricular {
+    -id: Integer
+    -anoCurricular: Integer
+    -semestre: Integer
+    -tipo: TipoDisciplina
+  }
+  class Disciplina {
+    -id: Integer
+    -designacao: String
+    -codigo: String
+    -creditos: Integer
+    -cargaHoraria: Integer
+    -activo: Boolean
+    +preRequisitos(): List<Disciplina>
+  }
+}
+
+Utilizador "1" -- "0..1" Estudante
+Utilizador "1" -- "0..1" Docente
+Curso "1" *-- "1..*" PlanoCurricular
+PlanoCurricular "1" *-- "1..*" ItemPlanoCurricular
+ItemPlanoCurricular "*" --> "1" Disciplina
+Disciplina "*" -- "*" Disciplina : pre-requisito >
+Estudante "*" --> "1" Curso : matriculado em >
+Curso "1" --> "0..1" Docente : coordenado por >
+
+enum EstadoEstudante {
+  ACTIVO
+  SUSPENSO
+  TRANSFERIDO
+  GRADUADO
+  DESISTENTE
+}
+enum TipoDisciplina {
+  OBRIGATORIA
+  OPCIONAL
+}
+enum Sexo {
+  MASCULINO
+  FEMININO
+}
+Estudante ..> EstadoEstudante
+Estudante ..> Sexo
+ItemPlanoCurricular ..> TipoDisciplina
+@enduml

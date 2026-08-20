@@ -1,0 +1,57 @@
+@startuml casos-de-uso-nucleo
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam ArrowColor #2C3E50
+skinparam ActorBorderColor #2C3E50
+skinparam UsecaseBorderColor #2C3E50
+skinparam UsecaseBackgroundColor #F8FAFC
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+left to right direction
+title SGA - Nucleo academico: inscricoes, avaliacoes e notas
+
+actor "Estudante" as EST
+actor "Docente" as DOC
+actor "Coordenador\nde Curso" as COORD
+actor "Administrador" as ADM
+
+rectangle "Nucleo Academico" {
+  usecase "UC14\nInscrever-se em\ndisciplinas" as UC14
+  usecase "UC15\nValidar regras\nde inscricao" as UC15
+  usecase "UC16\nAnular inscricao" as UC16
+  usecase "UC17\nInscrever estudante\n(Secretaria)" as UC17
+  usecase "UC18\nDispensar validacao\nde pre-requisitos" as UC18
+
+  usecase "UC19\nDefinir avaliacoes\nda turma" as UC19
+  usecase "UC20\nLancar\nclassificacoes" as UC20
+  usecase "UC21\nPublicar\nclassificacoes" as UC21
+  usecase "UC22\nCalcular frequencia\ne situacao" as UC22
+  usecase "UC23\nSolicitar\nrectificacao" as UC23
+  usecase "UC24\nDecidir\nrectificacao" as UC24
+  usecase "UC32\nRegistar\nauditoria" as UC32
+  usecase "UC33\nNotificar\npublicacao" as UC33
+}
+
+EST --> UC14
+EST --> UC16
+ADM --> UC17
+DOC --> UC19
+DOC --> UC20
+DOC --> UC21
+DOC --> UC23
+COORD --> UC24
+COORD --> UC19
+
+UC14 ..> UC15 : <<include>>
+UC17 ..> UC15 : <<include>>
+UC18 ..> UC17 : <<extend>>
+UC14 ..> UC32 : <<include>>
+UC16 ..> UC32 : <<include>>
+UC20 ..> UC32 : <<include>>
+UC21 ..> UC22 : <<include>>
+UC21 ..> UC32 : <<include>>
+UC24 ..> UC22 : <<include>>
+UC24 ..> UC32 : <<include>>
+UC33 ..> UC21 : <<extend>>
+UC23 ..> UC24 : <<include>>
+@enduml

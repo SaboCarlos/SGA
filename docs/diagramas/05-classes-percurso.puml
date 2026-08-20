@@ -1,0 +1,205 @@
+@startuml classes-percurso
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowColor #2C3E50
+skinparam ClassBorderColor #2C3E50
+skinparam ClassBackgroundColor #F8FAFC
+skinparam ClassAttributeIconSize 0
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title SGA - Classes (2/2): oferta lectiva, percurso academico e regulamento
+
+package "Oferta Lectiva" {
+  class AnoLectivo {
+    -id: Integer
+    -designacao: String
+    -dataInicio: Date
+    -dataFim: Date
+    -estado: EstadoAnoLectivo
+  }
+  class PeriodoLectivo {
+    -id: Integer
+    -semestre: Integer
+    -inscricaoInicio: Date
+    -inscricaoFim: Date
+    -notasInicio: Date
+    -notasFim: Date
+    +inscricoesAbertas(): Boolean
+    +lancamentoNotasAberto(): Boolean
+  }
+  class Turma {
+    -id: Integer
+    -designacao: String
+    -capacidadeMaxima: Integer
+    +numeroInscritos(): Integer
+    +temVagas(): Boolean
+    +somaPesosAvaliacoes(): Decimal
+    +estruturaAvaliacaoValida(): Boolean
+  }
+  AnoLectivo "1" *-- "2" PeriodoLectivo
+  Turma "*" --> "1" PeriodoLectivo
+}
+
+package "Percurso Academico" {
+  class Inscricao {
+    -id: UUID
+    -dataInscricao: DateTime
+    -estado: EstadoInscricao
+    -notaFrequencia: Decimal
+    -situacaoFrequencia: SituacaoFrequencia
+    -classificacaoFinal: Decimal
+    -situacaoFinal: SituacaoFinal
+    -registadaPor: UUID
+    +anular(): void
+    +recalcularResultado(): void
+  }
+  class Avaliacao {
+    -id: Integer
+    -designacao: String
+    -tipo: TipoAvaliacao
+    -peso: Decimal
+    -dataPrevista: Date
+    -estado: EstadoAvaliacao
+    +publicar(): void
+  }
+  class Classificacao {
+    -id: UUID
+    -valor: Decimal
+    -faltou: Boolean
+    -estado: EstadoClassificacao
+    -publicadaEm: DateTime
+    +valorEfectivo(): Decimal
+    +estaPublicada(): Boolean
+  }
+  class PedidoRectificacao {
+    -id: UUID
+    -valorAnterior: Decimal
+    -valorNovo: Decimal
+    -justificacao: String
+    -estado: EstadoPedido
+    -criadoEm: DateTime
+    -decididoEm: DateTime
+    +aprovar(c: Docente): void
+    +recusar(motivo: String): void
+  }
+  class Pauta {
+    -id: Integer
+    -numero: String
+    -versao: Integer
+    -estado: EstadoPauta
+    -emitidaEm: DateTime
+    -homologadaEm: DateTime
+    +taxaAprovacao(): Decimal
+    +homologar(c: Docente): void
+  }
+}
+
+package "Regulamento de Avaliacao (Strategy)" {
+  interface RegulamentoAvaliacao {
+    +calcularFrequencia(cs: List<Classificacao>): Decimal
+    +determinarSituacaoFrequencia(nf: Decimal): SituacaoFrequencia
+    +calcularClassificacaoFinal(i: Inscricao): Decimal
+    +estaAprovado(cf: Decimal): Boolean
+  }
+  class RegulamentoPadraoESCN {
+    -notaDispensa: Decimal = 14.0
+    -notaMinimaExame: Decimal = 10.0
+    -notaAprovacao: Decimal = 10.0
+  }
+  class RegulamentoSemExame {
+    -notaAprovacao: Decimal = 10.0
+  }
+  class ServicoAvaliacao {
+    -regulamento: RegulamentoAvaliacao
+    +processarPublicacao(t: Turma): void
+    +recalcular(i: Inscricao): void
+  }
+  RegulamentoAvaliacao <|.. RegulamentoPadraoESCN
+  RegulamentoAvaliacao <|.. RegulamentoSemExame
+  ServicoAvaliacao o--> RegulamentoAvaliacao
+}
+
+package "Transversal" {
+  class RegistoAuditoria {
+    -id: UUID
+    -acao: String
+    -entidade: String
+    -entidadeId: String
+    -valorAnterior: JSON
+    -valorNovo: JSON
+    -enderecoIP: String
+    -criadoEm: DateTime
+  }
+  class Notificacao {
+    -id: UUID
+    -tipo: String
+    -titulo: String
+    -mensagem: String
+    -lidaEm: DateTime
+    -criadaEm: DateTime
+    +marcarComoLida(): void
+  }
+}
+
+Turma "1" *-- "*" Inscricao
+Turma "1" *-- "1..*" Avaliacao
+Turma "1" -- "*" Pauta
+Avaliacao "1" *-- "*" Classificacao
+Inscricao "1" *-- "*" Classificacao
+Classificacao "1" o-- "*" PedidoRectificacao
+ServicoAvaliacao ..> Inscricao : actualiza >
+
+enum EstadoInscricao {
+  ACTIVA
+  ANULADA
+  CONCLUIDA
+}
+enum SituacaoFrequencia {
+  DISPENSADO
+  ADMITIDO_EXAME
+  REPROVADO_FREQUENCIA
+}
+enum SituacaoFinal {
+  EM_CURSO
+  APROVADO
+  REPROVADO
+}
+enum TipoAvaliacao {
+  TESTE
+  TRABALHO
+  PRATICA
+  EXAME
+}
+enum EstadoClassificacao {
+  RASCUNHO
+  PUBLICADA
+  RECTIFICADA
+}
+enum EstadoPauta {
+  PROVISORIA
+  EMITIDA
+  HOMOLOGADA
+}
+enum EstadoPedido {
+  PENDENTE
+  APROVADO
+  RECUSADO
+}
+Inscricao ..> EstadoInscricao
+Inscricao ..> SituacaoFrequencia
+Inscricao ..> SituacaoFinal
+Avaliacao ..> TipoAvaliacao
+Classificacao ..> EstadoClassificacao
+Pauta ..> EstadoPauta
+PedidoRectificacao ..> EstadoPedido
+
+note right of Inscricao
+  Inscricao e a entidade central do
+  percurso: liga Estudante a Turma e
+  guarda o resultado consolidado
+  (frequencia, classificacao final,
+  situacao) calculado pelo
+  ServicoAvaliacao.
+end note
+@enduml

@@ -1,0 +1,65 @@
+@startuml implantacao
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam ArrowColor #2C3E50
+skinparam NodeBorderColor #2C3E50
+skinparam NodeBackgroundColor #F8FAFC
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title SGA - Diagrama de implantacao (Docker Compose)
+
+node "Estacao do utilizador" {
+  artifact "Navegador\n(Chrome / Firefox / Edge)" as BROWSER
+}
+
+cloud "Internet / Rede da instituicao" as NET
+
+node "Servidor (Linux + Docker Engine)" {
+  node "docker-compose: rede sga-net" {
+    node "sga-proxy\nNginx" as PROXY {
+      artifact "TLS 1.2+\ncertificado" as TLS
+    }
+    node "sga-frontend\nnode:20-alpine (build)\nnginx:alpine (runtime)" as CFE {
+      artifact "bundle estatico\nda SPA" as BUNDLE
+    }
+    node "sga-api\nphp:8.3-fpm" as CAPI {
+      artifact "aplicacao Laravel\n(API REST)" as APP
+    }
+    node "sga-worker\nphp:8.3-cli" as CWK {
+      artifact "queue:work" as QW
+    }
+    node "sga-db\npostgres:16-alpine" as CDB {
+      database "volume: pgdata" as VOL
+    }
+    node "sga-cache\nredis:7-alpine" as CRD
+  }
+}
+
+node "Servicos externos" {
+  artifact "SMTP institucional" as SMTP
+  artifact "Armazenamento\ndas copias de seguranca" as BKP
+}
+
+BROWSER --> NET : HTTPS
+NET --> PROXY : porta 443
+PROXY --> CFE : conteudo estatico
+PROXY --> CAPI : /api/*  (FastCGI)
+CAPI --> CDB : porta 5432 (rede interna)
+CAPI --> CRD : porta 6379
+CWK --> CRD
+CWK --> CDB
+CWK --> SMTP : porta 587
+CDB --> BKP : pg_dump diario (RNF-15)
+
+note right of CDB
+  Apenas o proxy expoe portas ao
+  exterior. A base de dados e o
+  Redis sao acessiveis somente
+  dentro da rede sga-net (RNF-07).
+end note
+
+note bottom of CAPI
+  Arranque completo do ambiente:
+  docker compose up -d  (RNF-27)
+end note
+@enduml

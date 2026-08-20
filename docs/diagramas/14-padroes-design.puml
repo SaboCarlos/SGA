@@ -1,0 +1,109 @@
+@startuml padroes-design
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowColor #2C3E50
+skinparam ClassBorderColor #2C3E50
+skinparam ClassBackgroundColor #F8FAFC
+skinparam ClassAttributeIconSize 0
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title SGA - Padroes de desenho aplicados (Strategy, Observer, Repository)
+
+package "Padrao 1: Strategy - regulamento de avaliacao" {
+  class ServicoAvaliacao <<Context>> {
+    -regulamento: RegulamentoAvaliacao
+    -repositorio: RepositorioInscricao
+    +__construct(f: FabricaRegulamento, r: RepositorioInscricao)
+    +publicar(a: Avaliacao): ResumoPublicacao
+    +recalcular(i: Inscricao): void
+  }
+  interface RegulamentoAvaliacao <<Strategy>> {
+    +calcularFrequencia(cs: Collection): float
+    +determinarSituacaoFrequencia(nf: float): SituacaoFrequencia
+    +calcularClassificacaoFinal(i: Inscricao): float
+    +estaAprovado(cf: float): bool
+  }
+  class RegulamentoPadraoESCN <<ConcreteStrategy>> {
+    -DISPENSA: float = 14.0
+    -MINIMO_EXAME: float = 10.0
+    -APROVACAO: float = 10.0
+  }
+  class RegulamentoSemExame <<ConcreteStrategy>> {
+    -APROVACAO: float = 10.0
+  }
+  class FabricaRegulamento <<Factory>> {
+    +para(c: Curso): RegulamentoAvaliacao
+  }
+  RegulamentoAvaliacao <|.. RegulamentoPadraoESCN
+  RegulamentoAvaliacao <|.. RegulamentoSemExame
+  ServicoAvaliacao o--> RegulamentoAvaliacao
+  FabricaRegulamento ..> RegulamentoAvaliacao : cria
+  ServicoAvaliacao ..> FabricaRegulamento : usa
+}
+
+package "Padrao 2: Observer - eventos de dominio" {
+  class EventoNotasPublicadas <<Event>> {
+    +turma: Turma
+    +avaliacao: Avaliacao
+    +ocorridoEm: DateTime
+  }
+  interface Ouvinte <<Observer>> {
+    +tratar(e: EventoNotasPublicadas): void
+  }
+  class NotificarEstudantes <<ConcreteObserver>> {
+    +tratar(e): void
+  }
+  class RegistarAuditoria <<ConcreteObserver>> {
+    +tratar(e): void
+  }
+  class ActualizarPautaProvisoria <<ConcreteObserver>> {
+    +tratar(e): void
+  }
+  class DespachanteEventos <<Subject>> {
+    -ouvintes: Map<String, List<Ouvinte>>
+    +registar(evento: String, o: Ouvinte): void
+    +despachar(e: EventoNotasPublicadas): void
+  }
+  Ouvinte <|.. NotificarEstudantes
+  Ouvinte <|.. RegistarAuditoria
+  Ouvinte <|.. ActualizarPautaProvisoria
+  DespachanteEventos o--> Ouvinte
+  DespachanteEventos ..> EventoNotasPublicadas
+  ServicoAvaliacao ..> DespachanteEventos : despacha
+}
+
+package "Padrao 3: Repository - inversao de dependencia" {
+  interface RepositorioInscricao <<abstraccao no dominio>> {
+    +porId(id: UUID): Inscricao
+    +porTurma(t: Turma): Collection
+    +porEstudanteEPeriodo(e, p): Collection
+    +guardar(i: Inscricao): Inscricao
+  }
+  class RepositorioInscricaoEloquent <<infra-estrutura>> {
+    -modelo: InscricaoModel
+    +porId(id: UUID): Inscricao
+    +porTurma(t: Turma): Collection
+    +guardar(i: Inscricao): Inscricao
+  }
+  class RepositorioInscricaoEmMemoria <<testes>> {
+    -registos: Array
+  }
+  RepositorioInscricao <|.. RepositorioInscricaoEloquent
+  RepositorioInscricao <|.. RepositorioInscricaoEmMemoria
+  ServicoAvaliacao o--> RepositorioInscricao
+}
+
+note bottom of RegulamentoPadraoESCN
+  Alterar o regulamento da instituicao
+  significa acrescentar uma classe,
+  nunca modificar ServicoAvaliacao
+  (principio aberto/fechado).
+end note
+
+note bottom of RepositorioInscricaoEmMemoria
+  Permite testar as regras RN-06 a RN-12
+  sem base de dados: testes unitarios
+  rapidos e deterministicos (Fase 5).
+end note
+@enduml

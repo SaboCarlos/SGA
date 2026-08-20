@@ -1,0 +1,90 @@
+@startuml actividades-notas
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam ArrowColor #2C3E50
+skinparam ActivityBorderColor #2C3E50
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityDiamondBackgroundColor #FDF6E3
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title Ciclo de avaliacao: lancamento, publicacao, rectificacao e pauta (UC19-UC27)
+
+|#F0F4F8|Docente|
+start
+:Definir avaliacoes da turma\n(designacao, tipo, peso, data);
+
+|#FFFFFF|Sistema|
+if (Soma dos pesos = 100%? (RN-06)) then (nao)
+  |Docente|
+  :Corrigir pesos das avaliacoes;
+  detach
+else (sim)
+  |Sistema|
+  :Activar estrutura de avaliacao;
+endif
+
+|Docente|
+repeat
+  :Lancar classificacoes\n(0 a 20 valores) ou marcar falta;
+  :Gravar em RASCUNHO;
+repeat while (Faltam estudantes por classificar?) is (sim)
+-> nao;
+
+:Solicitar publicacao;
+
+|Sistema|
+if (Todos classificados ou com falta?) then (nao)
+  |Docente|
+  :Ver lista de estudantes em falta\ne confirmar ou completar;
+  detach
+else (sim)
+  |Sistema|
+  :Marcar classificacoes como PUBLICADAS;
+  :Calcular nota de frequencia\n(RN-07, via Strategy);
+  if (Frequencia >= 14,0?) then (sim)
+    :Situacao = DISPENSADO (RN-08);
+  elseif (Frequencia >= 10,0?) then (sim)
+    :Situacao = ADMITIDO A EXAME (RN-09);
+  else (nao)
+    :Situacao = REPROVADO POR FREQUENCIA;
+  endif
+  :Calcular classificacao final\ne situacao final (RN-10);
+  :Actualizar media do curso\ne creditos (RN-12);
+  :Registar em auditoria;
+  :Notificar estudantes\n(assincrono, opcional);
+endif
+
+|Estudante|
+:Consultar notas publicadas\ne aproveitamento;
+
+|Docente|
+if (Erro detectado numa nota publicada?) then (sim)
+  :Criar pedido de rectificacao\ncom justificacao (RN-11);
+  |#EEF7EE|Coordenador|
+  if (Pedido aprovado?) then (sim)
+    |Sistema|
+    :Actualizar classificacao;
+    :Recalcular frequencia,\nclassificacao final e medias;
+    :Registar valor anterior e novo\nem auditoria;
+  else (nao)
+    |Docente|
+    :Receber motivo da recusa;
+  endif
+else (nao)
+endif
+
+|Docente|
+:Emitir pauta da turma;
+
+|#EEF7EE|Coordenador|
+if (Pauta completa e correcta?) then (sim)
+  :Homologar pauta;
+  |Sistema|
+  :Marcar pauta como HOMOLOGADA\ne registar em auditoria;
+  stop
+else (nao)
+  |Docente|
+  :Corrigir via pedido\nde rectificacao;
+  stop
+endif
+@enduml

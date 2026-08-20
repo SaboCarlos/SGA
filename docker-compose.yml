@@ -1,0 +1,122 @@
+# Sistema de Gestao Academica (SGA) - ambiente completo
+# Arranque:  docker compose up -d --build   (RNF-27)
+#
+# Apenas o proxy expoe portas ao exterior. A base de dados e o Redis sao
+# acessiveis somente dentro da rede sga-net (RNF-07, ADR-003).
+
+services:
+
+  proxy:
+    image: nginx:1.27-alpine
+    container_name: sga-proxy
+    ports:
+      - "${PORTA_HTTP:-8000}:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./backend/public:/var/www/html/public:ro
+    depends_on:
+      api:
+        condition: service_started
+      frontend:
+        condition: service_started
+    networks: [sga-net]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend.Dockerfile
+    container_name: sga-frontend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api/v1}
+    networks: [sga-net]
+
+  # DB_*, REDIS_HOST, QUEUE_CONNECTION, etc. nao sao definidos aqui: vem so
+  # do backend/.env (bind-mounted). Defini-los tambem aqui criava duas
+  # fontes para o mesmo valor - o processo do container arrancava ja com
+  # DB_DATABASE=sga em $_SERVER, e isso impedia o phpunit.xml de o
+  # substituir por sga_test durante os testes (RefreshDatabase acabava a
+  # migrar contra a base de dados de desenvolvimento).
+  api:
+    build:
+      context: ./backend
+      dockerfile: ../docker/api.Dockerfile
+    container_name: sga-api
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+    networks: [sga-net]
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: ../docker/api.Dockerfile
+    container_name: sga-worker
+    command: php artisan queue:work --tries=3 --timeout=90
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+    networks: [sga-net]
+
+  # US-30: sem isto, o Schedule::command(...) definido em routes/console.php
+  # nunca corre -- precisa de "php artisan schedule:run" a cada minuto, e
+  # "schedule:work" faz esse laco sem precisar de cron dentro do contentor.
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: ../docker/api.Dockerfile
+    container_name: sga-scheduler
+    command: php artisan schedule:work
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+    networks: [sga-net]
+
+  db:
+    image: postgres:16-alpine
+    container_name: sga-db
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-sga}
+      POSTGRES_USER: ${DB_USERNAME:-sga}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-segredo_local}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init-test-db.sh:/docker-entrypoint-initdb.d/init-test-db.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-sga} -d ${DB_DATABASE:-sga}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [sga-net]
+
+  cache:
+    image: redis:7-alpine
+    container_name: sga-cache
+    networks: [sga-net]
+
+  # SMTP de desenvolvimento (US-04): backend/.env ja apontava para
+  # MAIL_HOST=mailpit, mas o servico nunca tinha sido declarado -- os
+  # e-mails de recuperacao de palavra-passe nao tinham para onde ir.
+  # Interface web em http://localhost:8025 (nao exposta pelo proxy).
+  mailpit:
+    image: axllent/mailpit:v1.20
+    container_name: sga-mailpit
+    ports:
+      - "${PORTA_MAILPIT:-8025}:8025"
+    networks: [sga-net]
+
+volumes:
+  pgdata:
+
+networks:
+  sga-net:
+    driver: bridge

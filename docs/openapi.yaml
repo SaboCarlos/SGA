@@ -1,0 +1,1082 @@
+openapi: 3.0.3
+
+info:
+  title: API do Sistema de Gestão Académica (SGA)
+  description: |
+    API REST do Sistema de Gestão Académica — Projecto 2, Engenharia de Software,
+    Escola Superior de Ciências Náuticas, 2026.
+
+    Convenções aplicadas a todos os recursos:
+      * substantivos no plural para colecções (`/estudantes`, não `/getEstudante`);
+      * verbos HTTP com a semântica padrão (GET, POST, PUT, PATCH, DELETE);
+      * versionamento no caminho (`/api/v1`);
+      * autenticação por token Bearer; nenhuma rota de negócio é anónima;
+      * todas as colecções são paginadas (máximo 50 registos por página — RNF-04);
+      * erros de validação em 422 com detalhe por campo; erros de regra de negócio
+        em 409 ou 422 com código próprio;
+      * respostas nunca expõem detalhes internos (RNF-17).
+  version: 1.0.0
+  contact:
+    name: Grupo 2 — Engenharia de Software
+    email: grupo2@escn.ac.mz
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Ambiente local (Docker Compose)
+  - url: https://sga.escn.ac.mz/api/v1
+    description: Ambiente de demonstração
+
+tags:
+  - name: Autenticação
+  - name: Utilizadores e perfis
+  - name: Estudantes
+  - name: Docentes
+  - name: Cursos e planos curriculares
+  - name: Disciplinas
+  - name: Ano lectivo e turmas
+  - name: Inscrições
+  - name: Avaliações e classificações
+  - name: Rectificações
+  - name: Aproveitamento
+  - name: Pautas
+  - name: Relatórios
+  - name: Notificações
+  - name: Auditoria
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # ---------------------------------------------------------------- Autenticação
+  /auth/login:
+    post:
+      tags: [Autenticação]
+      summary: Autenticar utilizador (UC01)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, palavra_passe]
+              properties:
+                email: { type: string, format: email }
+                palavra_passe: { type: string, format: password }
+      responses:
+        '200':
+          description: Autenticado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  expira_em: { type: string, format: date-time }
+                  utilizador: { $ref: '#/components/schemas/Utilizador' }
+        '401': { $ref: '#/components/responses/NaoAutenticado' }
+        '423':
+          description: Conta bloqueada temporariamente após 5 tentativas falhadas
+
+  /auth/logout:
+    post:
+      tags: [Autenticação]
+      summary: Encerrar sessão e invalidar o token (RF-02)
+      responses:
+        '204': { description: Sessão encerrada }
+
+  /auth/me:
+    get:
+      tags: [Autenticação]
+      summary: Dados e permissões do utilizador autenticado
+      responses:
+        '200':
+          description: Perfil actual
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Utilizador' }
+
+  /auth/palavra-passe/recuperar:
+    post:
+      tags: [Autenticação]
+      summary: Solicitar ligação de recuperação (UC04)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '202':
+          description: |
+            Aceite. A resposta é idêntica para e-mails existentes e inexistentes,
+            para não revelar quais as contas registadas (US-04).
+
+  # ------------------------------------------------------------------ Estudantes
+  /estudantes:
+    get:
+      tags: [Estudantes]
+      summary: Listar e pesquisar estudantes (UC06)
+      parameters:
+        - { name: pesquisa, in: query, schema: { type: string }, description: Parte do nome ou do número }
+        - { name: curso_id, in: query, schema: { type: integer } }
+        - { name: ano_curricular, in: query, schema: { type: integer } }
+        - { name: estado, in: query, schema: { $ref: '#/components/schemas/EstadoEstudante' } }
+        - { $ref: '#/components/parameters/Pagina' }
+        - { $ref: '#/components/parameters/PorPagina' }
+      responses:
+        '200':
+          description: Colecção paginada
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ColeccaoPaginada'
+                  - type: object
+                    properties:
+                      dados:
+                        type: array
+                        items: { $ref: '#/components/schemas/Estudante' }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+    post:
+      tags: [Estudantes]
+      summary: Registar estudante (UC06 / US-05)
+      description: |
+        O número de estudante é gerado pelo servidor no formato `AAAA/NNNN` e a conta
+        de utilizador com perfil ESTUDANTE é criada automaticamente (RF-09).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EstudanteEntrada' }
+      responses:
+        '201':
+          description: Estudante criado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Estudante' }
+        '422': { $ref: '#/components/responses/ErroValidacao' }
+
+  /estudantes/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Estudantes]
+      summary: Obter estudante
+      responses:
+        '200':
+          description: Estudante
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Estudante' }
+        '404': { $ref: '#/components/responses/NaoEncontrado' }
+    put:
+      tags: [Estudantes]
+      summary: Actualizar dados do estudante
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EstudanteEntrada' }
+      responses:
+        '200':
+          description: Actualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Estudante' }
+        '422': { $ref: '#/components/responses/ErroValidacao' }
+    delete:
+      tags: [Estudantes]
+      summary: Inactivar estudante (eliminação lógica — RF-12)
+      responses:
+        '204': { description: Estudante inactivado }
+        '409':
+          description: Estudante com histórico académico não pode ser eliminado fisicamente
+
+  /estudantes/{id}/aproveitamento:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Aproveitamento]
+      summary: Aproveitamento académico do estudante (UC25)
+      description: |
+        O estudante acede apenas ao próprio aproveitamento; o Coordenador aos estudantes
+        do curso que coordena; o Administrador a todos (RNF-12).
+      parameters:
+        - { name: ano_lectivo, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Aproveitamento por ano lectivo e acumulado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Aproveitamento' }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+
+  # --------------------------------------------------------- Cursos e disciplinas
+  /cursos:
+    get:
+      tags: [Cursos e planos curriculares]
+      summary: Listar cursos
+      responses:
+        '200':
+          description: Colecção de cursos
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Curso' }
+    post:
+      tags: [Cursos e planos curriculares]
+      summary: Criar curso (UC08)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Curso' }
+      responses:
+        '201':
+          description: Curso criado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Curso' }
+
+  /cursos/{id}/plano-curricular:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Cursos e planos curriculares]
+      summary: Plano curricular do curso (UC10)
+      responses:
+        '200':
+          description: Itens do plano por ano e semestre
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ItemPlano' }
+    post:
+      tags: [Cursos e planos curriculares]
+      summary: Acrescentar disciplina ao plano curricular
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ItemPlano' }
+      responses:
+        '201': { description: Item criado }
+        '422':
+          description: |
+            Ano curricular superior à duração do curso, ou disciplina já presente
+            no plano (US-09)
+
+  /disciplinas/{id}/pre-requisitos:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Disciplinas]
+      summary: Pré-requisitos da disciplina
+      responses:
+        '200':
+          description: Lista de disciplinas exigidas
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Disciplina' }
+    post:
+      tags: [Disciplinas]
+      summary: Definir pré-requisito (UC11)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pre_requisito_id]
+              properties:
+                pre_requisito_id: { type: integer }
+      responses:
+        '201': { description: Pré-requisito definido }
+        '422':
+          description: Dependência circular detectada (US-10)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErroNegocio' }
+
+  # ---------------------------------------------------------------------- Turmas
+  /turmas:
+    get:
+      tags: [Ano lectivo e turmas]
+      summary: Listar turmas
+      parameters:
+        - { name: periodo_lectivo_id, in: query, schema: { type: integer } }
+        - { name: docente_id, in: query, schema: { type: string, format: uuid } }
+        - { name: disciplina_id, in: query, schema: { type: integer } }
+        - { name: com_vagas, in: query, schema: { type: boolean } }
+        - { $ref: '#/components/parameters/Pagina' }
+      responses:
+        '200':
+          description: Colecção de turmas com contagem de inscritos e vagas (RF-28)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Turma' }
+    post:
+      tags: [Ano lectivo e turmas]
+      summary: Criar turma (UC13)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TurmaEntrada' }
+      responses:
+        '201':
+          description: Turma criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Turma' }
+        '422': { $ref: '#/components/responses/ErroValidacao' }
+
+  /turmas/{id}/inscritos:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Ano lectivo e turmas]
+      summary: Estudantes inscritos na turma, com situação actual
+      responses:
+        '200':
+          description: Lista ordenada por número de estudante
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/InscritoTurma' }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+
+  # ------------------------------------------------------------------ Inscrições
+  /inscricoes/disponiveis:
+    get:
+      tags: [Inscrições]
+      summary: Turmas elegíveis para o estudante autenticado (UC14, passo 3)
+      description: |
+        Devolve apenas turmas do plano curricular do curso do estudante, com vagas e
+        com pré-requisitos satisfeitos (RN-01, RN-02, RN-04). Se o período de
+        inscrições estiver fechado, devolve 409 com as datas do período (RN-05).
+      responses:
+        '200':
+          description: Turmas elegíveis
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Turma' }
+        '409':
+          description: Período de inscrições encerrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErroNegocio' }
+
+  /inscricoes:
+    get:
+      tags: [Inscrições]
+      summary: Listar inscrições (RF-33)
+      parameters:
+        - { name: estudante_id, in: query, schema: { type: string, format: uuid } }
+        - { name: ano_lectivo, in: query, schema: { type: string } }
+        - { name: semestre, in: query, schema: { type: integer, enum: [1, 2] } }
+      responses:
+        '200':
+          description: Colecção de inscrições
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Inscricao' }
+    post:
+      tags: [Inscrições]
+      summary: Inscrever-se em uma ou mais turmas (UC14)
+      description: |
+        Operação transaccional: se qualquer turma violar uma regra, nenhuma inscrição
+        é criada e a resposta identifica a regra violada (RN-01 a RN-05).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [turmas]
+              properties:
+                turmas:
+                  type: array
+                  items: { type: integer }
+                estudante_id:
+                  type: string
+                  format: uuid
+                  description: Apenas para inscrição administrativa (UC17)
+                dispensar_pre_requisitos:
+                  type: boolean
+                  default: false
+                  description: Apenas Administrador; exige justificação (UC18)
+                justificacao: { type: string }
+      responses:
+        '201':
+          description: Inscrições criadas, com comprovativo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ComprovativoInscricao' }
+        '422':
+          description: Regra de inscrição violada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErroNegocio' }
+              examples:
+                preRequisito:
+                  value:
+                    codigo: RN-02
+                    mensagem: "Pré-requisito não satisfeito: Programação I (INF101) não aprovada."
+                    campo: turmas.0
+                semVagas:
+                  value:
+                    codigo: RN-04
+                    mensagem: "A turma A de Engenharia de Software não tem vagas disponíveis."
+
+  /inscricoes/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    delete:
+      tags: [Inscrições]
+      summary: Anular inscrição (UC16)
+      responses:
+        '204': { description: Inscrição anulada; vaga libertada }
+        '409':
+          description: |
+            Período encerrado ou já existem classificações publicadas (US-14)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErroNegocio' }
+
+  # ------------------------------------------------- Avaliações e classificações
+  /turmas/{id}/avaliacoes:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Avaliações e classificações]
+      summary: Estrutura de avaliação da turma
+      responses:
+        '200':
+          description: Avaliações e soma dos pesos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  soma_pesos: { type: number, format: float }
+                  estrutura_valida: { type: boolean }
+                  avaliacoes:
+                    type: array
+                    items: { $ref: '#/components/schemas/Avaliacao' }
+    post:
+      tags: [Avaliações e classificações]
+      summary: Definir avaliação da turma (UC19)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Avaliacao' }
+      responses:
+        '201': { description: Avaliação criada }
+        '422':
+          description: Soma dos pesos diferente de 100% ao activar a estrutura (RN-06)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErroNegocio' }
+
+  /avaliacoes/{id}/classificacoes:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Avaliações e classificações]
+      summary: Classificações lançadas na avaliação
+      responses:
+        '200':
+          description: Lista com estudantes inscritos e respectivas notas
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Classificacao' }
+    put:
+      tags: [Avaliações e classificações]
+      summary: Lançar ou actualizar classificações em bloco (UC20)
+      description: |
+        Substitui o conjunto de classificações da avaliação em estado RASCUNHO.
+        Idempotente: repetir o mesmo pedido produz o mesmo estado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [classificacoes]
+              properties:
+                classificacoes:
+                  type: array
+                  items:
+                    type: object
+                    required: [inscricao_id]
+                    properties:
+                      inscricao_id: { type: string, format: uuid }
+                      valor: { type: number, format: float, minimum: 0, maximum: 20 }
+                      faltou: { type: boolean, default: false }
+      responses:
+        '200': { description: Classificações gravadas em RASCUNHO }
+        '403':
+          description: O docente não é o responsável da turma (US-17)
+        '422':
+          description: Valor fora do intervalo 0–20 (RF-38)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErroValidacaoCorpo' }
+
+  /avaliacoes/{id}/publicar:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Avaliações e classificações]
+      summary: Publicar classificações e desencadear cálculos (UC21)
+      description: |
+        Marca as classificações como PUBLICADA, calcula nota de frequência, situação de
+        frequência, classificação final e médias (RN-06 a RN-12), registra auditoria e
+        dispara notificações de forma assíncrona.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirmar_incompleta:
+                  type: boolean
+                  default: false
+                  description: Confirma a publicação com estudantes sem classificação
+      responses:
+        '200':
+          description: Resumo da publicação
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResumoPublicacao' }
+        '409':
+          description: Estudantes sem classificação nem marca de falta (US-18)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErroNegocio' }
+
+  # -------------------------------------------------------------- Rectificações
+  /rectificacoes:
+    get:
+      tags: [Rectificações]
+      summary: Listar pedidos de rectificação
+      parameters:
+        - { name: estado, in: query, schema: { type: string, enum: [PENDENTE, APROVADO, RECUSADO] } }
+      responses:
+        '200':
+          description: Pedidos visíveis ao utilizador autenticado
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PedidoRectificacao' }
+    post:
+      tags: [Rectificações]
+      summary: Solicitar rectificação de nota publicada (UC23)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [classificacao_id, valor_novo, justificacao]
+              properties:
+                classificacao_id: { type: string, format: uuid }
+                valor_novo: { type: number, format: float, minimum: 0, maximum: 20 }
+                justificacao: { type: string, minLength: 20 }
+      responses:
+        '201': { description: Pedido criado no estado PENDENTE }
+        '422': { $ref: '#/components/responses/ErroValidacao' }
+
+  /rectificacoes/{id}/decisao:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Rectificações]
+      summary: Aprovar ou recusar pedido (UC24)
+      description: |
+        Na aprovação, a classificação é actualizada, as médias são recalculadas e a
+        auditoria guarda o valor anterior, o novo valor, a justificação e ambos os
+        intervenientes (RN-11).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decisao]
+              properties:
+                decisao: { type: string, enum: [APROVAR, RECUSAR] }
+                motivo: { type: string, description: Obrigatório na recusa }
+      responses:
+        '200':
+          description: Decisão registada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PedidoRectificacao' }
+        '403':
+          description: Apenas o Coordenador do curso da turma pode decidir
+
+  # ---------------------------------------------------------------------- Pautas
+  /turmas/{id}/pauta:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Pautas]
+      summary: Emitir pauta da turma (UC26)
+      parameters:
+        - name: formato
+          in: query
+          schema: { type: string, enum: [json, pdf], default: json }
+      responses:
+        '200':
+          description: Pauta emitida
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pauta' }
+            application/pdf:
+              schema: { type: string, format: binary }
+
+  /pautas/{id}/homologar:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Pautas]
+      summary: Homologar pauta (UC27)
+      responses:
+        '200': { description: Pauta homologada e marcada como definitiva }
+        '409':
+          description: Existem estudantes sem classificação nem marca de falta
+
+  # ------------------------------------------------------------------ Relatórios
+  /relatorios/aproveitamento-disciplina:
+    get:
+      tags: [Relatórios]
+      summary: Taxas de aprovação e reprovação por disciplina (UC29 / RF-55)
+      parameters:
+        - { name: ano_lectivo, in: query, schema: { type: string } }
+        - { name: semestre, in: query, schema: { type: integer, enum: [1, 2] } }
+        - { name: curso_id, in: query, schema: { type: integer } }
+        - name: formato
+          in: query
+          schema: { type: string, enum: [json, pdf, csv], default: json }
+      responses:
+        '200':
+          description: Relatório agregado
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/LinhaRelatorioDisciplina' }
+
+  /painel:
+    get:
+      tags: [Relatórios]
+      summary: Indicadores do painel inicial, conforme o perfil (UC30 / RF-60)
+      responses:
+        '200':
+          description: Estrutura variável em função do perfil autenticado
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+
+  # ---------------------------------------------------- Notificações e auditoria
+  /notificacoes:
+    get:
+      tags: [Notificações]
+      summary: Notificações do utilizador autenticado (RF-67)
+      parameters:
+        - { name: nao_lidas, in: query, schema: { type: boolean } }
+      responses:
+        '200':
+          description: Colecção de notificações
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Notificacao' }
+
+  /notificacoes/{id}/lida:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      tags: [Notificações]
+      summary: Marcar notificação como lida
+      responses:
+        '204': { description: Marcada como lida }
+
+  /auditoria:
+    get:
+      tags: [Auditoria]
+      summary: Consultar registo de auditoria (UC31)
+      description: |
+        Recurso apenas de leitura. Não existem operações de escrita, actualização ou
+        eliminação sobre a auditoria (RNF-32).
+      parameters:
+        - { name: utilizador_id, in: query, schema: { type: string, format: uuid } }
+        - { name: entidade, in: query, schema: { type: string } }
+        - { name: acao, in: query, schema: { type: string } }
+        - { name: de, in: query, schema: { type: string, format: date } }
+        - { name: ate, in: query, schema: { type: string, format: date } }
+        - { $ref: '#/components/parameters/Pagina' }
+      responses:
+        '200':
+          description: Registos de auditoria
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/RegistoAuditoria' }
+        '403': { $ref: '#/components/responses/SemPermissao' }
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Pagina:
+      name: pagina
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PorPagina:
+      name: por_pagina
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 50, default: 25 }
+      description: Máximo de 50 registos por página (RNF-04)
+
+  responses:
+    NaoAutenticado:
+      description: Credenciais ausentes ou inválidas
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+    SemPermissao:
+      description: O perfil autenticado não tem permissão para este recurso
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+    NaoEncontrado:
+      description: Recurso inexistente
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+    ErroValidacao:
+      description: Dados de entrada inválidos
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErroValidacaoCorpo' }
+
+  schemas:
+
+    Erro:
+      type: object
+      properties:
+        mensagem: { type: string }
+
+    ErroNegocio:
+      type: object
+      description: Erro de regra de negócio, com o código da regra violada
+      properties:
+        codigo: { type: string, example: RN-02 }
+        mensagem: { type: string }
+        campo: { type: string }
+
+    ErroValidacaoCorpo:
+      type: object
+      properties:
+        mensagem: { type: string, example: Os dados fornecidos são inválidos.
+        }
+        erros:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+          example:
+            valor: ["A classificação deve situar-se entre 0 e 20 valores."]
+
+    ColeccaoPaginada:
+      type: object
+      properties:
+        pagina: { type: integer }
+        por_pagina: { type: integer }
+        total: { type: integer }
+        total_paginas: { type: integer }
+
+    EstadoEstudante:
+      type: string
+      enum: [ACTIVO, SUSPENSO, TRANSFERIDO, GRADUADO, DESISTENTE]
+
+    SituacaoFrequencia:
+      type: string
+      enum: [EM_CURSO, DISPENSADO, ADMITIDO_EXAME, REPROVADO_FREQUENCIA]
+
+    SituacaoFinal:
+      type: string
+      enum: [EM_CURSO, APROVADO, REPROVADO]
+
+    Utilizador:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        nome: { type: string }
+        email: { type: string, format: email }
+        perfis:
+          type: array
+          items: { type: string, example: DOCENTE }
+        permissoes:
+          type: array
+          items: { type: string, example: classificacao.publicar }
+
+    Estudante:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        numero_estudante: { type: string, example: 2026/0001 }
+        nome_completo: { type: string }
+        curso: { $ref: '#/components/schemas/Curso' }
+        ano_ingresso: { type: integer }
+        estado: { $ref: '#/components/schemas/EstadoEstudante' }
+
+    EstudanteEntrada:
+      type: object
+      required: [nome_completo, documento_identificacao, data_nascimento, curso_id, ano_ingresso]
+      properties:
+        nome_completo: { type: string, maxLength: 150 }
+        documento_identificacao: { type: string }
+        data_nascimento: { type: string, format: date }
+        sexo: { type: string, enum: [MASCULINO, FEMININO] }
+        telefone: { type: string }
+        email: { type: string, format: email }
+        curso_id: { type: integer }
+        ano_ingresso: { type: integer }
+
+    Curso:
+      type: object
+      properties:
+        id: { type: integer }
+        codigo: { type: string, example: PSIT }
+        designacao: { type: string }
+        grau: { type: string }
+        duracao_anos: { type: integer }
+        total_creditos: { type: integer }
+        regulamento_avaliacao: { type: string, example: PADRAO_ESCN }
+
+    Disciplina:
+      type: object
+      properties:
+        id: { type: integer }
+        codigo: { type: string, example: INF301 }
+        designacao: { type: string }
+        creditos: { type: integer }
+        carga_horaria: { type: integer }
+
+    ItemPlano:
+      type: object
+      required: [disciplina_id, ano_curricular, semestre]
+      properties:
+        disciplina_id: { type: integer }
+        ano_curricular: { type: integer, minimum: 1 }
+        semestre: { type: integer, enum: [1, 2] }
+        tipo: { type: string, enum: [OBRIGATORIA, OPCIONAL] }
+
+    Turma:
+      type: object
+      properties:
+        id: { type: integer }
+        designacao: { type: string, example: A }
+        disciplina: { $ref: '#/components/schemas/Disciplina' }
+        ano_lectivo: { type: string, example: '2026' }
+        semestre: { type: integer }
+        docente: { type: string }
+        capacidade_maxima: { type: integer }
+        inscritos: { type: integer }
+        vagas: { type: integer }
+
+    TurmaEntrada:
+      type: object
+      required: [disciplina_id, periodo_lectivo_id, docente_id, capacidade_maxima]
+      properties:
+        disciplina_id: { type: integer }
+        periodo_lectivo_id: { type: integer }
+        docente_id: { type: string, format: uuid }
+        designacao: { type: string, default: A }
+        capacidade_maxima: { type: integer, minimum: 1 }
+
+    Inscricao:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        turma: { $ref: '#/components/schemas/Turma' }
+        data_inscricao: { type: string, format: date-time }
+        estado: { type: string, enum: [ACTIVA, ANULADA, CONCLUIDA] }
+        nota_frequencia: { type: number, format: float, nullable: true }
+        situacao_frequencia: { $ref: '#/components/schemas/SituacaoFrequencia' }
+        classificacao_final: { type: number, format: float, nullable: true }
+        situacao_final: { $ref: '#/components/schemas/SituacaoFinal' }
+
+    InscritoTurma:
+      type: object
+      properties:
+        inscricao_id: { type: string, format: uuid }
+        numero_estudante: { type: string }
+        nome_completo: { type: string }
+        nota_frequencia: { type: number, format: float, nullable: true }
+        situacao_frequencia: { $ref: '#/components/schemas/SituacaoFrequencia' }
+
+    ComprovativoInscricao:
+      type: object
+      properties:
+        emitido_em: { type: string, format: date-time }
+        estudante: { type: string }
+        ano_lectivo: { type: string }
+        semestre: { type: integer }
+        disciplinas:
+          type: array
+          items:
+            type: object
+            properties:
+              codigo: { type: string }
+              designacao: { type: string }
+              turma: { type: string }
+
+    Avaliacao:
+      type: object
+      required: [designacao, tipo, peso]
+      properties:
+        id: { type: integer }
+        designacao: { type: string, example: Teste 1 }
+        tipo: { type: string, enum: [TESTE, TRABALHO, PRATICA, EXAME] }
+        peso: { type: number, format: float, minimum: 0, maximum: 100 }
+        data_prevista: { type: string, format: date }
+        estado: { type: string, enum: [RASCUNHO, ACTIVA, PUBLICADA] }
+
+    Classificacao:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        inscricao_id: { type: string, format: uuid }
+        numero_estudante: { type: string }
+        nome_completo: { type: string }
+        valor: { type: number, format: float, nullable: true }
+        faltou: { type: boolean }
+        estado: { type: string, enum: [RASCUNHO, PUBLICADA, RECTIFICADA] }
+
+    ResumoPublicacao:
+      type: object
+      properties:
+        publicadas: { type: integer }
+        dispensados: { type: integer }
+        admitidos_exame: { type: integer }
+        reprovados_frequencia: { type: integer }
+        media_turma: { type: number, format: float }
+
+    PedidoRectificacao:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        classificacao_id: { type: string, format: uuid }
+        estudante: { type: string }
+        valor_anterior: { type: number, format: float }
+        valor_novo: { type: number, format: float }
+        justificacao: { type: string }
+        estado: { type: string, enum: [PENDENTE, APROVADO, RECUSADO] }
+        solicitado_por: { type: string }
+        decidido_por: { type: string, nullable: true }
+        decidido_em: { type: string, format: date-time, nullable: true }
+
+    Aproveitamento:
+      type: object
+      properties:
+        estudante: { type: string }
+        numero_estudante: { type: string }
+        curso: { type: string }
+        media_ponderada: { type: number, format: float, nullable: true }
+        creditos_obtidos: { type: integer }
+        creditos_curso: { type: integer }
+        percentagem_conclusao: { type: number, format: float }
+        anos_lectivos:
+          type: array
+          items:
+            type: object
+            properties:
+              ano_lectivo: { type: string }
+              semestre: { type: integer }
+              disciplinas:
+                type: array
+                items: { $ref: '#/components/schemas/Inscricao' }
+
+    Pauta:
+      type: object
+      properties:
+        numero: { type: string, example: PAUTA/2026/0042 }
+        versao: { type: integer }
+        estado: { type: string, enum: [PROVISORIA, EMITIDA, HOMOLOGADA] }
+        turma: { $ref: '#/components/schemas/Turma' }
+        emitida_em: { type: string, format: date-time }
+        total_inscritos: { type: integer }
+        total_aprovados: { type: integer }
+        taxa_aprovacao: { type: number, format: float }
+        linhas:
+          type: array
+          items: { $ref: '#/components/schemas/InscritoTurma' }
+
+    LinhaRelatorioDisciplina:
+      type: object
+      properties:
+        codigo: { type: string }
+        disciplina: { type: string }
+        ano_lectivo: { type: string }
+        semestre: { type: integer }
+        inscritos: { type: integer }
+        aprovados: { type: integer }
+        reprovados: { type: integer }
+        taxa_aprovacao: { type: number, format: float }
+        media_disciplina: { type: number, format: float }
+
+    Notificacao:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tipo: { type: string, example: notas.publicadas }
+        titulo: { type: string }
+        mensagem: { type: string }
+        criada_em: { type: string, format: date-time }
+        lida_em: { type: string, format: date-time, nullable: true }
+
+    RegistoAuditoria:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        utilizador: { type: string }
+        acao: { type: string, example: classificacao.rectificada }
+        entidade: { type: string }
+        entidade_id: { type: string }
+        valor_anterior: { type: object, additionalProperties: true, nullable: true }
+        valor_novo: { type: object, additionalProperties: true, nullable: true }
+        justificacao: { type: string, nullable: true }
+        criado_em: { type: string, format: date-time }

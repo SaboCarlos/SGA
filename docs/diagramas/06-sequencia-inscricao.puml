@@ -1,0 +1,81 @@
+@startuml sequencia-inscricao
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam ArrowColor #2C3E50
+skinparam ParticipantBorderColor #2C3E50
+skinparam ParticipantBackgroundColor #F8FAFC
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title UC14 - Inscricao do estudante numa turma (fluxo principal e excepcoes)
+
+actor Estudante as EST
+participant "InscricaoController\n<<API REST>>" as CTRL
+participant "AuthMiddleware\n(politica de acesso)" as AUTH
+participant "ServicoInscricao" as SRV
+participant "ValidadorInscricao" as VAL
+participant "RepositorioInscricao" as REPO
+participant "Turma" as TURMA
+participant "ServicoAuditoria" as AUD
+database "PostgreSQL" as DB
+
+EST -> CTRL : POST /api/inscricoes\n{turma_id}
+activate CTRL
+CTRL -> AUTH : autorizar(token, "inscricao.criar")
+activate AUTH
+AUTH --> CTRL : utilizador autenticado (perfil Estudante)
+deactivate AUTH
+
+CTRL -> SRV : inscrever(estudante, turmaId)
+activate SRV
+
+SRV -> REPO : obterTurma(turmaId)
+activate REPO
+REPO -> DB : SELECT ... FROM turmas
+DB --> REPO : turma
+REPO --> SRV : turma
+deactivate REPO
+
+SRV -> VAL : validar(estudante, turma)
+activate VAL
+VAL -> VAL : RN-05 periodo de inscricoes aberto?
+VAL -> VAL : RN-01 disciplina no plano curricular?
+VAL -> VAL : RN-03 inscricao duplicada?
+VAL -> TURMA : temVagas()
+activate TURMA
+TURMA --> VAL : true
+deactivate TURMA
+VAL -> VAL : RN-02 pre-requisitos aprovados?
+
+alt Alguma regra violada
+  VAL --> SRV : ResultadoValidacao(invalido, motivo)
+  SRV --> CTRL : ExcepcaoRegraNegocio(motivo)
+  CTRL --> EST : 422 Unprocessable Entity\n{erro: motivo}
+else Todas as regras satisfeitas
+  VAL --> SRV : ResultadoValidacao(valido)
+  deactivate VAL
+
+  SRV -> DB : BEGIN TRANSACTION
+  SRV -> REPO : criar(inscricao)
+  activate REPO
+  REPO -> DB : INSERT INTO inscricoes
+  note right of DB
+    UNIQUE (estudante_id, turma_id)
+    garante RN-03 tambem a nivel
+    de base de dados
+  end note
+  DB --> REPO : inscricao persistida
+  REPO --> SRV : inscricao
+  deactivate REPO
+
+  SRV -> AUD : registar("inscricao.criada", inscricao)
+  activate AUD
+  AUD -> DB : INSERT INTO registos_auditoria
+  deactivate AUD
+  SRV -> DB : COMMIT
+
+  SRV --> CTRL : inscricao
+  deactivate SRV
+  CTRL --> EST : 201 Created\n{comprovativo}
+end
+deactivate CTRL
+@enduml

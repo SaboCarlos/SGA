@@ -1,0 +1,250 @@
+@startuml modelo-base-dados
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowColor #2C3E50
+skinparam ClassBorderColor #2C3E50
+skinparam ClassBackgroundColor #F8FAFC
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+hide circle
+hide methods
+title SGA - Modelo fisico da base de dados (PostgreSQL)
+
+entity utilizadores {
+  * id : UUID <<PK>>
+  --
+  * nome : VARCHAR(150)
+  * email : VARCHAR(150) <<UK>>
+  * palavra_passe : VARCHAR(255)
+  * activo : BOOLEAN
+  ultimo_acesso : TIMESTAMPTZ
+}
+entity perfis {
+  * id : SERIAL <<PK>>
+  --
+  * nome : VARCHAR(30) <<UK>>
+  descricao : TEXT
+}
+entity permissoes {
+  * id : SERIAL <<PK>>
+  --
+  * codigo : VARCHAR(60) <<UK>>
+  descricao : TEXT
+}
+entity perfil_utilizador {
+  * utilizador_id : UUID <<PK,FK>>
+  * perfil_id : INT <<PK,FK>>
+}
+entity permissao_perfil {
+  * perfil_id : INT <<PK,FK>>
+  * permissao_id : INT <<PK,FK>>
+}
+entity estudantes {
+  * id : UUID <<PK>>
+  --
+  * utilizador_id : UUID <<FK,UK>>
+  * curso_id : INT <<FK>>
+  * numero_estudante : VARCHAR(12) <<UK>>
+  * nome_completo : VARCHAR(150)
+  * documento_identificacao : VARCHAR(30) <<UK>>
+  * data_nascimento : DATE
+  sexo : sexo_enum
+  telefone : VARCHAR(20)
+  * ano_ingresso : INT
+  * estado : estado_estudante_enum
+}
+entity docentes {
+  * id : UUID <<PK>>
+  --
+  * utilizador_id : UUID <<FK,UK>>
+  * codigo : VARCHAR(20) <<UK>>
+  * nome_completo : VARCHAR(150)
+  grau_academico : VARCHAR(40)
+  categoria : VARCHAR(40)
+  area_cientifica : VARCHAR(80)
+  * activo : BOOLEAN
+}
+entity cursos {
+  * id : SERIAL <<PK>>
+  --
+  * codigo : VARCHAR(20) <<UK>>
+  * designacao : VARCHAR(150)
+  * grau : VARCHAR(30)
+  * duracao_anos : INT
+  * total_creditos : INT
+  * regulamento_avaliacao : VARCHAR(40)
+  coordenador_id : UUID <<FK>>
+  * activo : BOOLEAN
+}
+entity planos_curriculares {
+  * id : SERIAL <<PK>>
+  --
+  * curso_id : INT <<FK>>
+  * versao : VARCHAR(20)
+  * ano_inicio_vigencia : INT
+  * activo : BOOLEAN
+}
+entity disciplinas {
+  * id : SERIAL <<PK>>
+  --
+  * codigo : VARCHAR(20) <<UK>>
+  * designacao : VARCHAR(150)
+  * creditos : INT
+  * carga_horaria : INT
+  * activo : BOOLEAN
+}
+entity itens_plano_curricular {
+  * id : SERIAL <<PK>>
+  --
+  * plano_id : INT <<FK>>
+  * disciplina_id : INT <<FK>>
+  * ano_curricular : INT
+  * semestre : INT
+  * tipo : tipo_disciplina_enum
+  == UNIQUE (plano_id, disciplina_id) ==
+}
+entity pre_requisitos {
+  * disciplina_id : INT <<PK,FK>>
+  * pre_requisito_id : INT <<PK,FK>>
+}
+entity anos_lectivos {
+  * id : SERIAL <<PK>>
+  --
+  * designacao : VARCHAR(15) <<UK>>
+  * data_inicio : DATE
+  * data_fim : DATE
+  * estado : estado_ano_enum
+}
+entity periodos_lectivos {
+  * id : SERIAL <<PK>>
+  --
+  * ano_lectivo_id : INT <<FK>>
+  * semestre : INT
+  * inscricao_inicio : DATE
+  * inscricao_fim : DATE
+  * notas_inicio : DATE
+  * notas_fim : DATE
+  == UNIQUE (ano_lectivo_id, semestre) ==
+}
+entity turmas {
+  * id : SERIAL <<PK>>
+  --
+  * disciplina_id : INT <<FK>>
+  * periodo_lectivo_id : INT <<FK>>
+  * docente_id : UUID <<FK>>
+  * designacao : VARCHAR(20)
+  * capacidade_maxima : INT
+  == UNIQUE (disciplina_id, periodo_lectivo_id, designacao) ==
+}
+entity inscricoes {
+  * id : UUID <<PK>>
+  --
+  * estudante_id : UUID <<FK>>
+  * turma_id : INT <<FK>>
+  * data_inscricao : TIMESTAMPTZ
+  * estado : estado_inscricao_enum
+  nota_frequencia : NUMERIC(4,1)
+  situacao_frequencia : situacao_freq_enum
+  nota_exame : NUMERIC(4,1)
+  classificacao_final : NUMERIC(4,1)
+  situacao_final : situacao_final_enum
+  registada_por : UUID <<FK>>
+  == UNIQUE (estudante_id, turma_id) -> RN-03 ==
+}
+entity avaliacoes {
+  * id : SERIAL <<PK>>
+  --
+  * turma_id : INT <<FK>>
+  * designacao : VARCHAR(60)
+  * tipo : tipo_avaliacao_enum
+  * peso : NUMERIC(5,2)
+  data_prevista : DATE
+  * estado : estado_avaliacao_enum
+}
+entity classificacoes {
+  * id : UUID <<PK>>
+  --
+  * avaliacao_id : INT <<FK>>
+  * inscricao_id : UUID <<FK>>
+  valor : NUMERIC(4,1)
+  * faltou : BOOLEAN
+  * estado : estado_classificacao_enum
+  publicada_em : TIMESTAMPTZ
+  lancada_por : UUID <<FK>>
+  == UNIQUE (avaliacao_id, inscricao_id) ==
+  == CHECK (valor BETWEEN 0 AND 20) ==
+}
+entity pedidos_rectificacao {
+  * id : UUID <<PK>>
+  --
+  * classificacao_id : UUID <<FK>>
+  * solicitado_por : UUID <<FK>>
+  valor_anterior : NUMERIC(4,1)
+  * valor_novo : NUMERIC(4,1)
+  * justificacao : TEXT
+  * estado : estado_pedido_enum
+  decidido_por : UUID <<FK>>
+  decidido_em : TIMESTAMPTZ
+}
+entity pautas {
+  * id : SERIAL <<PK>>
+  --
+  * turma_id : INT <<FK>>
+  * numero : VARCHAR(30) <<UK>>
+  * versao : INT
+  * estado : estado_pauta_enum
+  emitida_por : UUID <<FK>>
+  emitida_em : TIMESTAMPTZ
+  homologada_por : UUID <<FK>>
+  homologada_em : TIMESTAMPTZ
+}
+entity notificacoes {
+  * id : UUID <<PK>>
+  --
+  * utilizador_id : UUID <<FK>>
+  * tipo : VARCHAR(60)
+  * titulo : VARCHAR(150)
+  mensagem : TEXT
+  lida_em : TIMESTAMPTZ
+  * criada_em : TIMESTAMPTZ
+}
+entity registos_auditoria {
+  * id : UUID <<PK>>
+  --
+  utilizador_id : UUID <<FK>>
+  * acao : VARCHAR(60)
+  * entidade : VARCHAR(60)
+  * entidade_id : VARCHAR(60)
+  valor_anterior : JSONB
+  valor_novo : JSONB
+  endereco_ip : INET
+  * criado_em : TIMESTAMPTZ
+}
+
+utilizadores ||--o{ perfil_utilizador
+perfis ||--o{ perfil_utilizador
+perfis ||--o{ permissao_perfil
+permissoes ||--o{ permissao_perfil
+utilizadores ||--o| estudantes
+utilizadores ||--o| docentes
+utilizadores ||--o{ notificacoes
+utilizadores ||--o{ registos_auditoria
+cursos ||--o{ estudantes
+docentes |o--o{ cursos : coordena
+cursos ||--o{ planos_curriculares
+planos_curriculares ||--o{ itens_plano_curricular
+disciplinas ||--o{ itens_plano_curricular
+disciplinas ||--o{ pre_requisitos
+anos_lectivos ||--o{ periodos_lectivos
+periodos_lectivos ||--o{ turmas
+disciplinas ||--o{ turmas
+docentes ||--o{ turmas
+estudantes ||--o{ inscricoes
+turmas ||--o{ inscricoes
+turmas ||--o{ avaliacoes
+turmas ||--o{ pautas
+avaliacoes ||--o{ classificacoes
+inscricoes ||--o{ classificacoes
+classificacoes ||--o{ pedidos_rectificacao
+@enduml

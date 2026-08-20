@@ -1,0 +1,86 @@
+@startuml sequencia-publicacao-notas
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam ArrowColor #2C3E50
+skinparam ParticipantBorderColor #2C3E50
+skinparam ParticipantBackgroundColor #F8FAFC
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title UC21 - Publicacao de classificacoes e calculo automatico (Strategy + Observer)
+
+actor Docente as DOC
+participant "AvaliacaoController\n<<API REST>>" as CTRL
+participant "PolicyAvaliacao" as POL
+participant "ServicoAvaliacao" as SRV
+participant "RegulamentoPadraoESCN\n<<Strategy>>" as REG
+participant "Inscricao" as INS
+participant "EventoNotasPublicadas\n<<Observer>>" as EVT
+participant "ServicoNotificacao" as NOT
+participant "ServicoAuditoria" as AUD
+database "PostgreSQL" as DB
+
+DOC -> CTRL : POST /api/avaliacoes/{id}/publicar
+activate CTRL
+CTRL -> POL : podePublicar(docente, avaliacao)
+activate POL
+POL -> POL : docente e o responsavel da turma?
+POL -> POL : periodo de lancamento aberto? (RN)
+POL --> CTRL : autorizado
+deactivate POL
+
+CTRL -> SRV : publicar(avaliacao)
+activate SRV
+SRV -> DB : SELECT classificacoes WHERE avaliacao_id = ?
+DB --> SRV : classificacoes
+
+alt Existem estudantes sem nota nem falta
+  SRV --> CTRL : ExcepcaoPautaIncompleta(lista)
+  CTRL --> DOC : 409 Conflict\n{estudantes em falta}
+else Todos classificados
+  SRV -> DB : BEGIN TRANSACTION
+  SRV -> DB : UPDATE classificacoes SET estado='PUBLICADA'
+
+  loop para cada inscricao da turma
+    SRV -> REG : calcularFrequencia(classificacoes)
+    activate REG
+    REG --> SRV : notaFrequencia (1 casa decimal)
+    SRV -> REG : determinarSituacaoFrequencia(nf)
+    REG --> SRV : DISPENSADO | ADMITIDO_EXAME | REPROVADO_FREQUENCIA
+    SRV -> REG : calcularClassificacaoFinal(inscricao)
+    REG --> SRV : classificacaoFinal
+    deactivate REG
+    SRV -> INS : actualizarResultado(nf, situacao, cf)
+    activate INS
+    INS -> DB : UPDATE inscricoes
+    deactivate INS
+  end
+
+  SRV -> AUD : registar("avaliacao.publicada", avaliacao)
+  activate AUD
+  AUD -> DB : INSERT INTO registos_auditoria
+  deactivate AUD
+  SRV -> DB : COMMIT
+
+  SRV -> EVT : disparar(EventoNotasPublicadas)
+  activate EVT
+  EVT -> NOT : notificarEstudantes(turma)  <<assincrono>>
+  activate NOT
+  NOT -> DB : INSERT INTO notificacoes
+  NOT --> EVT : enfileirado
+  deactivate NOT
+  EVT --> SRV : ok
+  deactivate EVT
+
+  SRV --> CTRL : resumo(publicadas, dispensados, admitidos, reprovados)
+  deactivate SRV
+  CTRL --> DOC : 200 OK\n{resumo}
+end
+deactivate CTRL
+
+note over REG
+  A estrategia concreta e resolvida
+  a partir do curso da turma
+  (Curso.regulamentoAvaliacao),
+  isolando as regras RN-06 a RN-12.
+end note
+@enduml

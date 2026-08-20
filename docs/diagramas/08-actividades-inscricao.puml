@@ -1,0 +1,68 @@
+@startuml actividades-inscricao
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam ArrowColor #2C3E50
+skinparam ActivityBorderColor #2C3E50
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam ActivityDiamondBackgroundColor #FDF6E3
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title Processo de inscricao em disciplinas (UC14 / UC17)
+
+|#F0F4F8|Estudante|
+start
+:Autenticar-se no sistema;
+:Acessar area de inscricoes;
+
+|#FFFFFF|Sistema|
+if (Periodo de inscricoes aberto? (RN-05)) then (nao)
+  |Estudante|
+  :Ver datas do periodo\ne mensagem informativa;
+  stop
+else (sim)
+  |Sistema|
+  :Determinar plano curricular\ndo curso do estudante (RN-01);
+  :Listar turmas elegiveis\ncom vagas disponiveis;
+endif
+
+|Estudante|
+:Selecionar disciplinas\npretendidas;
+:Submeter inscricao;
+
+|Sistema|
+:Iniciar transaccao;
+fork
+  :Validar RN-01\n(disciplina no plano);
+fork again
+  :Validar RN-02\n(pre-requisitos aprovados);
+fork again
+  :Validar RN-03\n(sem inscricao duplicada);
+fork again
+  :Validar RN-04\n(capacidade da turma);
+end fork
+
+if (Todas as validacoes passaram?) then (nao)
+  :Anular transaccao (rollback);
+  |Estudante|
+  :Receber mensagem que identifica\na regra violada;
+  note right
+    Excepcao: o Administrador pode
+    dispensar a validacao de
+    pre-requisitos (UC18), com
+    justificacao obrigatoria e
+    registo em auditoria.
+  end note
+  stop
+else (sim)
+  |Sistema|
+  :Criar registo de inscricao\n(estado ACTIVA);
+  :Actualizar contagem de vagas\nda turma;
+  :Registar em auditoria\n(autor, data, valores);
+  :Confirmar transaccao (commit);
+  :Gerar comprovativo\nde inscricao;
+endif
+
+|Estudante|
+:Consultar comprovativo\ne lista de disciplinas;
+stop
+@enduml

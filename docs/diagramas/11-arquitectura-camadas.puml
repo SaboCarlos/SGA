@@ -1,0 +1,90 @@
+@startuml arquitectura-camadas
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowColor #2C3E50
+skinparam ComponentBorderColor #2C3E50
+skinparam ComponentBackgroundColor #F8FAFC
+skinparam RectangleBorderColor #2C3E50
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+title SGA - Arquitectura em camadas (regra de dependencia unidireccional)
+
+rectangle "1. Camada de Apresentacao\n(cliente, fora do servidor)" as L1 #E8F0FE {
+  component "SPA React\n(Vite + TypeScript)" as SPA
+  component "Componentes de UI\ne validacao de formulario" as UI
+}
+
+rectangle "2. Camada de Interface (API)" as L2 #F0F7F0 {
+  component "Controladores REST\n(finos: sem regras de negocio)" as CTRL
+  component "Middleware\nautenticacao / autorizacao" as MW
+  component "Form Requests\n(validacao de entrada)" as REQ
+  component "API Resources\n(serializacao de saida)" as RES
+}
+
+rectangle "3. Camada de Aplicacao (casos de uso)" as L3 #FFF8E1 {
+  component "ServicoInscricao" as S1
+  component "ServicoAvaliacao" as S2
+  component "ServicoPauta" as S3
+  component "ServicoRelatorio" as S4
+  component "ServicoAuditoria" as S5
+  component "Eventos e Listeners\n(Observer)" as EV
+}
+
+rectangle "4. Camada de Dominio" as L4 #FDECEC {
+  component "Entidades\n(Inscricao, Turma, Classificacao...)" as ENT
+  component "Regras de negocio\nRN-01 a RN-12" as RN
+  component "RegulamentoAvaliacao\n<<interface / Strategy>>" as STR
+  component "Politicas de acesso\n(Policies)" as POL
+  component "Interfaces de repositorio\n<<abstraccoes>>" as IREPO
+}
+
+rectangle "5. Camada de Infra-estrutura" as L5 #EFEFEF {
+  component "Repositorios Eloquent\n(implementacoes)" as REPO
+  component "PostgreSQL" as DB
+  component "Fila de tarefas\n(Redis + Worker)" as Q
+  component "Servico de e-mail" as MAIL
+  component "Gerador de PDF" as PDF
+  component "Registo de logs" as LOG
+}
+
+SPA --> CTRL : HTTPS / JSON\n(API REST)
+UI -[hidden]- SPA
+CTRL --> MW
+CTRL --> REQ
+CTRL --> RES
+CTRL --> S1
+CTRL --> S2
+CTRL --> S3
+CTRL --> S4
+MW --> POL
+S1 --> ENT
+S1 --> IREPO
+S2 --> STR
+S2 --> ENT
+S3 --> ENT
+S4 --> IREPO
+S1 --> S5
+S2 --> S5
+S2 --> EV
+EV --> Q
+REPO ..|> IREPO : implementa
+REPO --> DB
+S5 --> LOG
+S3 --> PDF
+Q --> MAIL
+
+note right of L4
+  A camada de dominio nao depende
+  de nenhuma outra camada.
+  As dependencias sao invertidas
+  atraves das interfaces de
+  repositorio (DIP - SOLID).
+end note
+
+note bottom of L2
+  Regra de dependencia: 1 -> 2 -> 3 -> 4 <- 5
+  Nenhuma camada interior conhece
+  a camada que a invoca.
+end note
+@enduml

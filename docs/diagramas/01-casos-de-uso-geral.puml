@@ -1,0 +1,54 @@
+@startuml casos-de-uso-geral
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowColor #2C3E50
+skinparam ActorBorderColor #2C3E50
+skinparam UsecaseBorderColor #2C3E50
+skinparam UsecaseBackgroundColor #F8FAFC
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 13
+left to right direction
+title SGA - Visao global dos casos de uso
+
+actor "Estudante" as EST
+actor "Docente" as DOC
+actor "Coordenador\nde Curso" as COORD
+actor "Administrador" as ADM
+
+COORD --|> DOC
+
+rectangle "Sistema de Gestao Academica" {
+  usecase "Gerir acesso\ne utilizadores" as G1
+  usecase "Gerir cadastros\nestruturantes" as G2
+  usecase "Gerir inscricoes" as G3
+  usecase "Gerir avaliacoes\ne notas" as G4
+  usecase "Consultar\naproveitamento" as G5
+  usecase "Emitir e homologar\npautas" as G6
+  usecase "Gerar relatorios\ne paineis" as G7
+  usecase "Consultar\nauditoria" as G8
+}
+
+EST --> G3
+EST --> G5
+DOC --> G4
+DOC --> G6
+COORD --> G2
+COORD --> G6
+COORD --> G7
+COORD --> G5
+ADM --> G1
+ADM --> G2
+ADM --> G3
+ADM --> G7
+ADM --> G8
+
+note bottom of G4
+  Detalhado no diagrama
+  "Nucleo Academico"
+end note
+note bottom of G2
+  Detalhado no diagrama
+  "Administracao"
+end note
+@enduml
