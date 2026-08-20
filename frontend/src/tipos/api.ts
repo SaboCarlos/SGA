@@ -59,3 +59,207 @@ export interface ErroNegocioApi {
   mensagem: string
   campo?: string
 }
+
+export interface ColeccaoPaginada<T> {
+  pagina: number
+  por_pagina: number
+  total: number
+  total_paginas: number
+  dados: T[]
+}
+
+export type EstadoEstudante = 'ACTIVO' | 'SUSPENSO' | 'TRANSFERIDO' | 'GRADUADO' | 'DESISTENTE'
+
+export interface Curso {
+  id: number
+  codigo: string
+  designacao: string
+  grau: string
+  duracao_anos: number
+  total_creditos: number
+  regulamento_avaliacao: string
+}
+
+export interface Estudante {
+  id: string
+  numero_estudante: string
+  nome_completo: string
+  curso: Curso | null
+  ano_ingresso: number
+  estado: EstadoEstudante
+}
+
+export interface Disciplina {
+  id: number
+  codigo: string
+  designacao: string
+  creditos: number
+  carga_horaria: number
+}
+
+export interface ItemPlano {
+  id: number
+  disciplina_id: number
+  disciplina: string
+  ano_curricular: number
+  semestre: number
+  tipo: 'OBRIGATORIA' | 'OPCIONAL'
+}
+
+export interface Docente {
+  id: string
+  codigo: string
+  nome_completo: string
+  grau_academico: string | null
+  categoria: string | null
+  area_cientifica: string | null
+  activo: boolean
+}
+
+export interface InscritoTurma {
+  inscricao_id: string
+  numero_estudante: string
+  nome_completo: string
+  nota_frequencia: number | null
+  situacao_frequencia: SituacaoFrequencia
+}
+
+export type TipoAvaliacao = 'TESTE' | 'TRABALHO' | 'PRATICA' | 'EXAME'
+export type EstadoAvaliacao = 'RASCUNHO' | 'ACTIVA' | 'PUBLICADA'
+
+export interface Avaliacao {
+  id: number
+  designacao: string
+  tipo: TipoAvaliacao
+  peso: number
+  data_prevista: string | null
+  estado: EstadoAvaliacao
+}
+
+export interface EstruturaAvaliacao {
+  soma_pesos: number
+  estrutura_valida: boolean
+  avaliacoes: Avaliacao[]
+}
+
+export interface Classificacao {
+  id: string
+  inscricao_id: string
+  numero_estudante: string
+  nome_completo: string
+  valor: number | null
+  faltou: boolean
+  estado: 'RASCUNHO' | 'PUBLICADA' | 'RECTIFICADA'
+}
+
+export interface ResumoPublicacao {
+  publicadas: number
+  dispensados: number
+  admitidos_exame: number
+  reprovados_frequencia: number
+  media_turma: number | null
+}
+
+export type EstadoPedido = 'PENDENTE' | 'APROVADO' | 'RECUSADO'
+
+export interface PedidoRectificacao {
+  id: string
+  classificacao_id: string
+  estudante: string
+  valor_anterior: number
+  valor_novo: number
+  justificacao: string
+  estado: EstadoPedido
+  solicitado_por: string | null
+  decidido_por: string | null
+  decidido_em: string | null
+}
+
+export interface Pauta {
+  id: number
+  numero: string
+  versao: number
+  estado: 'PROVISORIA' | 'EMITIDA' | 'HOMOLOGADA'
+  turma: { id: number; designacao: string; disciplina?: string }
+  emitida_em: string | null
+  total_inscritos: number
+  total_aprovados: number
+  taxa_aprovacao: number
+  linhas: InscritoTurma[]
+}
+
+export interface LinhaRelatorioDisciplina {
+  codigo: string
+  disciplina: string
+  ano_lectivo: string
+  semestre: number
+  inscritos: number
+  aprovados: number
+  reprovados: number
+  taxa_aprovacao: number
+  media_disciplina: number | null
+}
+
+export type EstadoAnoLectivo = 'PLANEADO' | 'ACTIVO' | 'ENCERRADO'
+
+export interface AnoLectivo {
+  id: number
+  designacao: string
+  data_inicio: string
+  data_fim: string
+  estado: EstadoAnoLectivo
+}
+
+export interface PeriodoLectivo {
+  id: number
+  semestre: number
+  inscricao_inicio: string
+  inscricao_fim: string
+  notas_inicio: string
+  notas_fim: string
+  inscricoes_abertas: boolean
+}
+
+export interface Notificacao {
+  id: string
+  tipo: string
+  titulo: string
+  mensagem: string | null
+  criada_em: string
+  lida_em: string | null
+}
+
+export interface Aproveitamento {
+  estudante: string
+  numero_estudante: string
+  curso: string
+  media_ponderada: number | null
+  creditos_obtidos: number
+  creditos_curso: number
+  percentagem_conclusao: number
+  anos_lectivos: Array<{
+    ano_lectivo: string
+    semestre: number
+    disciplinas: Array<{
+      id: string
+      disciplina: string
+      codigo: string
+      nota_frequencia: number | null
+      situacao_frequencia: SituacaoFrequencia
+      classificacao_final: number | null
+      situacao_final: SituacaoFinal
+    }>
+  }>
+}
+
+export interface RegistoAuditoria {
+  id: string
+  utilizador: string | null
+  acao: string
+  entidade: string
+  entidade_id: string
+  valor_anterior: Record<string, unknown> | null
+  valor_novo: Record<string, unknown> | null
+  justificacao: string | null
+  criado_em: string
+}

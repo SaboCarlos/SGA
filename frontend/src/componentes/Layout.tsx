@@ -7,13 +7,20 @@ interface ItemNav {
   perfis?: string[]
 }
 
-// Apenas rotas com ecrã construído. As restantes (aproveitamento, turmas do
-// docente, rectificações, estudantes, relatórios) são os próximos itens do
-// backlog (Fase 1, secção 8.2) — não são aqui simuladas como já existentes,
-// para a navegação nunca apontar a um ecrã que ainda não existe.
 const ITENS_NAV: ItemNav[] = [
   { rota: '/painel', rotulo: 'Painel' },
   { rota: '/inscricoes', rotulo: 'Inscrições', perfis: ['ESTUDANTE'] },
+  { rota: '/estudantes', rotulo: 'Estudantes', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
+  { rota: '/docentes', rotulo: 'Docentes', perfis: ['ADMINISTRADOR'] },
+  { rota: '/cursos', rotulo: 'Cursos', perfis: ['ADMINISTRADOR'] },
+  { rota: '/disciplinas', rotulo: 'Disciplinas', perfis: ['ADMINISTRADOR'] },
+  { rota: '/turmas', rotulo: 'Turmas', perfis: ['ADMINISTRADOR', 'COORDENADOR', 'DOCENTE'] },
+  { rota: '/ano-lectivo', rotulo: 'Ano lectivo', perfis: ['ADMINISTRADOR'] },
+  { rota: '/rectificacoes', rotulo: 'Rectificações' },
+  { rota: '/relatorios', rotulo: 'Relatórios', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
+  { rota: '/notificacoes', rotulo: 'Notificações' },
+  { rota: '/auditoria', rotulo: 'Auditoria', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
+  { rota: '/utilizadores', rotulo: 'Utilizadores', perfis: ['ADMINISTRADOR'] },
 ]
 
 /**

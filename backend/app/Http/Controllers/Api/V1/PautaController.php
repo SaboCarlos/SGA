@@ -64,6 +64,7 @@ class PautaController extends Controller
         );
 
         return [
+            'id' => $pauta->id,
             'numero' => $pauta->numero,
             'versao' => $pauta->versao,
             'estado' => $pauta->estado,

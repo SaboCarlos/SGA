@@ -53,6 +53,30 @@ async function pedido<T>(caminho: string, opcoes: RequestInit = {}): Promise<T> 
   return corpo as T
 }
 
+/**
+ * Para respostas binárias (PDF/CSV de pautas e relatórios), que pedido<T>
+ * não serve — força sempre .json() no corpo da resposta. Abre o ficheiro
+ * numa nova aba em vez de o gravar directamente: o sandbox do browser aqui
+ * bloqueia downloads iniciados por script, mas uma aba nova com um blob URL
+ * continua a permitir ao utilizador guardar a partir do visualizador nativo.
+ */
+async function baixar(caminho: string): Promise<void> {
+  const token = obterToken()
+
+  const resposta = await fetch(`${BASE_URL}${caminho}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+
+  if (!resposta.ok) {
+    throw new ErroApi('Não foi possível obter o ficheiro.', resposta.status)
+  }
+
+  const blob = await resposta.blob()
+  const url = URL.createObjectURL(blob)
+  window.open(url, '_blank')
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
+}
+
 export const api = {
   get: <T>(caminho: string) => pedido<T>(caminho),
   post: <T>(caminho: string, dados?: unknown) =>
@@ -62,4 +86,5 @@ export const api = {
   patch: <T>(caminho: string, dados?: unknown) =>
     pedido<T>(caminho, { method: 'PATCH', body: dados ? JSON.stringify(dados) : undefined }),
   delete: <T>(caminho: string) => pedido<T>(caminho, { method: 'DELETE' }),
+  baixar,
 }
