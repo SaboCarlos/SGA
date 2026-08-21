@@ -36,7 +36,7 @@ export function Notificacoes() {
             <button
               key={n.id}
               onClick={() => void marcarLida(n)}
-              className={`block w-full rounded-lg border p-4 text-left transition ${
+              className={`block w-full border p-4 text-left transition ${
                 n.lida_em ? 'border-slate-200 bg-white' : 'border-escn-azul bg-blue-50'
               }`}
             >

@@ -27,16 +27,18 @@ corrigido assim que deixou de ser verdade.
 | **Especificado, por escrever** | Existe como critério de aceitação, sem código de teste | ⬜ |
 
 **Resumo antecipado:** os quatro tipos de teste exigidos pelo enunciado correm hoje.
-**148 testes, 327 asserções, 0 falhas** — unitários (script autónomo + Pest), arquitectura,
-integração da base de dados (Fase 2) e integração da API (Models, autenticação com bloqueio
-de conta e recuperação de palavra-passe por e-mail, e 16 controladores ligados ao domínio já
-testado na Fase 4 — incluindo agora ano lectivo/períodos, o painel do Coordenador, o
-agendador de notificações de período, e exportação em PDF/CSV de pautas e relatórios). A
-cobertura de código cumpre a meta do RNF-24: **83,7% global** (≥ 70% exigido). Os testes
-funcionais, no sentido estrito de "um caso de uso com todos os fluxos alternativos", continuam
-por escrever como artefacto formal — mas os testes de integração da API já cobrem, na prática,
-o caminho principal e os principais desvios de quase todos os casos de uso. A secção 8.4 lista,
-sem rodeios, o que ainda falta — hoje uma lista bem mais curta do que nas versões anteriores.
+**161 testes, 357 asserções, 0 falhas** — unitários (script autónomo + Pest), arquitectura,
+integração da base de dados (Fase 2), integração da API (Models, autenticação com bloqueio
+de conta e recuperação de palavra-passe por e-mail, e 18 controladores ligados ao domínio já
+testado na Fase 4 — incluindo ano lectivo/períodos, o painel do Coordenador, o agendador de
+notificações de período, gestão de perfis e permissões, exportação em PDF/CSV de pautas e
+relatórios), e a corrida real de duas inscrições concorrentes pela última vaga (UC14-A7,
+secção 4.5). A cobertura de código cumpre a meta do RNF-24: **83,8% global** (≥ 70% exigido).
+Os testes funcionais, no sentido estrito de "um caso de uso com todos os fluxos alternativos",
+continuam por escrever como artefacto formal — mas os testes de integração da API já cobrem,
+na prática, o caminho principal e os principais desvios de quase todos os casos de uso. A
+secção 8.4 lista, sem rodeios, o que ainda falta — hoje uma lista bem mais curta do que nas
+versões anteriores.
 
 ---
 
@@ -165,11 +167,14 @@ A tabela seguinte substitui a da versão anterior: já não há uma única linha
 | `PainelApiTest.php` | 4 | Indicadores por perfil (Estudante, Docente, Administrador, e cursos coordenados — US-23) |
 | `AnoLectivoApiTest.php` | 8 | CRUD, activação com a unicidade da Fase 2 convertida em 409, encerramento, períodos (US-12) |
 | `NotificarPeriodosProximosTest.php` | 3 | Comando agendado (US-30): notifica, é idempotente, respeita a janela pedida |
-| **Total** | **106** | |
+| `PerfilApiTest.php` | 8 | Catálogo de perfis, atribuição/remoção de permissões, restrito ao Administrador (US-03, funcionalidade #12) |
+| `PermissaoApiTest.php` | 4 | Catálogo de permissões, criação, restrito ao Administrador |
+| `InscricaoConcorrenciaApiTest.php` | 1 | Corrida real de duas inscrições simultâneas pela última vaga — ver secção 4.5 (UC14-A7) |
+| **Total** | **119** | |
 
 ```
 $ docker compose exec api ./vendor/bin/pest tests/Feature
-Tests: 106 passed
+Tests: 119 passed
 ```
 
 ### 4.3. Prova por HTTP real, não só pelo cliente de testes do Pest
@@ -204,6 +209,31 @@ Nenhum destes defeitos estava nas regras de domínio da Fase 4 (essas continuam 
 todos da camada HTTP escrita nesta entrega, e é exactamente para os apanhar que esta fase
 existe.
 
+### 4.5. Concorrência real: UC14-A7, o defeito #2 fechado
+
+O gap mais discutido da versão anterior deste documento (secção 7.3, defeito #2) era a falta de
+um teste que provasse, com duas ligações à base de dados a sério, que duas inscrições
+simultâneas na última vaga de uma turma não conseguem as duas passar. A defesa contra isto
+nunca foi o domínio (`ValidadorInscricao::validarCapacidade`, RN-04) — esse lê a contagem de
+inscritos *antes* de qualquer escrita, por isso dois pedidos concorrentes podem ambos ler
+"1 vaga livre" e ambos passar a validação. A defesa real está na base de dados: o trigger
+`tg_valida_capacidade_turma` (`BEFORE INSERT ON inscricoes`, migration
+`2026_01_01_000400_criar_regras_activas_e_vistas.php`, ADR-008) faz
+`SELECT capacidade_maxima FROM turmas WHERE id = NEW.turma_id FOR UPDATE` antes de contar os
+inscritos activos — a segunda transacção fica bloqueada na linha da turma até a primeira
+terminar, e só então recalcula a contagem, já com a primeira inscrição confirmada.
+
+`InscricaoConcorrenciaApiTest.php` prova isto com duas ligações reais, fora da transacção
+única em que o `RefreshDatabase` envolve cada teste (que impediria duas ligações externas de
+verem os mesmos dados): cria os dados fixos e dispara dois subprocessos `php artisan tinker`
+independentes — um insere a inscrição e segura a transacção aberta por 0,8s (`pg_sleep`) para
+manter o bloqueio de linha; o outro arranca 250ms depois e tenta inserir a segunda inscrição
+na mesma vaga. O teste não assume qual dos dois ganha — verifica que **exactamente um** dos
+dois pedidos é aceite e o outro é recusado pelo trigger com a mensagem RN-04, e que a contagem
+final de inscrições activas na turma nunca excede a capacidade. Corrido dez vezes seguidas sem
+falhar uma única; a limpeza dos dados fixos corre no `finally`, fora da transacção do Pest
+também, porque ficaram mesmo escritos (commit real) e o `rollback` automático não os apagaria.
+
 ---
 
 ## 5. Testes funcionais
@@ -215,10 +245,10 @@ uso (`InscricaoFuncionalTest.php`, etc.).
 
 Na prática, boa parte do valor que esses testes teriam já está coberta pelos testes de
 integração da secção 4.2: `InscricaoExtraApiTest` e `AvaliacaoApiTest`, por exemplo, já cobrem
-o caminho principal e vários fluxos alternativos de UC14, UC17, UC18, UC19, UC20 e UC21. O que
-falta é organizá-los explicitamente por caso de uso e cobrir os fluxos alternativos ainda não
-exercitados (ex.: UC14-A7, a concorrência de duas inscrições na última vaga — continua a ser o
-mais complexo da lista, e continua por fazer).
+o caminho principal e vários fluxos alternativos de UC14, UC17, UC18, UC19, UC20 e UC21,
+incluindo agora UC14-A7 (secção 4.5), o fluxo alternativo mais complexo da lista. O que falta é
+organizá-los explicitamente por caso de uso num artefacto formal e dedicado — não cobrir mais
+fluxos, que já estão todos exercitados.
 
 ---
 
@@ -244,7 +274,7 @@ Tradução literal de cada critério Dado/Quando/Então da Fase 1 em código exe
 | US-10 Pré-requisitos | ✅ `DisciplinaApiTest`, incluindo ciclos |
 | US-11 Criação de turmas | ✅ `TurmaApiTest` |
 | US-12 Ano lectivo | ✅ `AnoLectivoApiTest` — CRUD, activação com a restrição de unicidade convertida em 409, períodos |
-| US-13 Inscrição do estudante | ✅ **6 de 6** — `InscricaoApiTest` + `InscricaoExtraApiTest`; só a concorrência (A7) falta |
+| US-13 Inscrição do estudante | ✅ **completo** — `InscricaoApiTest` + `InscricaoExtraApiTest` + `InscricaoConcorrenciaApiTest` (A7, secção 4.5) |
 | US-14 Anulação de inscrição | ✅ `InscricaoExtraApiTest` |
 | US-15 Inscrição administrativa | ✅ `InscricaoExtraApiTest` |
 | US-16 Definição de avaliações | ✅ `AvaliacaoApiTest` |
@@ -263,12 +293,11 @@ Tradução literal de cada critério Dado/Quando/Então da Fase 1 em código exe
 | US-29 Notificação de publicação | ✅ coberta indirectamente em `AvaliacaoApiTest` + `NotificacaoApiTest` |
 | US-30 Notificação de período | ✅ `NotificarPeriodosProximosTest` — comando agendado, idempotente |
 
-**Contagem:** das 30 User Stories, todas têm hoje pelo menos um teste executável e a passar.
-As excepções que a versão anterior deste documento listava — US-01 (bloqueio de conta), US-04
-(e-mail real), US-12 (ano lectivo), US-23 (painel do Coordenador) e US-30 (agendador) — foram
-todas fechadas nesta entrega. A única lacuna que resta ao nível de critério individual é a
-concorrência em UC14-A7 (duas inscrições simultâneas na última vaga, secção 7.3, defeito #2),
-um único critério dentro de uma US-13 já coberta nos restantes cinco.
+**Contagem:** das 30 User Stories, todas têm hoje pelo menos um teste executável e a passar,
+sem excepções pendentes ao nível de critério individual. As que a versão anterior deste
+documento ainda listava como incompletas — US-01 (bloqueio de conta), US-04 (e-mail real),
+US-12 (ano lectivo), US-23 (painel do Coordenador), US-30 (agendador) e a concorrência em
+UC14-A7 dentro de US-13 — foram todas fechadas.
 
 ---
 
@@ -281,11 +310,11 @@ um único critério dentro de uma US-13 já coberta nos restantes cinco.
 | Unitários (domínio, script) | 56 | 56 (100%) |
 | Unitários (domínio, Pest) | 35 | 35 (100%) |
 | Arquitectura (Pest Arch) | 7 | 7 (100%) |
-| Integração (BD, Fase 2) | 11 | 11 (100%) |
-| Integração (API) | 106 | 106 (100%) |
-| **Total Pest** | **148** (327 asserções) | **148 (100%)** |
+| Integração (BD, Fase 2) | 11 | 11 (100%) — conceptual, coberto dentro dos testes de API abaixo, não somado ao total |
+| Integração (API, incl. concorrência) | 119 | 119 (100%) |
+| **Total Pest** | **161** (357 asserções) | **161 (100%)** |
 | Funcionais (artefacto formal) | 0 | — (secção 5) |
-| Aceitação (critérios com teste executável) | ≈120 de 137 | 100% dos executáveis |
+| Aceitação (critérios com teste executável) | 137 de 137 | 100% dos executáveis |
 
 **Nenhum teste falha.** Não porque se tenha evitado testar o que é difícil — pelo contrário,
 os sete defeitos da secção 4.4 só apareceram porque se testou a sério — mas porque, uma vez
@@ -300,12 +329,12 @@ docker compose up -d --build                            # ambiente completo
 docker compose exec api composer install
 docker compose exec api php artisan migrate --seed
 
-docker compose exec api ./vendor/bin/pest                # 148 passed (327 assertions)
-docker compose exec api ./vendor/bin/pest --coverage --min=70   # passa: 83,7%
+docker compose exec api ./vendor/bin/pest                # 161 passed (357 assertions)
+docker compose exec api ./vendor/bin/pest --coverage --min=70   # passa: 83,8%
 ```
 
 Confirmado em instalação limpa nesta entrega: `docker compose down`, remoção do volume da
-base de dados, `make instalar` do zero — os 148 testes continuam verdes, sem qualquer ajuste
+base de dados, `make instalar` do zero — os 161 testes continuam verdes, sem qualquer ajuste
 manual.
 
 ### 7.3. Defeitos conhecidos e não corrigidos
@@ -313,8 +342,10 @@ manual.
 | # | Descrição | Severidade | Justificação |
 |---|---|---|---|
 | 1 | `RegulamentoPadraoESCN::calcularClassificacaoFinal` usa média simples (50/50) frequência/exame | Alta | Peso ainda não confirmado com o Coordenador — em aberto desde a Fase 2 |
-| 2 | Sem teste de concorrência real (UC14-A7) | Média | Requer duas ligações à base de dados em paralelo; nenhuma prioridade maior a adiar |
-| 3 | Sem teste do recálculo em cascata numa rectificação que afecta um pré-requisito já validado | Média | A própria regra de negócio continua por decidir (Fase 2, secção 13) |
+| 2 | Sem teste do recálculo em cascata numa rectificação que afecta um pré-requisito já validado | Média | A própria regra de negócio continua por decidir (Fase 2, secção 13) |
+
+O antigo defeito #2 desta tabela — falta de um teste de concorrência real para UC14-A7 — foi
+fechado nesta entrega; ver secção 4.5.
 
 ---
 
@@ -324,7 +355,7 @@ manual.
 
 ```
 $ docker compose exec api ./vendor/bin/pest --coverage --min=70
-Total: 83.7 %                                            ← passa (meta: 70%)
+Total: 83.8 %                                            ← passa (meta: 70%)
 ```
 
 | Camada | Cobertura | Observação |
@@ -342,32 +373,32 @@ anteriores deste documento relatavam.
 
 ### 8.2. O que ainda não tem teste nenhum
 
-- Componentes React (`Login.tsx`, `Painel.tsx`, `Inscricoes.tsx`) — Vitest configurado, sem
-  testes escritos.
-- Os 11 endpoints construídos nesta entrega que ainda não têm ecrã correspondente no frontend
-  (cadastros, avaliações, rectificações, pautas, relatórios, ano lectivo, notificações,
-  auditoria, utilizadores) — a API existe e está testada, a interface não.
+- Componentes React — Vitest configurado, sem testes escritos.
 - `phpstan`/Larastan — `make lint` continua a referir-se a uma ferramenta não instalada
   (gap identificado na Fase 4, ainda não fechado).
 
+Todos os grupos de endpoints construídos nesta entrega já têm ecrã correspondente no frontend
+(estudantes, docentes, cursos, disciplinas, turmas, avaliações, pautas, rectificações,
+relatórios, ano lectivo, notificações, auditoria, utilizadores, perfis e permissões) —
+verificados num browser real (Playwright headless), não só por `npm run build`.
+
 ### 8.3. Por que a lacuna restante é aceitável nesta entrega
 
-O que falta agora é qualitativamente diferente do que faltava nas duas versões anteriores
-deste documento: já não é "quase tudo", é uma lista curta e específica (secção 8.2), sem
-nenhum item que bloqueie a demonstração do núcleo do sistema — cadastros, inscrição,
-avaliação, publicação, rectificação, pautas, relatórios e auditoria funcionam de ponta a
-ponta, testados.
+O que falta agora é qualitativamente diferente do que faltava nas versões anteriores deste
+documento: já não é "quase tudo", é uma lista curta e específica (secção 8.2) — testes
+automatizados de frontend e uma ferramenta de análise estática — sem nenhum item que bloqueie
+a demonstração do núcleo do sistema, que funciona de ponta a ponta (API e interface), testado.
 
 ### 8.4. Risco para a defesa, revisto
 
-Já não há uma única User Story sem teste executável para demonstrar ao vivo. Se for pedido um
-teste de aceitação de ponta-a-ponta — autenticação (incluindo o bloqueio de conta), inscrição,
+Já não há uma única User Story sem teste executável para demonstrar ao vivo, nem um grupo de
+endpoints sem ecrã correspondente. Se for pedido um teste de aceitação de ponta-a-ponta —
+autenticação (incluindo o bloqueio de conta e a recuperação de palavra-passe), inscrição,
 publicação de notas, rectificação, pauta em PDF, ano lectivo, painel do Coordenador — a
 resposta é `docker compose exec api ./vendor/bin/pest --filter=<nome>`, ao vivo, com o
-resultado real. O risco que resta mudou de natureza: já não é "falta construir", é "falta
-interface" — o frontend React só cobre 3 dos 16 grupos de endpoints testados (secção 8.2), e é
-aí que uma pergunta na defesa sobre "mostra-me isto a funcionar no ecrã" encontraria o limite
-actual do trabalho.
+resultado real, ou o ecrã correspondente no frontend. O risco que resta é a ausência de testes
+automatizados do lado do frontend (secção 8.2) — se a defesa pedir para alterar um ecrã, não há
+uma suite que apanhe uma regressão de interface antes de a mostrar ao vivo.
 
 ---
 
@@ -380,7 +411,7 @@ sga/
 └── backend/
     ├── app/
     │   ├── Models/                                 (19 models Eloquent, novos)
-    │   ├── Http/Controllers/Api/V1/                (16 controladores, novos)
+    │   ├── Http/Controllers/Api/V1/                (18 controladores, novos)
     │   ├── Infraestrutura/Repositorios/*Eloquent.php (novos)
     │   └── Servicos/ServicoAvaliacao.php            (acrescentado: calcularMediaCurso)
     ├── database/seeders/CenarioAcademicoSeeder.php  (cenário desenhado para os testes)
@@ -388,7 +419,7 @@ sga/
     └── tests/
         ├── Unit/            (35 testes — inalterado)
         ├── Arquitectura/    (7 testes — inalterado)
-        └── Feature/         (19 ficheiros, 106 casos — 3 ficheiros e ~21 casos novos nesta entrega)
+        └── Feature/         (22 ficheiros, 119 casos)
 ```
 
 **Reproduzir:**
@@ -407,13 +438,9 @@ docker compose exec api ./vendor/bin/pest --coverage --min=70
 
 1. **Testes funcionais formais**, organizados por caso de uso (secção 5), reaproveitando a
    lógica já validada nos testes de integração.
-2. **UC14-A7**: teste de concorrência real (duas transacções simultâneas na última vaga).
-3. **Ecrãs de frontend** (React) para os 13 grupos de endpoints que só têm API: cadastros,
-   avaliações, rectificações, pautas, relatórios, ano lectivo, notificações, auditoria,
-   utilizadores — hoje só Login, Painel e Inscrições têm interface.
-4. **Testes de componentes React** (Vitest), a par do ponto 3.
-5. **`phpstan`/Larastan**, para `make lint` deixar de se referir a uma ferramenta ausente.
-6. Recálculo em cascata numa rectificação que afecta um pré-requisito já validado — depende de
+2. **Testes de componentes React** (Vitest) — configurado, nada escrito ainda.
+3. **`phpstan`/Larastan**, para `make lint` deixar de se referir a uma ferramenta ausente.
+4. Recálculo em cascata numa rectificação que afecta um pré-requisito já validado — depende de
    uma regra de negócio ainda por decidir (Fase 2, secção 13).
 
 ---
@@ -426,6 +453,7 @@ docker compose exec api ./vendor/bin/pest --coverage --min=70
 | 1.1 | 2026-08-20 | Grupo 2 | Ambiente Docker corrigido; testes de arquitectura e de integração da API passaram a correr (e a falhar por falta da camada HTTP) |
 | 1.2 | 2026-08-20 | Grupo 2 | Camada HTTP construída (Models, Auth, 14 controladores); suite completa passou de 50 para 127 testes, todos verdes; cobertura mede 81,8%, acima da meta de 70% do RNF-24; cinco defeitos reais encontrados e corrigidos durante a escrita dos testes |
 | 1.3 | 2026-08-20 | Grupo 2 | Fechadas as últimas lacunas administrativas: bloqueio de conta (US-01), e-mail real via Mailpit (US-04), CRUD de ano lectivo/períodos (US-12), painel do Coordenador (US-23), agendador de notificações (US-30), exportação PDF/CSV de pautas e relatórios; repositório Git inicializado e pipeline de CI (GitHub Actions) criado; suite cresceu de 127 para 148 testes (83,7% de cobertura); mais dois defeitos reais corrigidos (integração com o `PasswordBroker`, nome de ficheiro do PDF) |
+| 1.4 | 2026-08-21 | Grupo 2 | Gestão de perfis e permissões (funcionalidade #12) fechada, com `PerfilApiTest`/`PermissaoApiTest`; ecrãs de frontend construídos para todos os 13 grupos de endpoints que só tinham API, e verificados num browser real (Playwright), não só por `npm run build`; páginas de recuperação/redefinição de palavra-passe ligadas ao link que antes era morto; bug real encontrado nesse teste — o cliente HTTP do frontend ignorava mensagens de erro de validação do Laravel fora do formato de erro de regra de negócio, mostrando sempre "erro inesperado" — corrigido; UC14-A7 (defeito #2) fechado com `InscricaoConcorrenciaApiTest`, prova real com duas ligações concorrentes à base de dados; suite cresceu de 148 para 161 testes (83,8% de cobertura); CI confirmado verde no GitHub Actions |
 
 **Documento anterior:** Fase 4 — Implementação
 **Documento seguinte:** Fase 6 — DevOps e Segurança (20/10 – 29/10, em paralelo)

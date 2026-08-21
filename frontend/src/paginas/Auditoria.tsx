@@ -30,13 +30,13 @@ export function Auditoria() {
         placeholder="Filtrar por entidade (ex.: classificacao, inscricao)…"
         value={entidade}
         onChange={(e) => setEntidade(e.target.value)}
-        className="mb-4 w-full max-w-sm rounded border border-slate-300 px-3 py-2 text-sm"
+        className="mb-4 w-full max-w-sm border border-slate-300 px-3 py-2 text-sm"
       />
 
       {registos === null && !erro && <p className="text-sm text-slate-500">A carregar…</p>}
 
       {registos && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>

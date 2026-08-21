@@ -34,26 +34,26 @@ export function Aproveitamento() {
       </p>
 
       <div className="mb-6 grid grid-cols-3 gap-4">
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="border border-slate-200 bg-white p-4">
           <p className="text-xs uppercase tracking-wide text-slate-400">Média ponderada</p>
           <p className="mt-1 text-2xl font-semibold text-escn-azul">
             {dados.media_ponderada ?? '—'}
           </p>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="border border-slate-200 bg-white p-4">
           <p className="text-xs uppercase tracking-wide text-slate-400">Créditos obtidos</p>
           <p className="mt-1 text-2xl font-semibold text-escn-azul">
             {dados.creditos_obtidos} / {dados.creditos_curso}
           </p>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="border border-slate-200 bg-white p-4">
           <p className="text-xs uppercase tracking-wide text-slate-400">Conclusão</p>
           <p className="mt-1 text-2xl font-semibold text-escn-azul">{dados.percentagem_conclusao}%</p>
         </div>
       </div>
 
       {dados.anos_lectivos.map((ano) => (
-        <div key={`${ano.ano_lectivo}-${ano.semestre}`} className="mb-4 overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div key={`${ano.ano_lectivo}-${ano.semestre}`} className="mb-4 overflow-x-auto border border-slate-200 bg-white">
           <div className="border-b border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700">
             {ano.ano_lectivo} — Semestre {ano.semestre}
           </div>

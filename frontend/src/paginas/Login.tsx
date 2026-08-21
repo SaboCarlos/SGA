@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ErroApi } from '@/servicos/api'
 import { useAutenticacao } from '@/contextos/AutenticacaoContexto'
 
@@ -43,7 +43,7 @@ export function Login() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <form
         onSubmit={submeter}
-        className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm"
+        className="w-full max-w-sm border border-slate-200 bg-white p-8"
       >
         <h1 className="mb-1 text-xl font-semibold text-escn-azul">
           Sistema de Gestão Académica
@@ -62,7 +62,7 @@ export function Login() {
           autoComplete="username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mb-4 w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-escn-azul focus:outline-none"
+          className="mb-4 w-full border border-slate-300 px-3 py-2 text-sm focus:border-escn-azul focus:outline-none"
         />
 
         <label className="mb-1 block text-sm font-medium text-slate-700" htmlFor="palavra-passe">
@@ -75,15 +75,15 @@ export function Login() {
           autoComplete="current-password"
           value={palavraPasse}
           onChange={(e) => setPalavraPasse(e.target.value)}
-          className="mb-2 w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-escn-azul focus:outline-none"
+          className="mb-2 w-full border border-slate-300 px-3 py-2 text-sm focus:border-escn-azul focus:outline-none"
         />
 
-        <a href="/recuperar-palavra-passe" className="mb-4 inline-block text-sm text-escn-azul hover:underline">
+        <Link to="/recuperar-palavra-passe" className="mb-4 inline-block text-sm text-escn-azul hover:underline">
           Esqueceu-se da palavra-passe?
-        </a>
+        </Link>
 
         {erro && (
-          <p role="alert" className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p role="alert" className="mb-4 bg-red-50 px-3 py-2 text-sm text-red-700">
             {erro}
           </p>
         )}
@@ -91,7 +91,7 @@ export function Login() {
         <button
           type="submit"
           disabled={aEnviar}
-          className="w-full rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white transition hover:bg-opacity-90 disabled:opacity-50"
+          className="w-full bg-escn-azul px-4 py-2 text-sm font-medium text-white transition hover:bg-opacity-90 disabled:opacity-50"
         >
           {aEnviar ? 'A autenticar…' : 'Entrar'}
         </button>

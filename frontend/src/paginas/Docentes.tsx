@@ -44,7 +44,7 @@ export function Docentes() {
         <h1 className="text-lg font-semibold text-slate-800">Docentes</h1>
         <button
           onClick={() => setAMostrarFormulario((v) => !v)}
-          className="rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+          className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
         >
           {aMostrarFormulario ? 'Cancelar' : 'Novo docente'}
         </button>
@@ -53,24 +53,24 @@ export function Docentes() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
           <input required placeholder="Nome completo" value={formulario.nome_completo}
             onChange={(e) => setFormulario({ ...formulario, nome_completo: e.target.value })}
-            className="col-span-2 rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="col-span-2 border border-slate-300 px-3 py-2 text-sm" />
           <input required type="email" placeholder="E-mail institucional" value={formulario.email}
             onChange={(e) => setFormulario({ ...formulario, email: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input required placeholder="Código (ex.: DOC003)" value={formulario.codigo}
             onChange={(e) => setFormulario({ ...formulario, codigo: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input placeholder="Grau académico" value={formulario.grau_academico}
             onChange={(e) => setFormulario({ ...formulario, grau_academico: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input placeholder="Categoria" value={formulario.categoria}
             onChange={(e) => setFormulario({ ...formulario, categoria: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <button type="submit" disabled={aSubmeter}
-            className="col-span-2 mt-2 rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50">
+            className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50">
             {aSubmeter ? 'A registar…' : 'Registar docente'}
           </button>
         </form>
@@ -79,7 +79,7 @@ export function Docentes() {
       {docentes === null && <p className="text-sm text-slate-500">A carregar…</p>}
 
       {docentes && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>

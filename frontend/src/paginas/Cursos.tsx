@@ -78,7 +78,7 @@ export function Cursos() {
         <h1 className="text-lg font-semibold text-slate-800">Cursos</h1>
         <button
           onClick={() => setAMostrarFormulario((v) => !v)}
-          className="rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+          className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
         >
           {aMostrarFormulario ? 'Cancelar' : 'Novo curso'}
         </button>
@@ -87,24 +87,24 @@ export function Cursos() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
           <input required placeholder="Código (ex.: PSIT)" value={formulario.codigo}
             onChange={(e) => setFormulario({ ...formulario, codigo: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input required placeholder="Grau" value={formulario.grau}
             onChange={(e) => setFormulario({ ...formulario, grau: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input required placeholder="Designação" value={formulario.designacao}
             onChange={(e) => setFormulario({ ...formulario, designacao: e.target.value })}
-            className="col-span-2 rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="col-span-2 border border-slate-300 px-3 py-2 text-sm" />
           <input required type="number" placeholder="Duração (anos)" value={formulario.duracao_anos}
             onChange={(e) => setFormulario({ ...formulario, duracao_anos: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input required type="number" placeholder="Total de créditos" value={formulario.total_creditos}
             onChange={(e) => setFormulario({ ...formulario, total_creditos: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <button type="submit" disabled={aSubmeter}
-            className="col-span-2 mt-2 rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50">
+            className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50">
             {aSubmeter ? 'A criar…' : 'Criar curso'}
           </button>
         </form>
@@ -113,7 +113,7 @@ export function Cursos() {
       {cursos === null && <p className="text-sm text-slate-500">A carregar…</p>}
 
       {cursos && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>
@@ -142,7 +142,7 @@ export function Cursos() {
       )}
 
       {cursoAberto && (
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+        <div className="mt-6 border border-slate-200 bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-800">Plano curricular — {cursoAberto.designacao}</h2>
             <button onClick={() => setCursoAberto(null)} className="text-sm text-slate-500 hover:underline">Fechar</button>
@@ -177,19 +177,19 @@ export function Cursos() {
           <form onSubmit={acrescentarAoPlano} className="flex flex-wrap items-end gap-2">
             <select required value={novoItem.disciplina_id}
               onChange={(e) => setNovoItem({ ...novoItem, disciplina_id: e.target.value })}
-              className="rounded border border-slate-300 px-3 py-2 text-sm">
+              className="border border-slate-300 px-3 py-2 text-sm">
               <option value="" disabled>Disciplina…</option>
               {disciplinas.map((d) => <option key={d.id} value={d.id}>{d.codigo} — {d.designacao}</option>)}
             </select>
             <input required type="number" min={1} placeholder="Ano" value={novoItem.ano_curricular}
               onChange={(e) => setNovoItem({ ...novoItem, ano_curricular: e.target.value })}
-              className="w-20 rounded border border-slate-300 px-3 py-2 text-sm" />
+              className="w-20 border border-slate-300 px-3 py-2 text-sm" />
             <select value={novoItem.semestre} onChange={(e) => setNovoItem({ ...novoItem, semestre: e.target.value })}
-              className="rounded border border-slate-300 px-3 py-2 text-sm">
+              className="border border-slate-300 px-3 py-2 text-sm">
               <option value="1">Semestre 1</option>
               <option value="2">Semestre 2</option>
             </select>
-            <button type="submit" className="rounded bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
+            <button type="submit" className="bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
               Acrescentar
             </button>
           </form>

@@ -58,7 +58,7 @@ export function Utilizadores() {
         <h1 className="text-lg font-semibold text-slate-800">Utilizadores</h1>
         <button
           onClick={() => setAMostrarFormulario((v) => !v)}
-          className="rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+          className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
         >
           {aMostrarFormulario ? 'Cancelar' : 'Novo utilizador'}
         </button>
@@ -67,16 +67,16 @@ export function Utilizadores() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
           <input required placeholder="Nome completo" value={formulario.nome}
             onChange={(e) => setFormulario({ ...formulario, nome: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input required type="email" placeholder="E-mail" value={formulario.email}
             onChange={(e) => setFormulario({ ...formulario, email: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input required type="password" minLength={8} placeholder="Palavra-passe inicial" value={formulario.palavra_passe}
             onChange={(e) => setFormulario({ ...formulario, palavra_passe: e.target.value })}
-            className="col-span-2 rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="col-span-2 border border-slate-300 px-3 py-2 text-sm" />
           <div className="col-span-2 flex gap-4">
             {PERFIS_DISPONIVEIS.map((p) => (
               <label key={p} className="flex items-center gap-1.5 text-sm text-slate-700">
@@ -85,7 +85,7 @@ export function Utilizadores() {
               </label>
             ))}
           </div>
-          <button type="submit" className="col-span-2 mt-2 rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90">
+          <button type="submit" className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90">
             Criar utilizador
           </button>
         </form>
@@ -94,7 +94,7 @@ export function Utilizadores() {
       {utilizadores === null && !erro && <p className="text-sm text-slate-500">A carregar…</p>}
 
       {utilizadores && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>

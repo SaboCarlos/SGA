@@ -1,4 +1,4 @@
-.PHONY: ajuda arrancar parar instalar migrar seed testes cobertura lint dominio pauta-limpa
+.PHONY: ajuda arrancar parar instalar migrar seed testes cobertura lint dominio pauta-limpa testes-frontend
 
 ajuda:            ## Lista os comandos disponiveis
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | sed 's/:.*##/\t/'
@@ -34,9 +34,13 @@ testes:           ## Suite completa (unitarios, integracao, arquitectura)
 cobertura:        ## Relatorio de cobertura (minimo 70% global, 90% no dominio)
 	docker compose exec api ./vendor/bin/pest --coverage --min=70
 
-lint:             ## Estilo de codigo e analise estatica
+lint:             ## Estilo de codigo e analise estatica (backend + frontend)
 	docker compose exec api ./vendor/bin/pint --test
 	docker compose exec api ./vendor/bin/phpstan analyse --memory-limit=512M
+	cd frontend && npm run lint
+
+testes-frontend:  ## Suite Vitest do frontend
+	cd frontend && npm test
 
 dominio:          ## Verificacao das regras de dominio sem dependencias
 	php verificar-dominio.php

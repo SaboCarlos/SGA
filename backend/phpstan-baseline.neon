@@ -1,0 +1,583 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Cannot call method toDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: app/Console/Commands/NotificarPeriodosProximos.php
+
+		-
+			message: '#^Method App\\Dominio\\Regras\\Regulamento\\RegulamentoSemExame\:\:calcularClassificacaoFinal\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Dominio/Regras/Regulamento/RegulamentoSemExame.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\AnoLectivo\:\:\$estado\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AnoLectivoController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array, Closure\(App\\Models\\PeriodoLectivo\)\: array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/AnoLectivoController.php
+
+		-
+			message: '#^Parameter \#1 \$periodo of method App\\Http\\Controllers\\Api\\V1\\AnoLectivoController\:\:periodoParaResposta\(\) expects App\\Models\\PeriodoLectivo, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/AnoLectivoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$nome\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AuditoriaController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,App\\Models\\RegistoAuditoria\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/V1/AuditoriaController.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Http/Controllers/Api/V1/AuthController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Avaliacao\:\:\$estado\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Avaliacao\:\:\$regulamento_avaliacao\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Avaliacao\:\:\$tipo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Classificacao\:\:\$estado\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$estudante\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$inscricoes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:inscricoes\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Parameter \#1 \$avaliacao of method App\\Http\\Controllers\\Api\\V1\\AvaliacaoController\:\:avaliacaoParaResposta\(\) expects App\\Models\\Avaliacao, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array, Closure\(App\\Models\\Avaliacao\)\: array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int, inscricao_id\: string, numero_estudante\: mixed, nome_completo\: mixed, valor\: float\|null, faltou\: bool, estado\: mixed\}, Closure\(App\\Models\\Classificacao\)\: array\{id\: int, inscricao_id\: string, numero_estudante\: mixed, nome_completo\: mixed, valor\: float\|null, faltou\: bool, estado\: mixed\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Parameter \#2 \$turma of method App\\Http\\Controllers\\Api\\V1\\AvaliacaoController\:\:autorizarDocenteDaTurma\(\) expects App\\Models\\Turma, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>regulamento_avaliacao" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/V1/AvaliacaoController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ItemPlanoCurricular\:\:\$tipo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/CursoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$designacao\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/CursoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/CursoController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/V1/CursoController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int, disciplina_id\: int\<0, max\>, disciplina\: mixed, ano_curricular\: int\<0, max\>, semestre\: int\<0, max\>, tipo\: mixed\}, Closure\(App\\Models\\ItemPlanoCurricular\)\: array\{id\: int, disciplina_id\: int\<0, max\>, disciplina\: mixed, ano_curricular\: int\<0, max\>, semestre\: int\<0, max\>, tipo\: mixed\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/CursoController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array, Closure\(App\\Models\\Disciplina\)\: array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/DisciplinaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Estudante\:\:\$estado\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Inscricao\:\:\$situacao_final\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Inscricao\:\:\$situacao_frequencia\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$codigo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$coordenador_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$designacao\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$disciplina\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$periodoLectivo\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$regulamento_avaliacao\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$total_creditos\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Anonymous function should return array\{ano_lectivo\: string, semestre\: int, disciplinas\: Illuminate\\Support\\Collection\<int, array\{id\: int, disciplina\: mixed, codigo\: mixed, nota_frequencia\: float\|null, situacao_frequencia\: mixed, classificacao_final\: float\|null, situacao_final\: mixed\}\>\} but returns array\{ano_lectivo\: string, semestre\: int, disciplinas\: Illuminate\\Support\\Collection\<int, array\{id\: int, disciplina\: mixed, codigo\: mixed, nota_frequencia\: float\|null, situacao_frequencia\: mixed, classificacao_final\: float\|null, situacao_final\: mixed\}\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Inscricao\>\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Inscricao\>\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Inscricao\>, int\|string\)\: array\{ano_lectivo\: string, semestre\: int, disciplinas\: Illuminate\\Support\\Collection\<int, array\{id\: int, disciplina\: mixed, codigo\: mixed, nota_frequencia\: float\|null, situacao_frequencia\: mixed, classificacao_final\: float\|null, situacao_final\: mixed\}\>\}, Closure\(mixed, mixed\)\: array\{ano_lectivo\: string, semestre\: int, disciplinas\: Illuminate\\Support\\Collection\<int, array\{id\: int, disciplina\: mixed, codigo\: mixed, nota_frequencia\: float\|null, situacao_frequencia\: mixed, classificacao_final\: float\|null, situacao_final\: mixed\}\>\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Inscricao\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Parameter \#1 \$estudanteId of method App\\Servicos\\ServicoAvaliacao\:\:calcularMediaCurso\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/EstudanteController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Inscricao\:\:\$estado\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Inscricao\:\:\$situacao_final\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Inscricao\:\:\$situacao_frequencia\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Estudante\>\|Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Estudante\>\|Illuminate\\Database\\Eloquent\\Model\:\:\$nome_completo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Estudante\>\|Illuminate\\Database\\Eloquent\\Model\:\:\$plano_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$anoLectivo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$carga_horaria\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$codigo\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$creditos\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$designacao\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$periodoLectivo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$plano_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$preRequisitos\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$semestre\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:inscricoesAbertas\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Turma\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Parameter \#1 \$turma of method App\\Http\\Controllers\\Api\\V1\\InscricaoController\:\:turmaParaResposta\(\) expects App\\Models\\Turma, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Parameter \#3 \$entidadeId of method App\\Servicos\\ServicoAuditoria\:\:registar\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/InscricaoController.php
+
+		-
+			message: '#^Call to function abort_unless\(\) with false and 403 will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Http/Controllers/Api/V1/NotificacaoController.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and int will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/Api/V1/NotificacaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$estado\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/PainelController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/PainelController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:inscricoes\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/PainelController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Pauta\:\:\$estado\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/PautaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$designacao\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/PautaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$estudante\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/PautaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/PautaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$nota_frequencia\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/PautaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$situacao_frequencia\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/PautaController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:inscricoes\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/PautaController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/V1/PautaController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\{id\: int, codigo\: string\}, Closure\(App\\Models\\Permissao\)\: array\{id\: int, codigo\: string\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/PerfilController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\PedidoRectificacao\:\:\$estado\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/RectificacaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$avaliacao\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/RectificacaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/RectificacaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$inscricao\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/RectificacaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$nome\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/RectificacaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$valor\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/RectificacaoController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$codigo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/TurmaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$designacao\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/TurmaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$estudante\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/TurmaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/TurmaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$nome_completo\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/TurmaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$nota_frequencia\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/TurmaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$situacao_frequencia\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/TurmaController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/V1/TurmaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$permissoes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UtilizadorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Inscricao\:\:\$creditos\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Infraestrutura/Repositorios/RepositorioInscricaoEloquent.php
+
+		-
+			message: '#^Method App\\Models\\Curso\:\:planoActivo\(\) should return App\\Models\\PlanoCurricular\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Curso.php
+
+		-
+			message: '#^Cannot call method toDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Models/PeriodoLectivo.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:flatMap\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: \(array\<mixed\>\|Illuminate\\Support\\Collection\<int\|string, mixed\>\), Closure\(App\\Models\\Perfil\)\: Illuminate\\Support\\Collection\<int\|string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Models/Utilizador.php

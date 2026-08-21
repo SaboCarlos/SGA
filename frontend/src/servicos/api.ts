@@ -43,8 +43,11 @@ async function pedido<T>(caminho: string, opcoes: RequestInit = {}): Promise<T> 
   const corpo = await resposta.json().catch(() => null)
 
   if (!resposta.ok) {
+    const primeiroErroDeValidacao = corpo?.errors && Object.values(corpo.errors)[0]
     throw new ErroApi(
-      corpo?.mensagem ?? 'Ocorreu um erro inesperado.',
+      corpo?.mensagem ??
+        (Array.isArray(primeiroErroDeValidacao) ? primeiroErroDeValidacao[0] : corpo?.message) ??
+        'Ocorreu um erro inesperado.',
       resposta.status,
       corpo?.codigo,
     )

@@ -59,7 +59,7 @@ export function Rectificacoes() {
         </div>
         <button
           onClick={() => setAMostrarFormulario((v) => !v)}
-          className="rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+          className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
         >
           {aMostrarFormulario ? 'Cancelar' : 'Solicitar rectificação'}
         </button>
@@ -68,18 +68,18 @@ export function Rectificacoes() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
           <input required placeholder="ID da classificação" value={formulario.classificacao_id}
             onChange={(e) => setFormulario({ ...formulario, classificacao_id: e.target.value })}
-            className="col-span-2 rounded border border-slate-300 px-3 py-2 text-sm font-mono" />
+            className="col-span-2 border border-slate-300 px-3 py-2 text-sm font-mono" />
           <input required type="number" min={0} max={20} step="0.1" placeholder="Valor novo"
             value={formulario.valor_novo}
             onChange={(e) => setFormulario({ ...formulario, valor_novo: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <textarea required minLength={20} placeholder="Justificação (mínimo 20 caracteres)" value={formulario.justificacao}
             onChange={(e) => setFormulario({ ...formulario, justificacao: e.target.value })}
-            className="col-span-2 rounded border border-slate-300 px-3 py-2 text-sm" rows={2} />
-          <button type="submit" className="col-span-2 mt-2 rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90">
+            className="col-span-2 border border-slate-300 px-3 py-2 text-sm" rows={2} />
+          <button type="submit" className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90">
             Solicitar
           </button>
         </form>
@@ -90,10 +90,10 @@ export function Rectificacoes() {
       {pedidos && (
         <div className="space-y-3">
           {pedidos.map((p) => (
-            <div key={p.id} className="rounded-lg border border-slate-200 bg-white p-4">
+            <div key={p.id} className="border border-slate-200 bg-white p-4">
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-sm font-medium text-slate-800">{p.estudante}</p>
-                <span className={`rounded px-2 py-0.5 text-xs ${
+                <span className={`px-2 py-0.5 text-xs ${
                   p.estado === 'PENDENTE' ? 'bg-amber-100 text-amber-700'
                   : p.estado === 'APROVADO' ? 'bg-green-100 text-green-700'
                   : 'bg-red-100 text-red-700'
@@ -110,12 +110,12 @@ export function Rectificacoes() {
                     placeholder="Motivo (obrigatório se recusar)"
                     value={motivos[p.id] ?? ''}
                     onChange={(e) => setMotivos({ ...motivos, [p.id]: e.target.value })}
-                    className="flex-1 rounded border border-slate-300 px-3 py-1.5 text-sm"
+                    className="flex-1 border border-slate-300 px-3 py-1.5 text-sm"
                   />
-                  <button onClick={() => void decidir(p, 'APROVAR')} className="rounded bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700">
+                  <button onClick={() => void decidir(p, 'APROVAR')} className="bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700">
                     Aprovar
                   </button>
-                  <button onClick={() => void decidir(p, 'RECUSAR')} className="rounded bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700">
+                  <button onClick={() => void decidir(p, 'RECUSAR')} className="bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700">
                     Recusar
                   </button>
                 </div>

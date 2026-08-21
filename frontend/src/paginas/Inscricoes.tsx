@@ -61,7 +61,7 @@ export function Inscricoes() {
     } catch (e: unknown) {
       if (e instanceof ErroApi && e.estado === 422) {
         // Corpo da resposta segue o esquema ErroNegocio (docs/openapi.yaml):
-        // inclui o código da regra (ex.: "RN-02") e a mensagem explicativa.
+        // inclui o código da regra (ex.:"RN-02") e a mensagem explicativa.
         setErro({ codigo: e.codigoRegra ?? '?', mensagem: e.message })
       } else {
         setErro('Não foi possível concluir a inscrição.')
@@ -73,7 +73,7 @@ export function Inscricoes() {
 
   if (comprovativo) {
     return (
-      <div className="max-w-lg rounded-lg border border-green-200 bg-green-50 p-6">
+      <div className="max-w-lg border border-green-200 bg-green-50 p-6">
         <h1 className="mb-2 text-lg font-semibold text-green-800">Inscrição confirmada</h1>
         <p className="mb-4 text-sm text-green-700">
           {comprovativo.ano_lectivo} · Semestre {comprovativo.semestre} ·{' '}
@@ -88,7 +88,7 @@ export function Inscricoes() {
         </ul>
         <button
           onClick={() => setComprovativo(null)}
-          className="rounded bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90"
+          className="bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90"
         >
           Voltar às inscrições
         </button>
@@ -105,7 +105,7 @@ export function Inscricoes() {
       </p>
 
       {erro && (
-        <div role="alert" className="mb-4 rounded bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div role="alert" className="mb-4 bg-red-50 px-4 py-3 text-sm text-red-700">
           {typeof erro === 'string' ? (
             erro
           ) : (
@@ -125,7 +125,7 @@ export function Inscricoes() {
       )}
 
       {turmas && turmas.length > 0 && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>
@@ -169,7 +169,7 @@ export function Inscricoes() {
       <button
         onClick={() => void submeter()}
         disabled={seleccionadas.size === 0 || aSubmeter}
-        className="mt-4 rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white transition hover:bg-opacity-90 disabled:opacity-50"
+        className="mt-4 bg-escn-azul px-4 py-2 text-sm font-medium text-white transition hover:bg-opacity-90 disabled:opacity-50"
       >
         {aSubmeter ? 'A inscrever…' : `Inscrever (${seleccionadas.size})`}
       </button>

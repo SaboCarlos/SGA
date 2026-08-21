@@ -74,7 +74,7 @@ export function Disciplinas() {
         <h1 className="text-lg font-semibold text-slate-800">Disciplinas</h1>
         <button
           onClick={() => setAMostrarFormulario((v) => !v)}
-          className="rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+          className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
         >
           {aMostrarFormulario ? 'Cancelar' : 'Nova disciplina'}
         </button>
@@ -83,21 +83,21 @@ export function Disciplinas() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
           <input required placeholder="Código (ex.: INF401)" value={formulario.codigo}
             onChange={(e) => setFormulario({ ...formulario, codigo: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input required placeholder="Designação" value={formulario.designacao}
             onChange={(e) => setFormulario({ ...formulario, designacao: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input required type="number" placeholder="Créditos" value={formulario.creditos}
             onChange={(e) => setFormulario({ ...formulario, creditos: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input required type="number" placeholder="Carga horária" value={formulario.carga_horaria}
             onChange={(e) => setFormulario({ ...formulario, carga_horaria: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <button type="submit" disabled={aSubmeter}
-            className="col-span-2 mt-2 rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50">
+            className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50">
             {aSubmeter ? 'A criar…' : 'Criar disciplina'}
           </button>
         </form>
@@ -106,7 +106,7 @@ export function Disciplinas() {
       {disciplinas === null && <p className="text-sm text-slate-500">A carregar…</p>}
 
       {disciplinas && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>
@@ -135,7 +135,7 @@ export function Disciplinas() {
       )}
 
       {aberta && (
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+        <div className="mt-6 border border-slate-200 bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-800">Pré-requisitos — {aberta.designacao}</h2>
             <button onClick={() => setAberta(null)} className="text-sm text-slate-500 hover:underline">Fechar</button>
@@ -150,13 +150,13 @@ export function Disciplinas() {
 
           <form onSubmit={definirPreRequisito} className="flex items-end gap-2">
             <select required value={novoPreRequisitoId} onChange={(e) => setNovoPreRequisitoId(e.target.value)}
-              className="rounded border border-slate-300 px-3 py-2 text-sm">
+              className="border border-slate-300 px-3 py-2 text-sm">
               <option value="" disabled>Disciplina exigida…</option>
               {disciplinas?.filter((d) => d.id !== aberta.id).map((d) => (
                 <option key={d.id} value={d.id}>{d.codigo} — {d.designacao}</option>
               ))}
             </select>
-            <button type="submit" className="rounded bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
+            <button type="submit" className="bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
               Definir
             </button>
           </form>

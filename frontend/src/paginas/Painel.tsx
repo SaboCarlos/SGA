@@ -30,7 +30,7 @@ export function Painel() {
       </p>
 
       {erro && (
-        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="bg-red-50 px-3 py-2 text-sm text-red-700">
           {erro}
         </p>
       )}
@@ -40,7 +40,7 @@ export function Painel() {
       {dados && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Object.entries(dados).map(([chave, valor]) => (
-            <div key={chave} className="rounded-lg border border-slate-200 bg-white p-4">
+            <div key={chave} className="border border-slate-200 bg-white p-4">
               <p className="text-xs uppercase tracking-wide text-slate-400">
                 {chave.replaceAll('_', ' ')}
               </p>

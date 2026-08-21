@@ -25,13 +25,13 @@ export function Relatorios() {
         <div className="flex gap-2">
           <button
             onClick={() => void api.baixar('/relatorios/aproveitamento-disciplina?formato=pdf')}
-            className="rounded border border-escn-azul px-4 py-2 text-sm text-escn-azul hover:bg-slate-50"
+            className="border border-escn-azul px-4 py-2 text-sm text-escn-azul hover:bg-slate-50"
           >
             PDF
           </button>
           <button
             onClick={() => void api.baixar('/relatorios/aproveitamento-disciplina?formato=csv')}
-            className="rounded border border-escn-azul px-4 py-2 text-sm text-escn-azul hover:bg-slate-50"
+            className="border border-escn-azul px-4 py-2 text-sm text-escn-azul hover:bg-slate-50"
           >
             CSV
           </button>
@@ -43,7 +43,7 @@ export function Relatorios() {
       {linhas === null && !erro && <p className="text-sm text-slate-500">A carregar…</p>}
 
       {linhas && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>

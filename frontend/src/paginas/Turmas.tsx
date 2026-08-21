@@ -69,7 +69,7 @@ export function Turmas() {
         {podeGerir && (
           <button
             onClick={() => setAMostrarFormulario((v) => !v)}
-            className="rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+            className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
           >
             {aMostrarFormulario ? 'Cancelar' : 'Nova turma'}
           </button>
@@ -79,33 +79,33 @@ export function Turmas() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
           <select required value={formulario.disciplina_id}
             onChange={(e) => setFormulario({ ...formulario, disciplina_id: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm">
+            className="border border-slate-300 px-3 py-2 text-sm">
             <option value="" disabled>Disciplina…</option>
             {disciplinas.map((d) => <option key={d.id} value={d.id}>{d.codigo} — {d.designacao}</option>)}
           </select>
           <select required value={formulario.periodo_lectivo_id}
             onChange={(e) => setFormulario({ ...formulario, periodo_lectivo_id: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm">
+            className="border border-slate-300 px-3 py-2 text-sm">
             <option value="" disabled>Período lectivo…</option>
             {periodos.map((p) => <option key={p.id} value={p.id}>Semestre {p.semestre}</option>)}
           </select>
           <select required value={formulario.docente_id}
             onChange={(e) => setFormulario({ ...formulario, docente_id: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm">
+            className="border border-slate-300 px-3 py-2 text-sm">
             <option value="" disabled>Docente…</option>
             {docentes.map((d) => <option key={d.id} value={d.id}>{d.nome_completo}</option>)}
           </select>
           <input required placeholder="Designação (ex.: A)" value={formulario.designacao}
             onChange={(e) => setFormulario({ ...formulario, designacao: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input required type="number" placeholder="Capacidade máxima" value={formulario.capacidade_maxima}
             onChange={(e) => setFormulario({ ...formulario, capacidade_maxima: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <button type="submit" disabled={aSubmeter}
-            className="col-span-2 mt-2 rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50">
+            className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50">
             {aSubmeter ? 'A criar…' : 'Criar turma'}
           </button>
         </form>
@@ -114,7 +114,7 @@ export function Turmas() {
       {turmas === null && <p className="text-sm text-slate-500">A carregar…</p>}
 
       {turmas && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>

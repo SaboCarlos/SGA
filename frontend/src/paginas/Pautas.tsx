@@ -49,7 +49,7 @@ export function Pautas() {
         <div className="flex gap-2">
           <button
             onClick={() => void api.baixar(`/turmas/${turmaId}/pauta?formato=pdf`)}
-            className="rounded border border-escn-azul px-4 py-2 text-sm text-escn-azul hover:bg-slate-50"
+            className="border border-escn-azul px-4 py-2 text-sm text-escn-azul hover:bg-slate-50"
           >
             Descarregar PDF
           </button>
@@ -57,7 +57,7 @@ export function Pautas() {
             <button
               onClick={() => void homologar()}
               disabled={aHomologar}
-              className="rounded bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90 disabled:opacity-50"
+              className="bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90 disabled:opacity-50"
             >
               {aHomologar ? 'A homologar…' : 'Homologar'}
             </button>
@@ -66,21 +66,21 @@ export function Pautas() {
       </div>
 
       <div className="mb-4 grid grid-cols-3 gap-4">
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="border border-slate-200 bg-white p-4">
           <p className="text-xs uppercase tracking-wide text-slate-400">Inscritos</p>
           <p className="mt-1 text-2xl font-semibold text-escn-azul">{pauta.total_inscritos}</p>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="border border-slate-200 bg-white p-4">
           <p className="text-xs uppercase tracking-wide text-slate-400">Aprovados</p>
           <p className="mt-1 text-2xl font-semibold text-escn-azul">{pauta.total_aprovados}</p>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="border border-slate-200 bg-white p-4">
           <p className="text-xs uppercase tracking-wide text-slate-400">Taxa de aprovação</p>
           <p className="mt-1 text-2xl font-semibold text-escn-azul">{pauta.taxa_aprovacao}%</p>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <div className="overflow-x-auto border border-slate-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>

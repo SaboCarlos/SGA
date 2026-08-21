@@ -115,20 +115,20 @@ export function Perfis() {
           </div>
 
           {aMostrarFormularioPerfil && (
-            <form onSubmit={criarPerfil} className="mb-3 space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+            <form onSubmit={criarPerfil} className="mb-3 space-y-2 border border-slate-200 bg-white p-3">
               <input required placeholder="Nome (ex.: AUDITOR)" value={novoPerfil.nome}
                 onChange={(e) => setNovoPerfil({ ...novoPerfil, nome: e.target.value.toUpperCase() })}
-                className="w-full rounded border border-slate-300 px-3 py-1.5 text-sm" />
+                className="w-full border border-slate-300 px-3 py-1.5 text-sm" />
               <input placeholder="Descrição" value={novoPerfil.descricao}
                 onChange={(e) => setNovoPerfil({ ...novoPerfil, descricao: e.target.value })}
-                className="w-full rounded border border-slate-300 px-3 py-1.5 text-sm" />
-              <button type="submit" className="w-full rounded bg-escn-azul px-3 py-1.5 text-sm text-white hover:bg-opacity-90">
+                className="w-full border border-slate-300 px-3 py-1.5 text-sm" />
+              <button type="submit" className="w-full bg-escn-azul px-3 py-1.5 text-sm text-white hover:bg-opacity-90">
                 Criar
               </button>
             </form>
           )}
 
-          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+          <div className="overflow-x-auto border border-slate-200 bg-white">
             {perfis === null && <p className="p-3 text-sm text-slate-500">A carregar…</p>}
             {perfis?.map((p) => (
               <button
@@ -154,20 +154,20 @@ export function Perfis() {
           </div>
 
           {aMostrarFormularioPermissao && (
-            <form onSubmit={criarPermissao} className="mb-3 space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+            <form onSubmit={criarPermissao} className="mb-3 space-y-2 border border-slate-200 bg-white p-3">
               <input required placeholder="Código (ex.: classificacao.publicar)" value={novaPermissao.codigo}
                 onChange={(e) => setNovaPermissao({ ...novaPermissao, codigo: e.target.value })}
-                className="w-full rounded border border-slate-300 px-3 py-1.5 text-sm font-mono" />
+                className="w-full border border-slate-300 px-3 py-1.5 text-sm font-mono" />
               <input placeholder="Descrição" value={novaPermissao.descricao}
                 onChange={(e) => setNovaPermissao({ ...novaPermissao, descricao: e.target.value })}
-                className="w-full rounded border border-slate-300 px-3 py-1.5 text-sm" />
-              <button type="submit" className="w-full rounded bg-escn-azul px-3 py-1.5 text-sm text-white hover:bg-opacity-90">
+                className="w-full border border-slate-300 px-3 py-1.5 text-sm" />
+              <button type="submit" className="w-full bg-escn-azul px-3 py-1.5 text-sm text-white hover:bg-opacity-90">
                 Criar
               </button>
             </form>
           )}
 
-          <ul className="overflow-hidden rounded-lg border border-slate-200 bg-white text-sm">
+          <ul className="overflow-x-auto border border-slate-200 bg-white text-sm">
             {permissoes.map((p) => (
               <li key={p.id} className="border-t border-slate-100 px-3 py-2 first:border-t-0">
                 <span className="font-mono text-xs text-slate-700">{p.codigo}</span>
@@ -180,7 +180,7 @@ export function Perfis() {
       </div>
 
       {aberto && (
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="border border-slate-200 bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-800">Permissões do perfil {aberto.nome}</h2>
             <button onClick={() => setAberto(null)} className="text-sm text-slate-500 hover:underline">Fechar</button>
@@ -190,7 +190,7 @@ export function Perfis() {
 
           <ul className="mb-4 space-y-1 text-sm">
             {aberto.permissoes.map((p) => (
-              <li key={p.id} className="flex items-center justify-between rounded bg-slate-50 px-3 py-1.5">
+              <li key={p.id} className="flex items-center justify-between bg-slate-50 px-3 py-1.5">
                 <span className="font-mono text-xs">{p.codigo}</span>
                 <button onClick={() => void retirar(p.id)} className="text-red-600 hover:underline">Retirar</button>
               </li>
@@ -200,11 +200,11 @@ export function Perfis() {
 
           <form onSubmit={atribuir} className="flex items-end gap-2">
             <select required value={novaPermissaoId} onChange={(e) => setNovaPermissaoId(e.target.value)}
-              className="flex-1 rounded border border-slate-300 px-3 py-2 text-sm">
+              className="flex-1 border border-slate-300 px-3 py-2 text-sm">
               <option value="" disabled>Permissão a atribuir…</option>
               {permissoesDisponiveis.map((p) => <option key={p.id} value={p.id}>{p.codigo}</option>)}
             </select>
-            <button type="submit" className="rounded bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
+            <button type="submit" className="bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
               Atribuir
             </button>
           </form>

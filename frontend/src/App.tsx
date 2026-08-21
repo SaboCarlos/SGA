@@ -3,6 +3,8 @@ import { ProvedorAutenticacao } from '@/contextos/AutenticacaoContexto'
 import { RotaProtegida } from '@/componentes/RotaProtegida'
 import { Layout } from '@/componentes/Layout'
 import { Login } from '@/paginas/Login'
+import { RecuperarPalavraPasse } from '@/paginas/RecuperarPalavraPasse'
+import { RedefinirPalavraPasse } from '@/paginas/RedefinirPalavraPasse'
 import { Painel } from '@/paginas/Painel'
 import { Inscricoes } from '@/paginas/Inscricoes'
 import { Estudantes } from '@/paginas/Estudantes'
@@ -35,6 +37,8 @@ export function App() {
       <ProvedorAutenticacao>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/recuperar-palavra-passe" element={<RecuperarPalavraPasse />} />
+          <Route path="/redefinir-palavra-passe" element={<RedefinirPalavraPasse />} />
 
           <Route element={<RotaProtegida />}>
             <Route element={<Layout />}>

@@ -76,7 +76,7 @@ export function AnoLectivo() {
         <h1 className="text-lg font-semibold text-slate-800">Ano lectivo</h1>
         <button
           onClick={() => setAMostrarFormulario((v) => !v)}
-          className="rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+          className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
         >
           {aMostrarFormulario ? 'Cancelar' : 'Novo ano lectivo'}
         </button>
@@ -85,17 +85,17 @@ export function AnoLectivo() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-3 gap-3 rounded-lg border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="mb-6 grid grid-cols-3 gap-3 border border-slate-200 bg-white p-4">
           <input required placeholder="Designação (ex.: 2027)" value={formulario.designacao}
             onChange={(e) => setFormulario({ ...formulario, designacao: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input required type="date" value={formulario.data_inicio}
             onChange={(e) => setFormulario({ ...formulario, data_inicio: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input required type="date" value={formulario.data_fim}
             onChange={(e) => setFormulario({ ...formulario, data_fim: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
-          <button type="submit" className="col-span-3 mt-2 rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90">
+            className="border border-slate-300 px-3 py-2 text-sm" />
+          <button type="submit" className="col-span-3 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90">
             Criar
           </button>
         </form>
@@ -104,7 +104,7 @@ export function AnoLectivo() {
       {anos === null && <p className="text-sm text-slate-500">A carregar…</p>}
 
       {anos && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>
@@ -137,7 +137,7 @@ export function AnoLectivo() {
       )}
 
       {aberto && (
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+        <div className="mt-6 border border-slate-200 bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-800">Períodos — {aberto.designacao}</h2>
             <button onClick={() => setAberto(null)} className="text-sm text-slate-500 hover:underline">Fechar</button>
@@ -169,23 +169,23 @@ export function AnoLectivo() {
 
           <form onSubmit={criarPeriodo} className="grid grid-cols-5 gap-2">
             <select value={novoPeriodo.semestre} onChange={(e) => setNovoPeriodo({ ...novoPeriodo, semestre: e.target.value })}
-              className="rounded border border-slate-300 px-2 py-1.5 text-sm">
+              className="border border-slate-300 px-2 py-1.5 text-sm">
               <option value="1">Sem. 1</option>
               <option value="2">Sem. 2</option>
             </select>
             <input required type="date" title="Início das inscrições" value={novoPeriodo.inscricao_inicio}
               onChange={(e) => setNovoPeriodo({ ...novoPeriodo, inscricao_inicio: e.target.value })}
-              className="rounded border border-slate-300 px-2 py-1.5 text-sm" />
+              className="border border-slate-300 px-2 py-1.5 text-sm" />
             <input required type="date" title="Fim das inscrições" value={novoPeriodo.inscricao_fim}
               onChange={(e) => setNovoPeriodo({ ...novoPeriodo, inscricao_fim: e.target.value })}
-              className="rounded border border-slate-300 px-2 py-1.5 text-sm" />
+              className="border border-slate-300 px-2 py-1.5 text-sm" />
             <input required type="date" title="Início do lançamento de notas" value={novoPeriodo.notas_inicio}
               onChange={(e) => setNovoPeriodo({ ...novoPeriodo, notas_inicio: e.target.value })}
-              className="rounded border border-slate-300 px-2 py-1.5 text-sm" />
+              className="border border-slate-300 px-2 py-1.5 text-sm" />
             <input required type="date" title="Fim do lançamento de notas" value={novoPeriodo.notas_fim}
               onChange={(e) => setNovoPeriodo({ ...novoPeriodo, notas_fim: e.target.value })}
-              className="rounded border border-slate-300 px-2 py-1.5 text-sm" />
-            <button type="submit" className="col-span-5 mt-1 rounded bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
+              className="border border-slate-300 px-2 py-1.5 text-sm" />
+            <button type="submit" className="col-span-5 mt-1 bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
               Criar período
             </button>
           </form>

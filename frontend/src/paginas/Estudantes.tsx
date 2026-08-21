@@ -71,7 +71,7 @@ export function Estudantes() {
         </div>
         <button
           onClick={() => setAMostrarFormulario((v) => !v)}
-          className="rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+          className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
         >
           {aMostrarFormulario ? 'Cancelar' : 'Novo estudante'}
         </button>
@@ -80,32 +80,32 @@ export function Estudantes() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
           <input
             required
             placeholder="Nome completo"
             value={formulario.nome_completo}
             onChange={(e) => setFormulario({ ...formulario, nome_completo: e.target.value })}
-            className="col-span-2 rounded border border-slate-300 px-3 py-2 text-sm"
+            className="col-span-2 border border-slate-300 px-3 py-2 text-sm"
           />
           <input
             required
             placeholder="Documento de identificação"
             value={formulario.documento_identificacao}
             onChange={(e) => setFormulario({ ...formulario, documento_identificacao: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm"
+            className="border border-slate-300 px-3 py-2 text-sm"
           />
           <input
             required
             type="date"
             value={formulario.data_nascimento}
             onChange={(e) => setFormulario({ ...formulario, data_nascimento: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm"
+            className="border border-slate-300 px-3 py-2 text-sm"
           />
           <select
             value={formulario.sexo}
             onChange={(e) => setFormulario({ ...formulario, sexo: e.target.value as 'MASCULINO' | 'FEMININO' })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm"
+            className="border border-slate-300 px-3 py-2 text-sm"
           >
             <option value="FEMININO">Feminino</option>
             <option value="MASCULINO">Masculino</option>
@@ -116,13 +116,13 @@ export function Estudantes() {
             placeholder="E-mail institucional"
             value={formulario.email}
             onChange={(e) => setFormulario({ ...formulario, email: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm"
+            className="border border-slate-300 px-3 py-2 text-sm"
           />
           <select
             required
             value={formulario.curso_id}
             onChange={(e) => setFormulario({ ...formulario, curso_id: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm"
+            className="border border-slate-300 px-3 py-2 text-sm"
           >
             <option value="" disabled>Curso…</option>
             {cursos.map((c) => (
@@ -135,12 +135,12 @@ export function Estudantes() {
             placeholder="Ano de ingresso"
             value={formulario.ano_ingresso}
             onChange={(e) => setFormulario({ ...formulario, ano_ingresso: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm"
+            className="border border-slate-300 px-3 py-2 text-sm"
           />
           <button
             type="submit"
             disabled={aSubmeter}
-            className="col-span-2 mt-2 rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50"
+            className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50"
           >
             {aSubmeter ? 'A registar…' : 'Registar estudante'}
           </button>
@@ -151,13 +151,13 @@ export function Estudantes() {
         placeholder="Pesquisar por nome ou número…"
         value={pesquisa}
         onChange={(e) => setPesquisa(e.target.value)}
-        className="mb-4 w-full max-w-sm rounded border border-slate-300 px-3 py-2 text-sm"
+        className="mb-4 w-full max-w-sm border border-slate-300 px-3 py-2 text-sm"
       />
 
       {estudantes === null && <p className="text-sm text-slate-500">A carregar…</p>}
 
       {estudantes && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>

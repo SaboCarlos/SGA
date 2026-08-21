@@ -11,7 +11,7 @@ const ESTILOS = {
 /** Caixa de aviso repetida em quase todos os ecrãs (erro de validação, erro de regra, confirmação). */
 export function Alerta({ tipo = 'erro', children }: Props) {
   return (
-    <div role="alert" className={`mb-4 rounded px-4 py-3 text-sm ${ESTILOS[tipo]}`}>
+    <div role="alert" className={`mb-4 px-4 py-3 text-sm ${ESTILOS[tipo]}`}>
       {children}
     </div>
   )

@@ -67,6 +67,10 @@ jobs:
         working-directory: backend
         run: ./vendor/bin/pint --test
 
+      - name: Análise estática (Larastan/PHPStan)
+        working-directory: backend
+        run: ./vendor/bin/phpstan analyse --memory-limit=512M
+
       - name: Testes de arquitectura, unitários e de integração, com cobertura
         working-directory: backend
         env:
@@ -74,7 +78,7 @@ jobs:
         run: ./vendor/bin/pest --coverage --min=70
 
   frontend:
-    name: Frontend — build de produção
+    name: Frontend — lint, testes e build de produção
     runs-on: ubuntu-latest
 
     steps:
@@ -90,6 +94,14 @@ jobs:
       - name: Instalar dependências
         working-directory: frontend
         run: npm ci
+
+      - name: Estilo de código (ESLint)
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Testes (Vitest)
+        working-directory: frontend
+        run: npm test
 
       - name: Build de produção
         working-directory: frontend

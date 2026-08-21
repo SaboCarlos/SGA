@@ -109,7 +109,7 @@ export function Avaliacoes() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {estrutura && (
-        <div className="mb-4 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3">
+        <div className="mb-4 flex items-center justify-between border border-slate-200 bg-white px-4 py-3">
           <p className="text-sm text-slate-600">
             Soma dos pesos: <strong>{estrutura.soma_pesos}%</strong>{' '}
             {estrutura.estrutura_valida ? (
@@ -118,19 +118,19 @@ export function Avaliacoes() {
               <span className="text-amber-600">— falta chegar aos 100%</span>
             )}
           </p>
-          <button onClick={() => setAMostrarFormulario((v) => !v)} className="rounded bg-escn-azul px-3 py-1.5 text-sm text-white hover:bg-opacity-90">
+          <button onClick={() => setAMostrarFormulario((v) => !v)} className="bg-escn-azul px-3 py-1.5 text-sm text-white hover:bg-opacity-90">
             {aMostrarFormulario ? 'Cancelar' : 'Nova avaliação'}
           </button>
         </div>
       )}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeterAvaliacao} className="mb-6 grid grid-cols-2 gap-3 rounded-lg border border-slate-200 bg-white p-4">
+        <form onSubmit={submeterAvaliacao} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
           <input required placeholder="Designação (ex.: Teste 1)" value={formulario.designacao}
             onChange={(e) => setFormulario({ ...formulario, designacao: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <select value={formulario.tipo} onChange={(e) => setFormulario({ ...formulario, tipo: e.target.value as Avaliacao['tipo'] })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm">
+            className="border border-slate-300 px-3 py-2 text-sm">
             <option value="TESTE">Teste</option>
             <option value="TRABALHO">Trabalho</option>
             <option value="PRATICA">Prática</option>
@@ -138,18 +138,18 @@ export function Avaliacoes() {
           </select>
           <input required type="number" step="0.01" placeholder="Peso (%)" value={formulario.peso}
             onChange={(e) => setFormulario({ ...formulario, peso: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
+            className="border border-slate-300 px-3 py-2 text-sm" />
           <input type="date" value={formulario.data_prevista}
             onChange={(e) => setFormulario({ ...formulario, data_prevista: e.target.value })}
-            className="rounded border border-slate-300 px-3 py-2 text-sm" />
-          <button type="submit" className="col-span-2 mt-2 rounded bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90">
+            className="border border-slate-300 px-3 py-2 text-sm" />
+          <button type="submit" className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90">
             Definir avaliação
           </button>
         </form>
       )}
 
       {estrutura && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto border border-slate-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
               <tr>
@@ -185,7 +185,7 @@ export function Avaliacoes() {
       )}
 
       {aberta && (
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+        <div className="mt-6 border border-slate-200 bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-800">Classificações — {aberta.designacao}</h2>
             <button onClick={() => setAberta(null)} className="text-sm text-slate-500 hover:underline">Fechar</button>
@@ -216,7 +216,7 @@ export function Avaliacoes() {
                       disabled={faltas[c.inscricao_id]}
                       value={valores[c.inscricao_id] ?? ''}
                       onChange={(e) => setValores({ ...valores, [c.inscricao_id]: e.target.value })}
-                      className="w-20 rounded border border-slate-300 px-2 py-1 text-sm disabled:bg-slate-100"
+                      className="w-20 border border-slate-300 px-2 py-1 text-sm disabled:bg-slate-100"
                     />
                   </td>
                   <td className="py-2">
@@ -235,10 +235,10 @@ export function Avaliacoes() {
           </table>
 
           <div className="flex gap-2">
-            <button onClick={() => void lancarClassificacoes()} className="rounded border border-escn-azul px-4 py-2 text-sm text-escn-azul hover:bg-slate-50">
+            <button onClick={() => void lancarClassificacoes()} className="border border-escn-azul px-4 py-2 text-sm text-escn-azul hover:bg-slate-50">
               Gravar rascunho
             </button>
-            <button onClick={() => void publicar(false)} className="rounded bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
+            <button onClick={() => void publicar(false)} className="bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
               Publicar
             </button>
           </div>
