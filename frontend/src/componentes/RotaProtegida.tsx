@@ -18,7 +18,7 @@ export function RotaProtegida({ perfisPermitidos }: Props) {
 
   if (aCarregar) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">
+      <div className="flex min-h-screen items-center justify-center bg-bruma text-sm text-aco">
         A carregar…
       </div>
     )

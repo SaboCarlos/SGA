@@ -4,14 +4,14 @@ interface Props {
 }
 
 const ESTILOS = {
-  erro: 'bg-red-50 text-red-700',
-  sucesso: 'bg-green-50 text-green-700',
+  erro: 'alerta-erro',
+  sucesso: 'alerta-sucesso',
 }
 
 /** Caixa de aviso repetida em quase todos os ecrãs (erro de validação, erro de regra, confirmação). */
 export function Alerta({ tipo = 'erro', children }: Props) {
   return (
-    <div role="alert" className={`mb-4 px-4 py-3 text-sm ${ESTILOS[tipo]}`}>
+    <div role="alert" className={`alerta mb-4 ${ESTILOS[tipo]}`}>
       {children}
     </div>
   )

@@ -101,36 +101,36 @@ export function Avaliacoes() {
 
   return (
     <div>
-      <h1 className="text-lg font-semibold text-slate-800">Avaliações</h1>
-      <p className="mb-6 text-sm text-slate-500">
+      <h1 className="titulo-pagina">Avaliações</h1>
+      <p className="mb-6 text-sm text-aco">
         {turma ? `${turma.disciplina.codigo} — ${turma.disciplina.designacao}, turma ${turma.designacao}` : '…'}
       </p>
 
       {erro && <Alerta>{erro}</Alerta>}
 
       {estrutura && (
-        <div className="mb-4 flex items-center justify-between border border-slate-200 bg-white px-4 py-3">
-          <p className="text-sm text-slate-600">
+        <div className="cartao mb-4 flex items-center justify-between px-4 py-3">
+          <p className="text-sm text-texto">
             Soma dos pesos: <strong>{estrutura.soma_pesos}%</strong>{' '}
             {estrutura.estrutura_valida ? (
-              <span className="text-green-600">— estrutura válida</span>
+              <span className="selo selo-sucesso">estrutura válida</span>
             ) : (
-              <span className="text-amber-600">— falta chegar aos 100%</span>
+              <span className="selo selo-aviso">falta chegar aos 100%</span>
             )}
           </p>
-          <button onClick={() => setAMostrarFormulario((v) => !v)} className="bg-escn-azul px-3 py-1.5 text-sm text-white hover:bg-opacity-90">
+          <button onClick={() => setAMostrarFormulario((v) => !v)} className="botao px-3 py-1.5">
             {aMostrarFormulario ? 'Cancelar' : 'Nova avaliação'}
           </button>
         </div>
       )}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeterAvaliacao} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
+        <form onSubmit={submeterAvaliacao} className="cartao mb-6 grid grid-cols-2 gap-3 p-4">
           <input required placeholder="Designação (ex.: Teste 1)" value={formulario.designacao}
             onChange={(e) => setFormulario({ ...formulario, designacao: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <select value={formulario.tipo} onChange={(e) => setFormulario({ ...formulario, tipo: e.target.value as Avaliacao['tipo'] })}
-            className="border border-slate-300 px-3 py-2 text-sm">
+            className="entrada">
             <option value="TESTE">Teste</option>
             <option value="TRABALHO">Trabalho</option>
             <option value="PRATICA">Prática</option>
@@ -138,38 +138,38 @@ export function Avaliacoes() {
           </select>
           <input required type="number" step="0.01" placeholder="Peso (%)" value={formulario.peso}
             onChange={(e) => setFormulario({ ...formulario, peso: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input type="date" value={formulario.data_prevista}
             onChange={(e) => setFormulario({ ...formulario, data_prevista: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
-          <button type="submit" className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90">
+            className="entrada" />
+          <button type="submit" className="botao col-span-2 mt-2">
             Definir avaliação
           </button>
         </form>
       )}
 
       {estrutura && (
-        <div className="overflow-x-auto border border-slate-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+        <div className="tabela-wrap">
+          <table className="tabela">
+            <thead>
               <tr>
-                <th className="px-4 py-2">Designação</th>
-                <th className="px-4 py-2">Tipo</th>
-                <th className="px-4 py-2">Peso</th>
-                <th className="px-4 py-2">Estado</th>
-                <th className="px-4 py-2"></th>
+                <th>Designação</th>
+                <th>Tipo</th>
+                <th className="num">Peso</th>
+                <th>Estado</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {estrutura.avaliacoes.map((a) => (
-                <tr key={a.id} className="border-t border-slate-100">
-                  <td className="px-4 py-2">{a.designacao}</td>
-                  <td className="px-4 py-2">{a.tipo}</td>
-                  <td className="px-4 py-2">{a.peso}%</td>
-                  <td className="px-4 py-2">{a.estado}</td>
-                  <td className="px-4 py-2 text-right">
+                <tr key={a.id}>
+                  <td>{a.designacao}</td>
+                  <td>{a.tipo}</td>
+                  <td className="num">{a.peso}%</td>
+                  <td>{a.estado}</td>
+                  <td className="text-right">
                     {a.estado !== 'PUBLICADA' && (
-                      <button onClick={() => abrirClassificacoes(a)} className="text-escn-azul hover:underline">
+                      <button onClick={() => abrirClassificacoes(a)} className="text-tinta hover:underline">
                         Classificações
                       </button>
                     )}
@@ -177,7 +177,7 @@ export function Avaliacoes() {
                 </tr>
               ))}
               {estrutura.avaliacoes.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-500">Sem avaliações definidas.</td></tr>
+                <tr><td colSpan={5} className="py-6 text-center text-aco">Sem avaliações definidas.</td></tr>
               )}
             </tbody>
           </table>
@@ -185,10 +185,10 @@ export function Avaliacoes() {
       )}
 
       {aberta && (
-        <div className="mt-6 border border-slate-200 bg-white p-4">
+        <div className="cartao mt-6 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-800">Classificações — {aberta.designacao}</h2>
-            <button onClick={() => setAberta(null)} className="text-sm text-slate-500 hover:underline">Fechar</button>
+            <h2 className="font-display text-sm font-semibold text-texto">Classificações — {aberta.designacao}</h2>
+            <button onClick={() => setAberta(null)} className="text-sm text-aco hover:underline">Fechar</button>
           </div>
 
           {erroAvaliacao && <Alerta>{erroAvaliacao}</Alerta>}
@@ -198,28 +198,28 @@ export function Avaliacoes() {
             </Alerta>
           )}
 
-          <table className="mb-4 w-full text-left text-sm">
-            <thead className="text-xs uppercase text-slate-500">
+          <table className="tabela mb-4">
+            <thead>
               <tr>
-                <th className="py-2">Estudante</th>
-                <th className="py-2">Nota (0–20)</th>
-                <th className="py-2">Faltou</th>
+                <th>Estudante</th>
+                <th>Nota (0–20)</th>
+                <th>Faltou</th>
               </tr>
             </thead>
             <tbody>
               {classificacoes?.map((c) => (
-                <tr key={c.inscricao_id} className="border-t border-slate-100">
-                  <td className="py-2">{c.numero_estudante} — {c.nome_completo}</td>
-                  <td className="py-2">
+                <tr key={c.inscricao_id}>
+                  <td>{c.numero_estudante} — {c.nome_completo}</td>
+                  <td>
                     <input
                       type="number" min={0} max={20} step="0.1"
                       disabled={faltas[c.inscricao_id]}
                       value={valores[c.inscricao_id] ?? ''}
                       onChange={(e) => setValores({ ...valores, [c.inscricao_id]: e.target.value })}
-                      className="w-20 border border-slate-300 px-2 py-1 text-sm disabled:bg-slate-100"
+                      className="entrada w-20 py-1 disabled:bg-superficie-alt"
                     />
                   </td>
-                  <td className="py-2">
+                  <td>
                     <input
                       type="checkbox"
                       checked={faltas[c.inscricao_id] ?? false}
@@ -229,16 +229,16 @@ export function Avaliacoes() {
                 </tr>
               ))}
               {classificacoes?.length === 0 && (
-                <tr><td colSpan={3} className="py-4 text-center text-slate-500">Sem estudantes inscritos nesta turma.</td></tr>
+                <tr><td colSpan={3} className="py-4 text-center text-aco">Sem estudantes inscritos nesta turma.</td></tr>
               )}
             </tbody>
           </table>
 
           <div className="flex gap-2">
-            <button onClick={() => void lancarClassificacoes()} className="border border-escn-azul px-4 py-2 text-sm text-escn-azul hover:bg-slate-50">
+            <button onClick={() => void lancarClassificacoes()} className="botao-fantasma">
               Gravar rascunho
             </button>
-            <button onClick={() => void publicar(false)} className="bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
+            <button onClick={() => void publicar(false)} className="botao">
               Publicar
             </button>
           </div>

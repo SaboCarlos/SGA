@@ -24,11 +24,11 @@ export function Notificacoes() {
 
   return (
     <div>
-      <h1 className="mb-6 text-lg font-semibold text-slate-800">Notificações</h1>
+      <h1 className="titulo-pagina mb-6">Notificações</h1>
 
       {erro && <Alerta>{erro}</Alerta>}
 
-      {notificacoes === null && !erro && <p className="text-sm text-slate-500">A carregar…</p>}
+      {notificacoes === null && !erro && <p className="text-sm text-aco">A carregar…</p>}
 
       {notificacoes && (
         <div className="space-y-2">
@@ -37,17 +37,17 @@ export function Notificacoes() {
               key={n.id}
               onClick={() => void marcarLida(n)}
               className={`block w-full border p-4 text-left transition ${
-                n.lida_em ? 'border-slate-200 bg-white' : 'border-escn-azul bg-blue-50'
+                n.lida_em ? 'border-linha bg-superficie' : 'border-dourado bg-superficie-alt'
               }`}
             >
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-slate-800">{n.titulo}</p>
-                <span className="text-xs text-slate-400">{new Date(n.criada_em).toLocaleString('pt-PT')}</span>
+                <p className="text-sm font-medium text-texto">{n.titulo}</p>
+                <span className="text-xs text-aco-suave">{new Date(n.criada_em).toLocaleString('pt-PT')}</span>
               </div>
-              {n.mensagem && <p className="mt-1 text-sm text-slate-600">{n.mensagem}</p>}
+              {n.mensagem && <p className="mt-1 text-sm text-aco">{n.mensagem}</p>}
             </button>
           ))}
-          {notificacoes.length === 0 && <p className="text-sm text-slate-500">Sem notificações.</p>}
+          {notificacoes.length === 0 && <p className="text-sm text-aco">Sem notificações.</p>}
         </div>
       )}
     </div>

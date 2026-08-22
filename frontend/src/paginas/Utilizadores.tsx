@@ -55,11 +55,8 @@ export function Utilizadores() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-slate-800">Utilizadores</h1>
-        <button
-          onClick={() => setAMostrarFormulario((v) => !v)}
-          className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
-        >
+        <h1 className="titulo-pagina">Utilizadores</h1>
+        <button onClick={() => setAMostrarFormulario((v) => !v)} className="botao">
           {aMostrarFormulario ? 'Cancelar' : 'Novo utilizador'}
         </button>
       </div>
@@ -67,51 +64,51 @@ export function Utilizadores() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="cartao mb-6 grid grid-cols-2 gap-3 p-4">
           <input required placeholder="Nome completo" value={formulario.nome}
             onChange={(e) => setFormulario({ ...formulario, nome: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input required type="email" placeholder="E-mail" value={formulario.email}
             onChange={(e) => setFormulario({ ...formulario, email: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input required type="password" minLength={8} placeholder="Palavra-passe inicial" value={formulario.palavra_passe}
             onChange={(e) => setFormulario({ ...formulario, palavra_passe: e.target.value })}
-            className="col-span-2 border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada col-span-2" />
           <div className="col-span-2 flex gap-4">
             {PERFIS_DISPONIVEIS.map((p) => (
-              <label key={p} className="flex items-center gap-1.5 text-sm text-slate-700">
+              <label key={p} className="flex items-center gap-1.5 text-sm text-texto">
                 <input type="checkbox" checked={formulario.perfis.includes(p)} onChange={() => alternarPerfil(p)} />
                 {p}
               </label>
             ))}
           </div>
-          <button type="submit" className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90">
+          <button type="submit" className="botao col-span-2 mt-2">
             Criar utilizador
           </button>
         </form>
       )}
 
-      {utilizadores === null && !erro && <p className="text-sm text-slate-500">A carregar…</p>}
+      {utilizadores === null && !erro && <p className="text-sm text-aco">A carregar…</p>}
 
       {utilizadores && (
-        <div className="overflow-x-auto border border-slate-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+        <div className="tabela-wrap">
+          <table className="tabela">
+            <thead>
               <tr>
-                <th className="px-4 py-2">Nome</th>
-                <th className="px-4 py-2">E-mail</th>
-                <th className="px-4 py-2">Perfis</th>
-                <th className="px-4 py-2"></th>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Perfis</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {utilizadores.map((u) => (
-                <tr key={u.id} className="border-t border-slate-100">
-                  <td className="px-4 py-2">{u.nome}</td>
-                  <td className="px-4 py-2">{u.email}</td>
-                  <td className="px-4 py-2">{u.perfis.join(', ')}</td>
-                  <td className="px-4 py-2 text-right">
-                    <button onClick={() => void alternarActivo(u)} className="text-red-600 hover:underline">
+                <tr key={u.id}>
+                  <td>{u.nome}</td>
+                  <td>{u.email}</td>
+                  <td>{u.perfis.join(', ')}</td>
+                  <td className="text-right">
+                    <button onClick={() => void alternarActivo(u)} className="text-perigo hover:underline">
                       Desactivar
                     </button>
                   </td>

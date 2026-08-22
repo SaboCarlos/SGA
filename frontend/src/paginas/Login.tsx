@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ErroApi } from '@/servicos/api'
 import { useAutenticacao } from '@/contextos/AutenticacaoContexto'
+import { ROTULO_TEMA, useTema } from '@/contextos/TemaContexto'
 
 /**
  * Ecrã de autenticação (UC01 / US-01).
@@ -12,6 +13,7 @@ import { useAutenticacao } from '@/contextos/AutenticacaoContexto'
  */
 export function Login() {
   const { autenticar } = useAutenticacao()
+  const { tema, alternarTema } = useTema()
   const navegar = useNavigate()
   const [email, setEmail] = useState('')
   const [palavraPasse, setPalavraPasse] = useState('')
@@ -40,62 +42,89 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <form
-        onSubmit={submeter}
-        className="w-full max-w-sm border border-slate-200 bg-white p-8"
+    <div className="relative flex min-h-screen items-stretch bg-bruma">
+      <button
+        onClick={alternarTema}
+        title="Alternar tema claro/escuro"
+        className="botao-fantasma absolute right-4 top-4 z-10 px-3 py-1.5 text-xs"
       >
-        <h1 className="mb-1 text-xl font-semibold text-escn-azul">
-          Sistema de Gestão Académica
-        </h1>
-        <p className="mb-6 text-sm text-slate-500">
-          Escola Superior de Ciências Náuticas
+        {ROTULO_TEMA[tema]}
+      </button>
+      <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-tinta-profunda p-12 text-white lg:flex">
+        <div className="flex items-center gap-3.5">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-dourado font-display text-lg font-semibold text-dourado">
+            SGA
+          </span>
+          <div className="leading-tight">
+            <strong className="block text-sm tracking-wide">Sistema de Gestão Académica</strong>
+            <span className="block text-xs tracking-wide text-white/60">
+              ESCOLA SUPERIOR DE CIÊNCIAS NÁUTICAS
+            </span>
+          </div>
+        </div>
+
+        <p className="max-w-md text-balance font-display text-3xl font-medium leading-tight">
+          Cada inscrição, avaliação e pauta com o rigor de um livro de bordo.
         </p>
 
-        <label className="mb-1 block text-sm font-medium text-slate-700" htmlFor="email">
-          E-mail institucional
-        </label>
-        <input
-          id="email"
-          type="email"
-          required
-          autoComplete="username"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="mb-4 w-full border border-slate-300 px-3 py-2 text-sm focus:border-escn-azul focus:outline-none"
-        />
+        <div className="flex gap-8 border-t border-white/15 pt-5 text-xs text-white/60">
+          <div>
+            <b className="block font-display text-base font-semibold text-white">2026</b>
+            ano lectivo
+          </div>
+          <div>
+            <b className="block font-display text-base font-semibold text-white">S1</b>
+            período corrente
+          </div>
+        </div>
+      </div>
 
-        <label className="mb-1 block text-sm font-medium text-slate-700" htmlFor="palavra-passe">
-          Palavra-passe
-        </label>
-        <input
-          id="palavra-passe"
-          type="password"
-          required
-          autoComplete="current-password"
-          value={palavraPasse}
-          onChange={(e) => setPalavraPasse(e.target.value)}
-          className="mb-2 w-full border border-slate-300 px-3 py-2 text-sm focus:border-escn-azul focus:outline-none"
-        />
+      <div className="flex flex-1 items-center justify-center p-6">
+        <form onSubmit={submeter} className="w-full max-w-sm">
+          <h1 className="titulo-pagina mb-1">Entrar</h1>
+          <p className="mb-6 text-sm text-aco">Use as credenciais institucionais da ESCN.</p>
 
-        <Link to="/recuperar-palavra-passe" className="mb-4 inline-block text-sm text-escn-azul hover:underline">
-          Esqueceu-se da palavra-passe?
-        </Link>
+          <label className="mb-1 block text-sm font-medium text-texto" htmlFor="email">
+            E-mail institucional
+          </label>
+          <input
+            id="email"
+            type="email"
+            required
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="entrada mb-4 w-full"
+          />
 
-        {erro && (
-          <p role="alert" className="mb-4 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {erro}
-          </p>
-        )}
+          <label className="mb-1 block text-sm font-medium text-texto" htmlFor="palavra-passe">
+            Palavra-passe
+          </label>
+          <input
+            id="palavra-passe"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={palavraPasse}
+            onChange={(e) => setPalavraPasse(e.target.value)}
+            className="entrada mb-2 w-full"
+          />
 
-        <button
-          type="submit"
-          disabled={aEnviar}
-          className="w-full bg-escn-azul px-4 py-2 text-sm font-medium text-white transition hover:bg-opacity-90 disabled:opacity-50"
-        >
-          {aEnviar ? 'A autenticar…' : 'Entrar'}
-        </button>
-      </form>
+          <Link to="/recuperar-palavra-passe" className="mb-4 inline-block text-sm text-tinta hover:underline">
+            Esqueceu-se da palavra-passe?
+          </Link>
+
+          {erro && (
+            <p role="alert" className="alerta alerta-erro mb-4">
+              {erro}
+            </p>
+          )}
+
+          <button type="submit" disabled={aEnviar} className="botao w-full">
+            {aEnviar ? 'A autenticar…' : 'Entrar'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

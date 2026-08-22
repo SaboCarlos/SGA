@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProvedorAutenticacao } from '@/contextos/AutenticacaoContexto'
+import { ProvedorTema } from '@/contextos/TemaContexto'
 import { RotaProtegida } from '@/componentes/RotaProtegida'
 import { Layout } from '@/componentes/Layout'
 import { Login } from '@/paginas/Login'
@@ -34,51 +35,53 @@ import { Perfis } from '@/paginas/Perfis'
 export function App() {
   return (
     <BrowserRouter>
-      <ProvedorAutenticacao>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/recuperar-palavra-passe" element={<RecuperarPalavraPasse />} />
-          <Route path="/redefinir-palavra-passe" element={<RedefinirPalavraPasse />} />
+      <ProvedorTema>
+        <ProvedorAutenticacao>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/recuperar-palavra-passe" element={<RecuperarPalavraPasse />} />
+            <Route path="/redefinir-palavra-passe" element={<RedefinirPalavraPasse />} />
 
-          <Route element={<RotaProtegida />}>
-            <Route element={<Layout />}>
-              <Route path="/painel" element={<Painel />} />
+            <Route element={<RotaProtegida />}>
+              <Route element={<Layout />}>
+                <Route path="/painel" element={<Painel />} />
 
-              <Route element={<RotaProtegida perfisPermitidos={['ESTUDANTE']} />}>
-                <Route path="/inscricoes" element={<Inscricoes />} />
-              </Route>
+                <Route element={<RotaProtegida perfisPermitidos={['ESTUDANTE']} />}>
+                  <Route path="/inscricoes" element={<Inscricoes />} />
+                </Route>
 
-              <Route element={<RotaProtegida perfisPermitidos={['ADMINISTRADOR', 'COORDENADOR']} />}>
-                <Route path="/estudantes" element={<Estudantes />} />
-              </Route>
-              <Route path="/estudantes/:id/aproveitamento" element={<Aproveitamento />} />
+                <Route element={<RotaProtegida perfisPermitidos={['ADMINISTRADOR', 'COORDENADOR']} />}>
+                  <Route path="/estudantes" element={<Estudantes />} />
+                </Route>
+                <Route path="/estudantes/:id/aproveitamento" element={<Aproveitamento />} />
 
-              <Route element={<RotaProtegida perfisPermitidos={['ADMINISTRADOR']} />}>
-                <Route path="/docentes" element={<Docentes />} />
-                <Route path="/cursos" element={<Cursos />} />
-                <Route path="/disciplinas" element={<Disciplinas />} />
-                <Route path="/ano-lectivo" element={<AnoLectivo />} />
-                <Route path="/utilizadores" element={<Utilizadores />} />
-                <Route path="/perfis" element={<Perfis />} />
-              </Route>
+                <Route element={<RotaProtegida perfisPermitidos={['ADMINISTRADOR']} />}>
+                  <Route path="/docentes" element={<Docentes />} />
+                  <Route path="/cursos" element={<Cursos />} />
+                  <Route path="/disciplinas" element={<Disciplinas />} />
+                  <Route path="/ano-lectivo" element={<AnoLectivo />} />
+                  <Route path="/utilizadores" element={<Utilizadores />} />
+                  <Route path="/perfis" element={<Perfis />} />
+                </Route>
 
-              <Route path="/turmas" element={<Turmas />} />
-              <Route path="/turmas/:turmaId/avaliacoes" element={<Avaliacoes />} />
-              <Route path="/turmas/:turmaId/pauta" element={<Pautas />} />
-              <Route path="/rectificacoes" element={<Rectificacoes />} />
-              <Route path="/notificacoes" element={<Notificacoes />} />
+                <Route path="/turmas" element={<Turmas />} />
+                <Route path="/turmas/:turmaId/avaliacoes" element={<Avaliacoes />} />
+                <Route path="/turmas/:turmaId/pauta" element={<Pautas />} />
+                <Route path="/rectificacoes" element={<Rectificacoes />} />
+                <Route path="/notificacoes" element={<Notificacoes />} />
 
-              <Route element={<RotaProtegida perfisPermitidos={['ADMINISTRADOR', 'COORDENADOR']} />}>
-                <Route path="/relatorios" element={<Relatorios />} />
-                <Route path="/auditoria" element={<Auditoria />} />
+                <Route element={<RotaProtegida perfisPermitidos={['ADMINISTRADOR', 'COORDENADOR']} />}>
+                  <Route path="/relatorios" element={<Relatorios />} />
+                  <Route path="/auditoria" element={<Auditoria />} />
+                </Route>
               </Route>
             </Route>
-          </Route>
 
-          <Route path="/" element={<Navigate to="/painel" replace />} />
-          <Route path="*" element={<Navigate to="/painel" replace />} />
-        </Routes>
-      </ProvedorAutenticacao>
+            <Route path="/" element={<Navigate to="/painel" replace />} />
+            <Route path="*" element={<Navigate to="/painel" replace />} />
+          </Routes>
+        </ProvedorAutenticacao>
+      </ProvedorTema>
     </BrowserRouter>
   )
 }

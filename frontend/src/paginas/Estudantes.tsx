@@ -66,13 +66,10 @@ export function Estudantes() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-slate-800">Estudantes</h1>
-          <p className="text-sm text-slate-500">Cadastro e pesquisa (RNF-01).</p>
+          <h1 className="titulo-pagina">Estudantes</h1>
+          <p className="text-sm text-aco">Cadastro e pesquisa (RNF-01).</p>
         </div>
-        <button
-          onClick={() => setAMostrarFormulario((v) => !v)}
-          className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
-        >
+        <button onClick={() => setAMostrarFormulario((v) => !v)} className="botao">
           {aMostrarFormulario ? 'Cancelar' : 'Novo estudante'}
         </button>
       </div>
@@ -80,32 +77,32 @@ export function Estudantes() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="cartao mb-6 grid grid-cols-2 gap-3 p-4">
           <input
             required
             placeholder="Nome completo"
             value={formulario.nome_completo}
             onChange={(e) => setFormulario({ ...formulario, nome_completo: e.target.value })}
-            className="col-span-2 border border-slate-300 px-3 py-2 text-sm"
+            className="entrada col-span-2"
           />
           <input
             required
             placeholder="Documento de identificação"
             value={formulario.documento_identificacao}
             onChange={(e) => setFormulario({ ...formulario, documento_identificacao: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm"
+            className="entrada"
           />
           <input
             required
             type="date"
             value={formulario.data_nascimento}
             onChange={(e) => setFormulario({ ...formulario, data_nascimento: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm"
+            className="entrada"
           />
           <select
             value={formulario.sexo}
             onChange={(e) => setFormulario({ ...formulario, sexo: e.target.value as 'MASCULINO' | 'FEMININO' })}
-            className="border border-slate-300 px-3 py-2 text-sm"
+            className="entrada"
           >
             <option value="FEMININO">Feminino</option>
             <option value="MASCULINO">Masculino</option>
@@ -116,13 +113,13 @@ export function Estudantes() {
             placeholder="E-mail institucional"
             value={formulario.email}
             onChange={(e) => setFormulario({ ...formulario, email: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm"
+            className="entrada"
           />
           <select
             required
             value={formulario.curso_id}
             onChange={(e) => setFormulario({ ...formulario, curso_id: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm"
+            className="entrada"
           >
             <option value="" disabled>Curso…</option>
             {cursos.map((c) => (
@@ -135,13 +132,9 @@ export function Estudantes() {
             placeholder="Ano de ingresso"
             value={formulario.ano_ingresso}
             onChange={(e) => setFormulario({ ...formulario, ano_ingresso: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm"
+            className="entrada"
           />
-          <button
-            type="submit"
-            disabled={aSubmeter}
-            className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50"
-          >
+          <button type="submit" disabled={aSubmeter} className="botao col-span-2 mt-2">
             {aSubmeter ? 'A registar…' : 'Registar estudante'}
           </button>
         </form>
@@ -151,32 +144,32 @@ export function Estudantes() {
         placeholder="Pesquisar por nome ou número…"
         value={pesquisa}
         onChange={(e) => setPesquisa(e.target.value)}
-        className="mb-4 w-full max-w-sm border border-slate-300 px-3 py-2 text-sm"
+        className="entrada mb-4 w-full max-w-sm"
       />
 
-      {estudantes === null && <p className="text-sm text-slate-500">A carregar…</p>}
+      {estudantes === null && <p className="text-sm text-aco">A carregar…</p>}
 
       {estudantes && (
-        <div className="overflow-x-auto border border-slate-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+        <div className="tabela-wrap">
+          <table className="tabela">
+            <thead>
               <tr>
-                <th className="px-4 py-2">Nº</th>
-                <th className="px-4 py-2">Nome</th>
-                <th className="px-4 py-2">Curso</th>
-                <th className="px-4 py-2">Estado</th>
-                <th className="px-4 py-2"></th>
+                <th>Nº</th>
+                <th>Nome</th>
+                <th>Curso</th>
+                <th>Estado</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {estudantes.map((e) => (
-                <tr key={e.id} className="border-t border-slate-100">
-                  <td className="px-4 py-2 font-mono text-xs">{e.numero_estudante}</td>
-                  <td className="px-4 py-2">{e.nome_completo}</td>
-                  <td className="px-4 py-2">{e.curso?.designacao ?? '—'}</td>
-                  <td className="px-4 py-2">{e.estado}</td>
-                  <td className="px-4 py-2 text-right">
-                    <Link to={`/estudantes/${e.id}/aproveitamento`} className="text-escn-azul hover:underline">
+                <tr key={e.id}>
+                  <td className="num">{e.numero_estudante}</td>
+                  <td>{e.nome_completo}</td>
+                  <td>{e.curso?.designacao ?? '—'}</td>
+                  <td>{e.estado}</td>
+                  <td className="text-right">
+                    <Link to={`/estudantes/${e.id}/aproveitamento`} className="text-tinta hover:underline">
                       Aproveitamento
                     </Link>
                   </td>
@@ -184,7 +177,7 @@ export function Estudantes() {
               ))}
               {estudantes.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-slate-500">Nenhum estudante encontrado.</td>
+                  <td colSpan={5} className="py-6 text-center text-aco">Nenhum estudante encontrado.</td>
                 </tr>
               )}
             </tbody>

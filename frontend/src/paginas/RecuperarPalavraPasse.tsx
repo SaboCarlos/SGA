@@ -27,24 +27,24 @@ export function RecuperarPalavraPasse() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm border border-slate-200 bg-white p-8">
-        <h1 className="mb-1 text-xl font-semibold text-escn-azul">Recuperar palavra-passe</h1>
-        <p className="mb-6 text-sm text-slate-500">Sistema de Gestão Académica</p>
+    <div className="flex min-h-screen items-center justify-center bg-bruma px-4">
+      <div className="w-full max-w-sm cartao p-8">
+        <h1 className="titulo-pagina mb-1">Recuperar palavra-passe</h1>
+        <p className="mb-6 text-sm text-aco">Sistema de Gestão Académica</p>
 
         {enviado ? (
           <div>
-            <p className="mb-4 text-sm text-slate-700">
+            <p className="mb-4 text-sm text-texto">
               Se existir uma conta com esse e-mail, foi enviada uma ligação para
               definir uma nova palavra-passe.
             </p>
-            <Link to="/login" className="text-sm text-escn-azul hover:underline">
+            <Link to="/login" className="text-sm text-tinta hover:underline">
               Voltar ao início de sessão
             </Link>
           </div>
         ) : (
           <form onSubmit={submeter}>
-            <label className="mb-1 block text-sm font-medium text-slate-700" htmlFor="email">
+            <label className="mb-1 block text-sm font-medium text-texto" htmlFor="email">
               E-mail institucional
             </label>
             <input
@@ -54,18 +54,14 @@ export function RecuperarPalavraPasse() {
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mb-4 w-full border border-slate-300 px-3 py-2 text-sm focus:border-escn-azul focus:outline-none"
+              className="entrada mb-4 w-full"
             />
 
-            <button
-              type="submit"
-              disabled={aEnviar}
-              className="w-full bg-escn-azul px-4 py-2 text-sm font-medium text-white transition hover:bg-opacity-90 disabled:opacity-50"
-            >
+            <button type="submit" disabled={aEnviar} className="botao w-full">
               {aEnviar ? 'A enviar…' : 'Enviar ligação'}
             </button>
 
-            <Link to="/login" className="mt-4 block text-center text-sm text-escn-azul hover:underline">
+            <Link to="/login" className="mt-4 block text-center text-sm text-tinta hover:underline">
               Voltar ao início de sessão
             </Link>
           </form>

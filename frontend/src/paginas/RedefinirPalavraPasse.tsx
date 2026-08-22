@@ -39,32 +39,32 @@ export function RedefinirPalavraPasse() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-sm border border-slate-200 bg-white p-8">
-        <h1 className="mb-1 text-xl font-semibold text-escn-azul">Nova palavra-passe</h1>
-        <p className="mb-6 text-sm text-slate-500">{email || 'Ligação inválida'}</p>
+    <div className="flex min-h-screen items-center justify-center bg-bruma px-4">
+      <div className="w-full max-w-sm cartao p-8">
+        <h1 className="titulo-pagina mb-1">Nova palavra-passe</h1>
+        <p className="mb-6 text-sm text-aco">{email || 'Ligação inválida'}</p>
 
         {!token || !email ? (
           <div>
-            <p className="mb-4 text-sm text-red-700">
+            <p role="alert" className="alerta alerta-erro mb-4">
               Esta ligação é inválida ou está incompleta. Solicite um novo pedido de recuperação.
             </p>
-            <Link to="/recuperar-palavra-passe" className="text-sm text-escn-azul hover:underline">
+            <Link to="/recuperar-palavra-passe" className="text-sm text-tinta hover:underline">
               Pedir nova ligação
             </Link>
           </div>
         ) : sucesso ? (
           <div>
-            <p className="mb-4 text-sm text-slate-700">
+            <p className="mb-4 text-sm text-texto">
               A sua palavra-passe foi redefinida. Já pode iniciar sessão.
             </p>
-            <Link to="/login" className="text-sm text-escn-azul hover:underline">
+            <Link to="/login" className="text-sm text-tinta hover:underline">
               Iniciar sessão
             </Link>
           </div>
         ) : (
           <form onSubmit={submeter}>
-            <label className="mb-1 block text-sm font-medium text-slate-700" htmlFor="palavra-passe">
+            <label className="mb-1 block text-sm font-medium text-texto" htmlFor="palavra-passe">
               Nova palavra-passe
             </label>
             <input
@@ -75,10 +75,10 @@ export function RedefinirPalavraPasse() {
               autoComplete="new-password"
               value={palavraPasse}
               onChange={(e) => setPalavraPasse(e.target.value)}
-              className="mb-4 w-full border border-slate-300 px-3 py-2 text-sm focus:border-escn-azul focus:outline-none"
+              className="entrada mb-4 w-full"
             />
 
-            <label className="mb-1 block text-sm font-medium text-slate-700" htmlFor="confirmacao">
+            <label className="mb-1 block text-sm font-medium text-texto" htmlFor="confirmacao">
               Confirmar palavra-passe
             </label>
             <input
@@ -89,20 +89,16 @@ export function RedefinirPalavraPasse() {
               autoComplete="new-password"
               value={confirmacao}
               onChange={(e) => setConfirmacao(e.target.value)}
-              className="mb-2 w-full border border-slate-300 px-3 py-2 text-sm focus:border-escn-azul focus:outline-none"
+              className="entrada mb-2 w-full"
             />
 
             {erro && (
-              <p role="alert" className="mb-4 mt-2 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <p role="alert" className="alerta alerta-erro mb-4 mt-2">
                 {erro}
               </p>
             )}
 
-            <button
-              type="submit"
-              disabled={aEnviar}
-              className="mt-4 w-full bg-escn-azul px-4 py-2 text-sm font-medium text-white transition hover:bg-opacity-90 disabled:opacity-50"
-            >
+            <button type="submit" disabled={aEnviar} className="botao mt-4 w-full">
               {aEnviar ? 'A guardar…' : 'Redefinir palavra-passe'}
             </button>
           </form>

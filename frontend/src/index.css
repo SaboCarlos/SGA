@@ -1,3 +1,164 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Paleta institucional do SGA (Escola Superior de Ciências Náuticas).
+ *
+ * --tinta-profunda e os tons de --dourado são fixos, propositadamente: a
+ * barra lateral funciona como moldura da aplicação, não como conteúdo, e
+ * mantém-se em tinta profunda em qualquer tema — como o resto da app tem
+ * de continuar legível em ambos, --tinta adapta-se (mais claro no escuro,
+ * para servir de texto/ligação e não só de fundo de botão).
+ */
+:root {
+  --tinta: #1e3a5f;
+  --tinta-profunda: #0f2038;
+  --dourado: #c9a227;
+  --dourado-suave: #e4c866;
+
+  --bruma: #f3f6f8;
+  --superficie: #ffffff;
+  --superficie-alt: #edf1f4;
+  --tinta-texto: #16232f;
+  --aco: #55697b;
+  --aco-suave: #7c8e9e;
+  --linha: #dce3e9;
+
+  --sucesso: #1f7a4d;
+  --sucesso-bg: #e8f5ee;
+  --perigo: #b3261e;
+  --perigo-bg: #fcebea;
+  --aviso: #8a6100;
+  --aviso-bg: #fbf1da;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --tinta: #6e93b8;
+    --bruma: #0a121c;
+    --superficie: #121f2e;
+    --superficie-alt: #182739;
+    --tinta-texto: #e8edf1;
+    --aco: #9aacbc;
+    --aco-suave: #718598;
+    --linha: #24384c;
+    --sucesso: #4fbe84;
+    --sucesso-bg: #113325;
+    --perigo: #f0847c;
+    --perigo-bg: #3a1613;
+    --aviso: #e0b84b;
+    --aviso-bg: #3a2e0c;
+  }
+}
+
+:root[data-theme='dark'] {
+  --tinta: #6e93b8;
+  --bruma: #0a121c;
+  --superficie: #121f2e;
+  --superficie-alt: #182739;
+  --tinta-texto: #e8edf1;
+  --aco: #9aacbc;
+  --aco-suave: #718598;
+  --linha: #24384c;
+  --sucesso: #4fbe84;
+  --sucesso-bg: #113325;
+  --perigo: #f0847c;
+  --perigo-bg: #3a1613;
+  --aviso: #e0b84b;
+  --aviso-bg: #3a2e0c;
+}
+
+body {
+  background: var(--bruma);
+  color: var(--tinta-texto);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  /* Título de página (cabeçalho de cada ecrã), com o peso institucional da serifada. */
+  .titulo-pagina {
+    @apply font-display text-xl font-semibold text-texto;
+  }
+
+  /* Campo de formulário — input, select e textarea. */
+  .entrada {
+    @apply border border-linha bg-bruma px-3 py-2 text-sm text-texto placeholder:text-aco-suave focus:border-tinta focus:bg-superficie focus:outline-none;
+  }
+
+  /* Botões. */
+  .botao {
+    @apply border border-tinta bg-tinta px-4 py-2 text-sm font-semibold text-white transition hover:bg-tinta-profunda hover:border-tinta-profunda disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .botao-dourado {
+    @apply border border-dourado bg-dourado px-4 py-2 text-sm font-semibold text-tinta-profunda transition hover:bg-dourado-suave hover:border-dourado-suave disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .botao-fantasma {
+    @apply border border-linha bg-transparent px-4 py-2 text-sm font-medium text-texto transition hover:bg-superficie-alt disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Painel/cartão — agrupa uma tabela ou um formulário. */
+  .cartao {
+    @apply border border-linha bg-superficie;
+  }
+  .cartao-cabecalho {
+    @apply flex items-center justify-between border-b border-linha px-4 py-3;
+  }
+  .cartao-cabecalho h2 {
+    @apply font-display text-base font-semibold text-texto;
+  }
+
+  /* Tabelas. */
+  .tabela-wrap {
+    @apply overflow-x-auto border border-linha bg-superficie;
+  }
+  .tabela {
+    @apply w-full text-left text-sm;
+  }
+  .tabela thead th {
+    @apply bg-tinta-profunda px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white/85;
+  }
+  .tabela tbody td {
+    @apply border-t border-linha px-4 py-2.5 text-texto;
+  }
+  .tabela tbody tr:hover td {
+    @apply bg-superficie-alt;
+  }
+  .tabela td.num,
+  .tabela th.num {
+    @apply tabular-nums text-aco;
+  }
+
+  /* Selo de estado (badge). */
+  .selo {
+    @apply inline-flex items-center gap-1.5 border px-2 py-0.5 text-xs font-semibold;
+  }
+  .selo::before {
+    content: '';
+    @apply h-1.5 w-1.5 bg-current;
+  }
+  .selo-sucesso {
+    @apply border-transparent bg-sucesso-bg text-sucesso;
+  }
+  .selo-aviso {
+    @apply border-transparent bg-aviso-bg text-aviso;
+  }
+  .selo-perigo {
+    @apply border-transparent bg-perigo-bg text-perigo;
+  }
+  .selo-neutro {
+    @apply border-transparent bg-superficie-alt text-aco;
+  }
+
+  /* Alerta (caixa de erro/sucesso) — ver componentes/Alerta.tsx. */
+  .alerta {
+    @apply border px-4 py-3 text-sm;
+  }
+  .alerta-erro {
+    @apply border-transparent bg-perigo-bg text-perigo;
+  }
+  .alerta-sucesso {
+    @apply border-transparent bg-sucesso-bg text-sucesso;
+  }
+}

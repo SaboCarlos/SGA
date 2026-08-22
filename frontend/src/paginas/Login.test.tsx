@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProvedorAutenticacao } from '@/contextos/AutenticacaoContexto'
+import { ProvedorTema } from '@/contextos/TemaContexto'
 import { Login } from './Login'
 
 vi.mock('@/servicos/api', async (importarOriginal) => {
@@ -15,13 +16,15 @@ const { api } = await import('@/servicos/api')
 function renderizar() {
   return render(
     <MemoryRouter initialEntries={['/login']}>
-      <ProvedorAutenticacao>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/painel" element={<p>Painel de facto</p>} />
-          <Route path="/recuperar-palavra-passe" element={<p>Recuperar de facto</p>} />
-        </Routes>
-      </ProvedorAutenticacao>
+      <ProvedorTema>
+        <ProvedorAutenticacao>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/painel" element={<p>Painel de facto</p>} />
+            <Route path="/recuperar-palavra-passe" element={<p>Recuperar de facto</p>} />
+          </Routes>
+        </ProvedorAutenticacao>
+      </ProvedorTema>
     </MemoryRouter>,
   )
 }

@@ -65,12 +65,9 @@ export function Turmas() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-slate-800">Turmas</h1>
+        <h1 className="titulo-pagina">Turmas</h1>
         {podeGerir && (
-          <button
-            onClick={() => setAMostrarFormulario((v) => !v)}
-            className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
-          >
+          <button onClick={() => setAMostrarFormulario((v) => !v)} className="botao">
             {aMostrarFormulario ? 'Cancelar' : 'Nova turma'}
           </button>
         )}
@@ -79,62 +76,61 @@ export function Turmas() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="cartao mb-6 grid grid-cols-2 gap-3 p-4">
           <select required value={formulario.disciplina_id}
             onChange={(e) => setFormulario({ ...formulario, disciplina_id: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm">
+            className="entrada">
             <option value="" disabled>Disciplina…</option>
             {disciplinas.map((d) => <option key={d.id} value={d.id}>{d.codigo} — {d.designacao}</option>)}
           </select>
           <select required value={formulario.periodo_lectivo_id}
             onChange={(e) => setFormulario({ ...formulario, periodo_lectivo_id: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm">
+            className="entrada">
             <option value="" disabled>Período lectivo…</option>
             {periodos.map((p) => <option key={p.id} value={p.id}>Semestre {p.semestre}</option>)}
           </select>
           <select required value={formulario.docente_id}
             onChange={(e) => setFormulario({ ...formulario, docente_id: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm">
+            className="entrada">
             <option value="" disabled>Docente…</option>
             {docentes.map((d) => <option key={d.id} value={d.id}>{d.nome_completo}</option>)}
           </select>
           <input required placeholder="Designação (ex.: A)" value={formulario.designacao}
             onChange={(e) => setFormulario({ ...formulario, designacao: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input required type="number" placeholder="Capacidade máxima" value={formulario.capacidade_maxima}
             onChange={(e) => setFormulario({ ...formulario, capacidade_maxima: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
-          <button type="submit" disabled={aSubmeter}
-            className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50">
+            className="entrada" />
+          <button type="submit" disabled={aSubmeter} className="botao col-span-2 mt-2">
             {aSubmeter ? 'A criar…' : 'Criar turma'}
           </button>
         </form>
       )}
 
-      {turmas === null && <p className="text-sm text-slate-500">A carregar…</p>}
+      {turmas === null && <p className="text-sm text-aco">A carregar…</p>}
 
       {turmas && (
-        <div className="overflow-x-auto border border-slate-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+        <div className="tabela-wrap">
+          <table className="tabela">
+            <thead>
               <tr>
-                <th className="px-4 py-2">Disciplina</th>
-                <th className="px-4 py-2">Turma</th>
-                <th className="px-4 py-2">Docente</th>
-                <th className="px-4 py-2">Vagas</th>
-                <th className="px-4 py-2"></th>
+                <th>Disciplina</th>
+                <th>Turma</th>
+                <th>Docente</th>
+                <th className="num">Vagas</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {turmas.map((t) => (
-                <tr key={t.id} className="border-t border-slate-100">
-                  <td className="px-4 py-2">{t.disciplina.codigo} — {t.disciplina.designacao}</td>
-                  <td className="px-4 py-2">{t.designacao}</td>
-                  <td className="px-4 py-2">{t.docente}</td>
-                  <td className="px-4 py-2">{t.vagas} / {t.capacidade_maxima}</td>
-                  <td className="space-x-3 px-4 py-2 text-right">
-                    <Link to={`/turmas/${t.id}/avaliacoes`} className="text-escn-azul hover:underline">Avaliações</Link>
-                    <Link to={`/turmas/${t.id}/pauta`} className="text-escn-azul hover:underline">Pauta</Link>
+                <tr key={t.id}>
+                  <td>{t.disciplina.codigo} — {t.disciplina.designacao}</td>
+                  <td>{t.designacao}</td>
+                  <td>{t.docente}</td>
+                  <td className="num">{t.vagas} / {t.capacidade_maxima}</td>
+                  <td className="space-x-3 text-right">
+                    <Link to={`/turmas/${t.id}/avaliacoes`} className="text-tinta hover:underline">Avaliações</Link>
+                    <Link to={`/turmas/${t.id}/pauta`} className="text-tinta hover:underline">Pauta</Link>
                   </td>
                 </tr>
               ))}

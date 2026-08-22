@@ -75,11 +75,8 @@ export function Cursos() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-slate-800">Cursos</h1>
-        <button
-          onClick={() => setAMostrarFormulario((v) => !v)}
-          className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
-        >
+        <h1 className="titulo-pagina">Cursos</h1>
+        <button onClick={() => setAMostrarFormulario((v) => !v)} className="botao">
           {aMostrarFormulario ? 'Cancelar' : 'Novo curso'}
         </button>
       </div>
@@ -87,50 +84,49 @@ export function Cursos() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="cartao mb-6 grid grid-cols-2 gap-3 p-4">
           <input required placeholder="Código (ex.: PSIT)" value={formulario.codigo}
             onChange={(e) => setFormulario({ ...formulario, codigo: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input required placeholder="Grau" value={formulario.grau}
             onChange={(e) => setFormulario({ ...formulario, grau: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input required placeholder="Designação" value={formulario.designacao}
             onChange={(e) => setFormulario({ ...formulario, designacao: e.target.value })}
-            className="col-span-2 border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada col-span-2" />
           <input required type="number" placeholder="Duração (anos)" value={formulario.duracao_anos}
             onChange={(e) => setFormulario({ ...formulario, duracao_anos: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input required type="number" placeholder="Total de créditos" value={formulario.total_creditos}
             onChange={(e) => setFormulario({ ...formulario, total_creditos: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
-          <button type="submit" disabled={aSubmeter}
-            className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50">
+            className="entrada" />
+          <button type="submit" disabled={aSubmeter} className="botao col-span-2 mt-2">
             {aSubmeter ? 'A criar…' : 'Criar curso'}
           </button>
         </form>
       )}
 
-      {cursos === null && <p className="text-sm text-slate-500">A carregar…</p>}
+      {cursos === null && <p className="text-sm text-aco">A carregar…</p>}
 
       {cursos && (
-        <div className="overflow-x-auto border border-slate-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+        <div className="tabela-wrap">
+          <table className="tabela">
+            <thead>
               <tr>
-                <th className="px-4 py-2">Código</th>
-                <th className="px-4 py-2">Designação</th>
-                <th className="px-4 py-2">Duração</th>
-                <th className="px-4 py-2"></th>
+                <th>Código</th>
+                <th>Designação</th>
+                <th>Duração</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {cursos.map((c) => (
-                <tr key={c.id} className="border-t border-slate-100">
-                  <td className="px-4 py-2 font-mono text-xs">{c.codigo}</td>
-                  <td className="px-4 py-2">{c.designacao}</td>
-                  <td className="px-4 py-2">{c.duracao_anos} anos</td>
-                  <td className="px-4 py-2 text-right">
-                    <button onClick={() => abrirPlano(c)} className="text-escn-azul hover:underline">
+                <tr key={c.id}>
+                  <td className="num">{c.codigo}</td>
+                  <td>{c.designacao}</td>
+                  <td>{c.duracao_anos} anos</td>
+                  <td className="text-right">
+                    <button onClick={() => abrirPlano(c)} className="text-tinta hover:underline">
                       Plano curricular
                     </button>
                   </td>
@@ -142,34 +138,34 @@ export function Cursos() {
       )}
 
       {cursoAberto && (
-        <div className="mt-6 border border-slate-200 bg-white p-4">
+        <div className="cartao mt-6 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-800">Plano curricular — {cursoAberto.designacao}</h2>
-            <button onClick={() => setCursoAberto(null)} className="text-sm text-slate-500 hover:underline">Fechar</button>
+            <h2 className="font-display text-sm font-semibold text-texto">Plano curricular — {cursoAberto.designacao}</h2>
+            <button onClick={() => setCursoAberto(null)} className="text-sm text-aco hover:underline">Fechar</button>
           </div>
 
           {erroPlano && <Alerta>{erroPlano}</Alerta>}
 
-          <table className="mb-4 w-full text-left text-sm">
-            <thead className="text-xs uppercase text-slate-500">
+          <table className="tabela mb-4">
+            <thead>
               <tr>
-                <th className="py-2">Disciplina</th>
-                <th className="py-2">Ano</th>
-                <th className="py-2">Semestre</th>
-                <th className="py-2">Tipo</th>
+                <th>Disciplina</th>
+                <th>Ano</th>
+                <th>Semestre</th>
+                <th>Tipo</th>
               </tr>
             </thead>
             <tbody>
               {plano?.map((item) => (
-                <tr key={item.id} className="border-t border-slate-100">
-                  <td className="py-2">{item.disciplina}</td>
-                  <td className="py-2">{item.ano_curricular}</td>
-                  <td className="py-2">{item.semestre}</td>
-                  <td className="py-2">{item.tipo}</td>
+                <tr key={item.id}>
+                  <td>{item.disciplina}</td>
+                  <td>{item.ano_curricular}</td>
+                  <td>{item.semestre}</td>
+                  <td>{item.tipo}</td>
                 </tr>
               ))}
               {plano?.length === 0 && (
-                <tr><td colSpan={4} className="py-4 text-center text-slate-500">Sem disciplinas no plano.</td></tr>
+                <tr><td colSpan={4} className="py-4 text-center text-aco">Sem disciplinas no plano.</td></tr>
               )}
             </tbody>
           </table>
@@ -177,19 +173,19 @@ export function Cursos() {
           <form onSubmit={acrescentarAoPlano} className="flex flex-wrap items-end gap-2">
             <select required value={novoItem.disciplina_id}
               onChange={(e) => setNovoItem({ ...novoItem, disciplina_id: e.target.value })}
-              className="border border-slate-300 px-3 py-2 text-sm">
+              className="entrada">
               <option value="" disabled>Disciplina…</option>
               {disciplinas.map((d) => <option key={d.id} value={d.id}>{d.codigo} — {d.designacao}</option>)}
             </select>
             <input required type="number" min={1} placeholder="Ano" value={novoItem.ano_curricular}
               onChange={(e) => setNovoItem({ ...novoItem, ano_curricular: e.target.value })}
-              className="w-20 border border-slate-300 px-3 py-2 text-sm" />
+              className="entrada w-20" />
             <select value={novoItem.semestre} onChange={(e) => setNovoItem({ ...novoItem, semestre: e.target.value })}
-              className="border border-slate-300 px-3 py-2 text-sm">
+              className="entrada">
               <option value="1">Semestre 1</option>
               <option value="2">Semestre 2</option>
             </select>
-            <button type="submit" className="bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
+            <button type="submit" className="botao">
               Acrescentar
             </button>
           </form>

@@ -12,12 +12,12 @@ describe('Alerta', () => {
   it('usa o estilo de erro por omissão', () => {
     render(<Alerta>Erro</Alerta>)
 
-    expect(screen.getByRole('alert').className).toContain('red')
+    expect(screen.getByRole('alert').className).toContain('alerta-erro')
   })
 
   it('usa o estilo de sucesso quando pedido', () => {
     render(<Alerta tipo="sucesso">Feito.</Alerta>)
 
-    expect(screen.getByRole('alert').className).toContain('green')
+    expect(screen.getByRole('alert').className).toContain('alerta-sucesso')
   })
 })

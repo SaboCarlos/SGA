@@ -19,19 +19,19 @@ export function Relatorios() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-slate-800">Aproveitamento por disciplina</h1>
-          <p className="text-sm text-slate-500">Taxas de aprovação e reprovação (RF-55).</p>
+          <h1 className="titulo-pagina">Aproveitamento por disciplina</h1>
+          <p className="text-sm text-aco">Taxas de aprovação e reprovação (RF-55).</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => void api.baixar('/relatorios/aproveitamento-disciplina?formato=pdf')}
-            className="border border-escn-azul px-4 py-2 text-sm text-escn-azul hover:bg-slate-50"
+            className="botao-fantasma"
           >
             PDF
           </button>
           <button
             onClick={() => void api.baixar('/relatorios/aproveitamento-disciplina?formato=csv')}
-            className="border border-escn-azul px-4 py-2 text-sm text-escn-azul hover:bg-slate-50"
+            className="botao-fantasma"
           >
             CSV
           </button>
@@ -40,36 +40,36 @@ export function Relatorios() {
 
       {erro && <Alerta>{erro}</Alerta>}
 
-      {linhas === null && !erro && <p className="text-sm text-slate-500">A carregar…</p>}
+      {linhas === null && !erro && <p className="text-sm text-aco">A carregar…</p>}
 
       {linhas && (
-        <div className="overflow-x-auto border border-slate-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+        <div className="tabela-wrap">
+          <table className="tabela">
+            <thead>
               <tr>
-                <th className="px-4 py-2">Disciplina</th>
-                <th className="px-4 py-2">Ano lectivo</th>
-                <th className="px-4 py-2">Inscritos</th>
-                <th className="px-4 py-2">Aprovados</th>
-                <th className="px-4 py-2">Reprovados</th>
-                <th className="px-4 py-2">Taxa</th>
-                <th className="px-4 py-2">Média</th>
+                <th>Disciplina</th>
+                <th>Ano lectivo</th>
+                <th className="num">Inscritos</th>
+                <th className="num">Aprovados</th>
+                <th className="num">Reprovados</th>
+                <th className="num">Taxa</th>
+                <th className="num">Média</th>
               </tr>
             </thead>
             <tbody>
               {linhas.map((l) => (
-                <tr key={`${l.codigo}-${l.ano_lectivo}-${l.semestre}`} className="border-t border-slate-100">
-                  <td className="px-4 py-2">{l.codigo} — {l.disciplina}</td>
-                  <td className="px-4 py-2">{l.ano_lectivo} / S{l.semestre}</td>
-                  <td className="px-4 py-2">{l.inscritos}</td>
-                  <td className="px-4 py-2">{l.aprovados}</td>
-                  <td className="px-4 py-2">{l.reprovados}</td>
-                  <td className="px-4 py-2">{l.taxa_aprovacao}%</td>
-                  <td className="px-4 py-2">{l.media_disciplina ?? '—'}</td>
+                <tr key={`${l.codigo}-${l.ano_lectivo}-${l.semestre}`}>
+                  <td>{l.codigo} — {l.disciplina}</td>
+                  <td>{l.ano_lectivo} / S{l.semestre}</td>
+                  <td className="num">{l.inscritos}</td>
+                  <td className="num">{l.aprovados}</td>
+                  <td className="num">{l.reprovados}</td>
+                  <td className="num">{l.taxa_aprovacao}%</td>
+                  <td className="num">{l.media_disciplina ?? '—'}</td>
                 </tr>
               ))}
               {linhas.length === 0 && (
-                <tr><td colSpan={7} className="px-4 py-6 text-center text-slate-500">Sem dados ainda.</td></tr>
+                <tr><td colSpan={7} className="py-6 text-center text-aco">Sem dados ainda.</td></tr>
               )}
             </tbody>
           </table>

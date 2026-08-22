@@ -41,11 +41,8 @@ export function Docentes() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-slate-800">Docentes</h1>
-        <button
-          onClick={() => setAMostrarFormulario((v) => !v)}
-          className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
-        >
+        <h1 className="titulo-pagina">Docentes</h1>
+        <button onClick={() => setAMostrarFormulario((v) => !v)} className="botao">
           {aMostrarFormulario ? 'Cancelar' : 'Novo docente'}
         </button>
       </div>
@@ -53,49 +50,48 @@ export function Docentes() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="cartao mb-6 grid grid-cols-2 gap-3 p-4">
           <input required placeholder="Nome completo" value={formulario.nome_completo}
             onChange={(e) => setFormulario({ ...formulario, nome_completo: e.target.value })}
-            className="col-span-2 border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada col-span-2" />
           <input required type="email" placeholder="E-mail institucional" value={formulario.email}
             onChange={(e) => setFormulario({ ...formulario, email: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input required placeholder="Código (ex.: DOC003)" value={formulario.codigo}
             onChange={(e) => setFormulario({ ...formulario, codigo: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input placeholder="Grau académico" value={formulario.grau_academico}
             onChange={(e) => setFormulario({ ...formulario, grau_academico: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input placeholder="Categoria" value={formulario.categoria}
             onChange={(e) => setFormulario({ ...formulario, categoria: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
-          <button type="submit" disabled={aSubmeter}
-            className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50">
+            className="entrada" />
+          <button type="submit" disabled={aSubmeter} className="botao col-span-2 mt-2">
             {aSubmeter ? 'A registar…' : 'Registar docente'}
           </button>
         </form>
       )}
 
-      {docentes === null && <p className="text-sm text-slate-500">A carregar…</p>}
+      {docentes === null && <p className="text-sm text-aco">A carregar…</p>}
 
       {docentes && (
-        <div className="overflow-x-auto border border-slate-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+        <div className="tabela-wrap">
+          <table className="tabela">
+            <thead>
               <tr>
-                <th className="px-4 py-2">Código</th>
-                <th className="px-4 py-2">Nome</th>
-                <th className="px-4 py-2">Grau</th>
-                <th className="px-4 py-2">Categoria</th>
+                <th>Código</th>
+                <th>Nome</th>
+                <th>Grau</th>
+                <th>Categoria</th>
               </tr>
             </thead>
             <tbody>
               {docentes.map((d) => (
-                <tr key={d.id} className="border-t border-slate-100">
-                  <td className="px-4 py-2 font-mono text-xs">{d.codigo}</td>
-                  <td className="px-4 py-2">{d.nome_completo}</td>
-                  <td className="px-4 py-2">{d.grau_academico ?? '—'}</td>
-                  <td className="px-4 py-2">{d.categoria ?? '—'}</td>
+                <tr key={d.id}>
+                  <td className="num">{d.codigo}</td>
+                  <td>{d.nome_completo}</td>
+                  <td>{d.grau_academico ?? '—'}</td>
+                  <td>{d.categoria ?? '—'}</td>
                 </tr>
               ))}
             </tbody>

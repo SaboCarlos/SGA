@@ -71,11 +71,8 @@ export function Disciplinas() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-slate-800">Disciplinas</h1>
-        <button
-          onClick={() => setAMostrarFormulario((v) => !v)}
-          className="bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
-        >
+        <h1 className="titulo-pagina">Disciplinas</h1>
+        <button onClick={() => setAMostrarFormulario((v) => !v)} className="botao">
           {aMostrarFormulario ? 'Cancelar' : 'Nova disciplina'}
         </button>
       </div>
@@ -83,47 +80,46 @@ export function Disciplinas() {
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
-        <form onSubmit={submeter} className="mb-6 grid grid-cols-2 gap-3 border border-slate-200 bg-white p-4">
+        <form onSubmit={submeter} className="cartao mb-6 grid grid-cols-2 gap-3 p-4">
           <input required placeholder="Código (ex.: INF401)" value={formulario.codigo}
             onChange={(e) => setFormulario({ ...formulario, codigo: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input required placeholder="Designação" value={formulario.designacao}
             onChange={(e) => setFormulario({ ...formulario, designacao: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input required type="number" placeholder="Créditos" value={formulario.creditos}
             onChange={(e) => setFormulario({ ...formulario, creditos: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
+            className="entrada" />
           <input required type="number" placeholder="Carga horária" value={formulario.carga_horaria}
             onChange={(e) => setFormulario({ ...formulario, carga_horaria: e.target.value })}
-            className="border border-slate-300 px-3 py-2 text-sm" />
-          <button type="submit" disabled={aSubmeter}
-            className="col-span-2 mt-2 bg-escn-azul px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50">
+            className="entrada" />
+          <button type="submit" disabled={aSubmeter} className="botao col-span-2 mt-2">
             {aSubmeter ? 'A criar…' : 'Criar disciplina'}
           </button>
         </form>
       )}
 
-      {disciplinas === null && <p className="text-sm text-slate-500">A carregar…</p>}
+      {disciplinas === null && <p className="text-sm text-aco">A carregar…</p>}
 
       {disciplinas && (
-        <div className="overflow-x-auto border border-slate-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+        <div className="tabela-wrap">
+          <table className="tabela">
+            <thead>
               <tr>
-                <th className="px-4 py-2">Código</th>
-                <th className="px-4 py-2">Designação</th>
-                <th className="px-4 py-2">Créditos</th>
-                <th className="px-4 py-2"></th>
+                <th>Código</th>
+                <th>Designação</th>
+                <th className="num">Créditos</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {disciplinas.map((d) => (
-                <tr key={d.id} className="border-t border-slate-100">
-                  <td className="px-4 py-2 font-mono text-xs">{d.codigo}</td>
-                  <td className="px-4 py-2">{d.designacao}</td>
-                  <td className="px-4 py-2">{d.creditos}</td>
-                  <td className="px-4 py-2 text-right">
-                    <button onClick={() => abrirPreRequisitos(d)} className="text-escn-azul hover:underline">
+                <tr key={d.id}>
+                  <td className="num">{d.codigo}</td>
+                  <td>{d.designacao}</td>
+                  <td className="num">{d.creditos}</td>
+                  <td className="text-right">
+                    <button onClick={() => abrirPreRequisitos(d)} className="text-tinta hover:underline">
                       Pré-requisitos
                     </button>
                   </td>
@@ -135,28 +131,28 @@ export function Disciplinas() {
       )}
 
       {aberta && (
-        <div className="mt-6 border border-slate-200 bg-white p-4">
+        <div className="cartao mt-6 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-800">Pré-requisitos — {aberta.designacao}</h2>
-            <button onClick={() => setAberta(null)} className="text-sm text-slate-500 hover:underline">Fechar</button>
+            <h2 className="font-display text-sm font-semibold text-texto">Pré-requisitos — {aberta.designacao}</h2>
+            <button onClick={() => setAberta(null)} className="text-sm text-aco hover:underline">Fechar</button>
           </div>
 
           {erroPreRequisito && <Alerta>{erroPreRequisito}</Alerta>}
 
-          <ul className="mb-4 space-y-1 text-sm text-slate-700">
+          <ul className="mb-4 space-y-1 text-sm text-texto">
             {preRequisitos?.map((p) => <li key={p.id}>{p.codigo} — {p.designacao}</li>)}
-            {preRequisitos?.length === 0 && <li className="text-slate-500">Sem pré-requisitos.</li>}
+            {preRequisitos?.length === 0 && <li className="text-aco">Sem pré-requisitos.</li>}
           </ul>
 
           <form onSubmit={definirPreRequisito} className="flex items-end gap-2">
             <select required value={novoPreRequisitoId} onChange={(e) => setNovoPreRequisitoId(e.target.value)}
-              className="border border-slate-300 px-3 py-2 text-sm">
+              className="entrada">
               <option value="" disabled>Disciplina exigida…</option>
               {disciplinas?.filter((d) => d.id !== aberta.id).map((d) => (
                 <option key={d.id} value={d.id}>{d.codigo} — {d.designacao}</option>
               ))}
             </select>
-            <button type="submit" className="bg-escn-azul px-4 py-2 text-sm text-white hover:bg-opacity-90">
+            <button type="submit" className="botao">
               Definir
             </button>
           </form>
