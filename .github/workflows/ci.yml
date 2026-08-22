@@ -87,7 +87,10 @@ jobs:
       - name: Configurar Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # jsdom 30 exige Node >=22.22.2 (ver frontend/node_modules/jsdom/package.json,
+          # campo "engines") — Node 20 falha com "webidl.util.markAsUncloneable is not
+          # a function" ao instanciar CacheStorage.
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
