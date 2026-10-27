@@ -19,10 +19,18 @@ class RelatorioController extends Controller
 {
     public function aproveitamentoPorDisciplina(Request $request)
     {
+        abort_unless($request->user()->temPerfil('ADMINISTRADOR', 'COORDENADOR'), 403, 'Relatórios reservados à administração e à coordenação.');
+
         $query = app('db')->table('vw_aproveitamento_disciplina');
 
         $query->when($request->filled('ano_lectivo'), fn ($q) => $q->where('ano_lectivo', $request->string('ano_lectivo')));
         $query->when($request->filled('semestre'), fn ($q) => $q->where('semestre', $request->integer('semestre')));
+
+        // Sem ordenacao explicita, a vista devolvia as linhas pela ordem em
+        // que o Postgres as encontrava -- que muda entre execucoes. Um
+        // relatorio institucional (e o CSV e o PDF que dele saem) tem de
+        // sair sempre na mesma ordem.
+        $query->orderBy('ano_lectivo')->orderBy('semestre')->orderBy('codigo');
 
         $linhas = $query->get()->map(fn ($linha) => [
             'codigo' => $linha->codigo,

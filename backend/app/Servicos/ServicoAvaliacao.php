@@ -30,10 +30,35 @@ final class ServicoAvaliacao
     ) {}
 
     /**
-     * @return array{publicadas: int, dispensados: int, admitidos_exame: int, reprovados_frequencia: int}
+     * Publica as notas de UMA avaliacao. O docente publica cada avaliacao a
+     * medida que a corrige (Teste 1 em Marco, Trabalho em Maio...), por isso
+     * os resultados so se calculam quando ha dados para isso:
+     *
+     *  - a nota de frequencia (RN-07), quando todas as avaliacoes de
+     *    frequencia da turma estiverem publicadas -- media ponderada entre
+     *    elas, pelos pesos relativos;
+     *  - a classificacao final, quando o exame for publicado (para quem foi
+     *    admitido) ou logo com a frequencia (dispensados e excluidos).
+     *
+     * @param  list<array{id: int, tipo: string, peso: float, estado: string}>  $estrutura
+     *                                                                                      todas as avaliacoes da turma (RN-06: os pesos somam 100%, incluindo o exame)
+     * @return array{publicadas: int, dispensados: int, admitidos_exame: int, reprovados_frequencia: int, frequencia_calculada: bool}
      */
-    public function publicar(object $avaliacao, bool $confirmarIncompleta = false): array
+    public function publicar(object $avaliacao, bool $confirmarIncompleta = false, array $estrutura = []): array
     {
+        // RN-06: sem a estrutura completa, os pesos de cada nota nao tem sentido.
+        $somaPesos = round(array_sum(array_column($estrutura, 'peso')), 2);
+        if ($estrutura !== [] && abs($somaPesos - 100.0) > 0.01) {
+            throw new RegraNegocioViolada(
+                'RN-06',
+                sprintf(
+                    'As avaliações desta disciplina somam %s%%. Ajuste os pesos para somarem 100%% (incluindo o exame) antes de publicar.',
+                    rtrim(rtrim(number_format($somaPesos, 2, ',', ''), '0'), ',')
+                ),
+                'peso'
+            );
+        }
+
         $inscricoes = $this->inscricoes->porTurma($avaliacao->turma_id);
         $lancadas = $this->classificacoes->porAvaliacao($avaliacao->id);
 
@@ -42,7 +67,7 @@ final class ServicoAvaliacao
         if ($emFalta !== [] && ! $confirmarIncompleta) {
             throw new RegraNegocioViolada(
                 'US-18',
-                sprintf('Existem %d estudantes sem classificação nem marca de falta.', count($emFalta)),
+                sprintf('Há %d aluno(s) sem nota nem falta marcada.', count($emFalta)),
                 'classificacoes'
             );
         }
@@ -56,20 +81,66 @@ final class ServicoAvaliacao
             'dispensados' => 0,
             'admitidos_exame' => 0,
             'reprovados_frequencia' => 0,
+            'frequencia_calculada' => false,
         ];
 
-        foreach ($inscricoes as $inscricao) {
-            $notas = $this->notasDe($inscricao);
+        // Sem estrutura (chamada antiga), a avaliacao publicada e a unica conhecida.
+        if ($estrutura === []) {
+            $estrutura = [['id' => (int) $avaliacao->id, 'tipo' => (string) $avaliacao->tipo, 'peso' => (float) $avaliacao->peso, 'estado' => 'PUBLICADA']];
+        }
 
-            if ($notas === []) {
-                continue;
+        $publicada = static fn (array $a) => $a['estado'] === 'PUBLICADA' || $a['id'] === (int) $avaliacao->id;
+        $deFrequencia = array_values(array_filter($estrutura, static fn (array $a) => TipoAvaliacao::from($a['tipo'])->contaParaFrequencia()));
+        $exames = array_values(array_filter($estrutura, static fn (array $a) => ! TipoAvaliacao::from($a['tipo'])->contaParaFrequencia()));
+
+        $frequenciaCompleta = $deFrequencia !== [] && count(array_filter($deFrequencia, $publicada)) === count($deFrequencia);
+        $exame = $exames[0] ?? null;
+        $examePublicado = $exame !== null && $publicada($exame);
+
+        if (! $frequenciaCompleta) {
+            $this->registarEvento($avaliacao, $resumo);
+
+            return $resumo;
+        }
+
+        $resumo['frequencia_calculada'] = true;
+        $somaFrequencia = array_sum(array_column($deFrequencia, 'peso'));
+
+        foreach ($inscricoes as $inscricao) {
+            $notasPorAvaliacao = [];
+            foreach ($this->classificacoes->porInscricao($inscricao->id) as $c) {
+                $notasPorAvaliacao[(int) $c->avaliacao_id] = $c;
             }
 
-            $frequencia = $regulamento->calcularFrequencia($notas);
+            // RN-07: media ponderada das avaliacoes de frequencia, com os pesos
+            // relativos entre elas (30% + 20% contam como 60/40). Nota em
+            // branco conta como falta, isto e, zero (US-20).
+            $notas = array_map(function (array $a) use ($notasPorAvaliacao, $somaFrequencia) {
+                $c = $notasPorAvaliacao[$a['id']] ?? null;
+                $valor = ($c === null || $c->valor === null) ? null : (float) $c->valor;
+                $faltou = $valor === null || (bool) $c->faltou;
+
+                return new NotaAvaliacao(
+                    TipoAvaliacao::from($a['tipo']),
+                    round((float) $a['peso'] * 100 / $somaFrequencia, 6),
+                    $valor,
+                    $faltou,
+                );
+            }, $deFrequencia);
+
+            $frequencia = $regulamento->calcularFrequencia($this->ajustarParaCem($notas));
             $situacao = $regulamento->determinarSituacaoFrequencia($frequencia);
-            $final = $regulamento->calcularClassificacaoFinal($frequencia, $inscricao->nota_exame ?? null);
+
+            $notaExame = null;
+            if ($examePublicado && $situacao === SituacaoFrequencia::ADMITIDO_EXAME) {
+                $c = $notasPorAvaliacao[$exame['id']] ?? null;
+                $notaExame = ($c === null || $c->faltou || $c->valor === null) ? 0.0 : (float) $c->valor;
+            }
+
+            $final = $regulamento->calcularClassificacaoFinal($frequencia, $notaExame);
 
             $inscricao->nota_frequencia = $frequencia;
+            $inscricao->nota_exame = $notaExame;
             $inscricao->situacao_frequencia = $situacao->value;
             $inscricao->classificacao_final = $final;
             $inscricao->situacao_final = $regulamento->determinarSituacaoFinal($final)->value;
@@ -88,13 +159,40 @@ final class ServicoAvaliacao
             }
         }
 
+        $this->registarEvento($avaliacao, $resumo);
+
+        return $resumo;
+    }
+
+    /**
+     * Os pesos relativos sao arredondados; o ultimo absorve o residuo para a
+     * soma dar exactamente 100 e o regulamento (RN-06) os aceitar.
+     *
+     * @param  list<NotaAvaliacao>  $notas
+     * @return list<NotaAvaliacao>
+     */
+    private function ajustarParaCem(array $notas): array
+    {
+        $residuo = 100.0 - array_sum(array_map(static fn (NotaAvaliacao $n) => $n->peso, $notas));
+        $ultima = array_pop($notas);
+
+        if ($ultima === null) {
+            return [];
+        }
+
+        $notas[] = new NotaAvaliacao($ultima->tipo, $ultima->peso + $residuo, $ultima->valor, $ultima->faltou);
+
+        return $notas;
+    }
+
+    /** @param array<string, int|bool> $resumo */
+    private function registarEvento(object $avaliacao, array $resumo): void
+    {
         $this->auditoria->registar('avaliacao.publicada', 'avaliacao', (string) $avaliacao->id, null, $resumo);
 
         // Observer: os ouvintes (notificacoes, pauta provisoria) reagem depois da
         // transaccao. Uma falha no envio nao anula a publicacao (US-18, fluxo A5).
         event(new NotasPublicadas($avaliacao, $resumo));
-
-        return $resumo;
     }
 
     /**
@@ -114,23 +212,6 @@ final class ServicoAvaliacao
             'media_ponderada' => $regulamento->calcularMediaCurso($aprovadas),
             'creditos_obtidos' => array_sum(array_column($aprovadas, 'creditos')),
         ];
-    }
-
-    /** @return list<NotaAvaliacao> */
-    private function notasDe(object $inscricao): array
-    {
-        $notas = [];
-
-        foreach ($this->classificacoes->porInscricao($inscricao->id) as $classificacao) {
-            $notas[] = new NotaAvaliacao(
-                TipoAvaliacao::from($classificacao->tipo),
-                (float) $classificacao->peso,
-                $classificacao->valor === null ? null : (float) $classificacao->valor,
-                (bool) $classificacao->faltou,
-            );
-        }
-
-        return $notas;
     }
 
     /** @return list<string> */

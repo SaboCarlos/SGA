@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\DisciplinaController;
 use App\Http\Controllers\Api\V1\DocenteController;
 use App\Http\Controllers\Api\V1\EstudanteController;
 use App\Http\Controllers\Api\V1\InscricaoController;
+use App\Http\Controllers\Api\V1\NotaController;
 use App\Http\Controllers\Api\V1\NotificacaoController;
 use App\Http\Controllers\Api\V1\PainelController;
 use App\Http\Controllers\Api\V1\PautaController;
@@ -43,21 +44,23 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/auth/me', [AuthController::class, 'me']);
 
         Route::get('/painel', PainelController::class);
+        Route::get('/notas', NotaController::class);
 
-        Route::apiResource('estudantes', EstudanteController::class)->parameters(['estudantes' => 'estudante']);
+        Route::apiResource('estudantes', EstudanteController::class)->only(['index', 'show'])->parameters(['estudantes' => 'estudante']);
+        Route::apiResource('estudantes', EstudanteController::class)->only(['store', 'update', 'destroy'])->parameters(['estudantes' => 'estudante'])
+            ->middleware('perfil:ADMINISTRADOR,COORDENADOR');
         Route::get('/estudantes/{estudante}/aproveitamento', [EstudanteController::class, 'aproveitamento']);
 
-        Route::apiResource('docentes', DocenteController::class)->parameters(['docentes' => 'docente']);
+        Route::apiResource('docentes', DocenteController::class)->only(['index', 'show'])->parameters(['docentes' => 'docente'])
+            ->middleware('perfil:ADMINISTRADOR,COORDENADOR');
 
-        Route::apiResource('cursos', CursoController::class)->only(['index', 'store', 'show', 'update']);
+        Route::apiResource('cursos', CursoController::class)->only(['index', 'show']);
         Route::get('/cursos/{curso}/plano-curricular', [CursoController::class, 'planoCurricular']);
-        Route::post('/cursos/{curso}/plano-curricular', [CursoController::class, 'acrescentarAoPlano']);
 
-        Route::apiResource('disciplinas', DisciplinaController::class)->only(['index', 'store', 'show', 'update']);
+        Route::apiResource('disciplinas', DisciplinaController::class)->only(['index', 'show']);
         Route::get('/disciplinas/{disciplina}/pre-requisitos', [DisciplinaController::class, 'preRequisitos']);
-        Route::post('/disciplinas/{disciplina}/pre-requisitos', [DisciplinaController::class, 'definirPreRequisito']);
 
-        Route::apiResource('turmas', TurmaController::class)->only(['index', 'store', 'show']);
+        Route::apiResource('turmas', TurmaController::class)->only(['index', 'show']);
         Route::get('/turmas/{turma}/inscritos', [TurmaController::class, 'inscritos']);
         Route::get('/turmas/{turma}/pauta', [PautaController::class, 'show']);
 
@@ -99,10 +102,27 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/perfis/{perfil}/permissoes', [PerfilController::class, 'atribuirPermissao']);
         Route::delete('/perfis/{perfil}/permissoes/{permissao}', [PerfilController::class, 'retirarPermissao']);
 
-        Route::apiResource('anos-lectivos', AnoLectivoController::class)->only(['index', 'store', 'show'])->parameters(['anos-lectivos' => 'anoLectivo']);
-        Route::post('/anos-lectivos/{anoLectivo}/activar', [AnoLectivoController::class, 'activar']);
-        Route::post('/anos-lectivos/{anoLectivo}/encerrar', [AnoLectivoController::class, 'encerrar']);
+        Route::apiResource('anos-lectivos', AnoLectivoController::class)->only(['index', 'show'])->parameters(['anos-lectivos' => 'anoLectivo']);
         Route::get('/anos-lectivos/{anoLectivo}/periodos', [AnoLectivoController::class, 'periodos']);
-        Route::post('/anos-lectivos/{anoLectivo}/periodos', [AnoLectivoController::class, 'criarPeriodo']);
+
+        // Gestao institucional: cadastros, oferta formativa e calendario.
+        // So o Administrador altera; a leitura (acima) fica aberta porque o
+        // catalogo nao tem dados pessoais e alimenta os ecras de todos.
+        Route::middleware('perfil:ADMINISTRADOR')->group(function (): void {
+            Route::apiResource('docentes', DocenteController::class)->only(['store', 'update', 'destroy'])->parameters(['docentes' => 'docente']);
+
+            Route::apiResource('cursos', CursoController::class)->only(['store', 'update']);
+            Route::post('/cursos/{curso}/plano-curricular', [CursoController::class, 'acrescentarAoPlano']);
+
+            Route::apiResource('disciplinas', DisciplinaController::class)->only(['store', 'update']);
+            Route::post('/disciplinas/{disciplina}/pre-requisitos', [DisciplinaController::class, 'definirPreRequisito']);
+
+            Route::post('/turmas', [TurmaController::class, 'store']);
+
+            Route::post('/anos-lectivos', [AnoLectivoController::class, 'store']);
+            Route::post('/anos-lectivos/{anoLectivo}/activar', [AnoLectivoController::class, 'activar']);
+            Route::post('/anos-lectivos/{anoLectivo}/encerrar', [AnoLectivoController::class, 'encerrar']);
+            Route::post('/anos-lectivos/{anoLectivo}/periodos', [AnoLectivoController::class, 'criarPeriodo']);
+        });
     });
 });

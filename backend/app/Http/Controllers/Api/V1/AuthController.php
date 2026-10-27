@@ -56,7 +56,7 @@ class AuthController extends Controller
 
         RateLimiter::clear($chave);
 
-        $minutos = (int) env('SANCTUM_EXPIRACAO', 60);
+        $minutos = (int) config('sanctum.expiracao_minutos');
         $expiraEm = now()->addMinutes($minutos);
 
         $token = $utilizador->createToken('api', ['*'], $expiraEm);

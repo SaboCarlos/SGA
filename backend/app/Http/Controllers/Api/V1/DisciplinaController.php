@@ -11,9 +11,9 @@ use Illuminate\Http\Request;
 /** UC10, UC11 (US-08 disciplinas, US-10 pré-requisitos). */
 class DisciplinaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Disciplina::where('activo', true)->get()->map(fn (Disciplina $d) => $this->paraResposta($d))->all());
+        return $this->listar($request, Disciplina::where('activo', true)->orderBy('codigo')->get()->map(fn (Disciplina $d) => $this->paraResposta($d)));
     }
 
     public function store(Request $request)

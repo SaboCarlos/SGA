@@ -13,6 +13,9 @@
         .resumo { margin-bottom: 12px; }
         .resumo span { margin-right: 24px; }
         .estado { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #e2e8f0; }
+        .num { text-align: right; }
+        .rascunho { color: #94a3b8; font-style: italic; }
+        .nota-rodape { margin-top: 10px; color: #64748b; font-size: 10px; }
     </style>
 </head>
 <body>
@@ -34,7 +37,11 @@
             <tr>
                 <th>Nº Estudante</th>
                 <th>Nome</th>
-                <th>Nota de frequência</th>
+                @foreach ($pauta['avaliacoes'] as $avaliacao)
+                    <th class="num">{{ $avaliacao['designacao'] }} ({{ rtrim(rtrim(number_format($avaliacao['peso'], 2, ',', ''), '0'), ',') }}%)</th>
+                @endforeach
+                <th class="num">Frequência</th>
+                <th class="num">Final</th>
                 <th>Situação</th>
             </tr>
         </thead>
@@ -43,11 +50,26 @@
                 <tr>
                     <td>{{ $linha['numero_estudante'] }}</td>
                     <td>{{ $linha['nome_completo'] }}</td>
-                    <td>{{ $linha['nota_frequencia'] ?? '—' }}</td>
-                    <td>{{ $linha['situacao_frequencia'] }}</td>
+                    @foreach ($pauta['avaliacoes'] as $avaliacao)
+                        @php($nota = $linha['notas'][$avaliacao['id']] ?? null)
+                        <td class="num {{ $nota && ! $nota['publicada'] ? 'rascunho' : '' }}">
+                            @if (! $nota || ($nota['valor'] === null && ! $nota['faltou']))
+                                —
+                            @elseif ($nota['faltou'])
+                                F
+                            @else
+                                {{ $nota['valor'] }}
+                            @endif
+                        </td>
+                    @endforeach
+                    <td class="num">{{ $linha['nota_frequencia'] ?? '—' }}</td>
+                    <td class="num">{{ $linha['classificacao_final'] ?? '—' }}</td>
+                    <td>{{ $linha['situacao_final'] }}</td>
                 </tr>
             @endforeach
         </tbody>
     </table>
+
+    <p class="nota-rodape">F = faltou. Notas a cinzento e em itálico ainda não foram publicadas.</p>
 </body>
 </html>

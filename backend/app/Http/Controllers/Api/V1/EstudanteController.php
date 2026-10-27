@@ -22,7 +22,15 @@ class EstudanteController extends Controller
 
     public function index(Request $request)
     {
+        abort_unless($request->user()->temPerfil('ADMINISTRADOR', 'COORDENADOR', 'DOCENTE'), 403, 'Sem permissão para listar estudantes.');
+
         $query = Estudante::query()->with('curso');
+        $utilizador = $request->user();
+
+        // O docente so ve os estudantes inscritos nas turmas que lecciona.
+        if (! $utilizador->ehDireccao()) {
+            $query->whereHas('inscricoes.turma', fn ($q) => $q->where('docente_id', $utilizador->docente?->id));
+        }
 
         if ($request->filled('pesquisa')) {
             $termo = mb_strtolower((string) $request->string('pesquisa'));
@@ -35,7 +43,7 @@ class EstudanteController extends Controller
         $query->when($request->filled('curso_id'), fn ($q) => $q->where('curso_id', $request->integer('curso_id')));
         $query->when($request->filled('estado'), fn ($q) => $q->where('estado', $request->string('estado')));
 
-        $porPagina = min(50, $request->integer('por_pagina', 25));
+        $porPagina = max(1, min(50, $request->integer('por_pagina', 10)));
         $pagina = $query->paginate($porPagina, page: $request->integer('pagina', 1));
 
         return response()->json([
@@ -91,8 +99,15 @@ class EstudanteController extends Controller
         return response()->json($this->estudanteParaResposta($estudante->fresh('curso')), 201);
     }
 
-    public function show(Estudante $estudante)
+    public function show(Request $request, Estudante $estudante)
     {
+        $utilizador = $request->user();
+        abort_unless(
+            $utilizador->ehDireccao() || $utilizador->leccionaA($estudante) || $utilizador->estudante?->id === $estudante->id,
+            403,
+            'Sem permissão para consultar este estudante.'
+        );
+
         return response()->json($this->estudanteParaResposta($estudante->load('curso')));
     }
 
@@ -130,7 +145,7 @@ class EstudanteController extends Controller
     {
         $utilizador = $request->user();
 
-        $podeVer = $utilizador->temPerfil('ADMINISTRADOR')
+        $podeVer = $utilizador->ehDireccao()
             || ($utilizador->estudante && $utilizador->estudante->id === $estudante->id)
             || ($utilizador->docente && $estudante->curso->coordenador_id === $utilizador->docente->id);
 

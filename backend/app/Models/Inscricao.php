@@ -10,6 +10,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property string $id
+ * @property string $estudante_id
+ * @property int $turma_id
+ * @property string $estado
+ * @property string $situacao_frequencia
+ * @property string $situacao_final
+ * @property float|null $nota_frequencia
+ * @property float|null $classificacao_final
+ * @property-read Turma|null $turma
+ * @property-read Estudante|null $estudante
+ */
 class Inscricao extends Model
 {
     use HasFactory, TemChaveUuid;

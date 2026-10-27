@@ -9,6 +9,7 @@ use App\Dominio\Repositorios\RepositorioClassificacao;
 use App\Http\Controllers\Controller;
 use App\Models\Avaliacao;
 use App\Models\Classificacao;
+use App\Models\Inscricao;
 use App\Models\Turma;
 use App\Servicos\ServicoAvaliacao;
 use Illuminate\Http\Request;
@@ -18,8 +19,15 @@ class AvaliacaoController extends Controller
 {
     public function __construct(private readonly ServicoAvaliacao $servicoAvaliacao) {}
 
-    public function index(Turma $turma)
+    public function index(Request $request, Turma $turma)
     {
+        // A estrutura (designacoes e pesos) nao tem notas: o estudante
+        // inscrito na turma tambem a pode consultar.
+        $utilizador = $request->user();
+        $estaInscrito = $utilizador->estudante
+            && $turma->inscricoes()->where('estudante_id', $utilizador->estudante->id)->exists();
+        abort_unless($utilizador->gereTurma($turma) || $estaInscrito, 403, 'Sem acesso às avaliações desta turma.');
+
         $avaliacoes = $turma->avaliacoes;
         $soma = round((float) $avaliacoes->sum('peso'), 2);
 
@@ -46,21 +54,39 @@ class AvaliacaoController extends Controller
         return response()->json($this->avaliacaoParaResposta($avaliacao), 201);
     }
 
-    public function classificacoes(Avaliacao $avaliacao)
+    /**
+     * Grelha de lancamento: uma linha por estudante activo na turma, com a
+     * nota se ja foi lancada. Antes devolvia so as classificacoes existentes,
+     * e numa avaliacao nova a grelha vinha vazia -- o docente nao tinha onde
+     * escrever a primeira nota.
+     */
+    public function classificacoes(Request $request, Avaliacao $avaliacao)
     {
+        abort_unless($request->user()->gereTurma($avaliacao->turma), 403, 'Sem acesso às classificações desta turma.');
+
+        $lancadas = $avaliacao->classificacoes()->get()->keyBy('inscricao_id');
+
         return response()->json(
-            $avaliacao->classificacoes()
-                ->with('inscricao.estudante')
+            $avaliacao->turma->inscricoes()
+                ->where('estado', 'ACTIVA')
+                ->with('estudante')
                 ->get()
-                ->map(fn (Classificacao $c) => [
-                    'id' => $c->id,
-                    'inscricao_id' => $c->inscricao_id,
-                    'numero_estudante' => $c->inscricao->estudante->numero_estudante,
-                    'nome_completo' => $c->inscricao->estudante->nome_completo,
-                    'valor' => $c->valor,
-                    'faltou' => $c->faltou,
-                    'estado' => $c->estado,
-                ])
+                ->sortBy('estudante.numero_estudante')
+                ->map(function (Inscricao $i) use ($lancadas) {
+                    /** @var Classificacao|null $c */
+                    $c = $lancadas->get($i->id);
+
+                    return [
+                        'id' => $c?->id,
+                        'inscricao_id' => $i->id,
+                        'numero_estudante' => $i->estudante->numero_estudante,
+                        'nome_completo' => $i->estudante->nome_completo,
+                        'valor' => $c?->valor,
+                        'faltou' => (bool) $c?->faltou,
+                        'estado' => $c?->estado,
+                    ];
+                })
+                ->values()
         );
     }
 
@@ -68,9 +94,11 @@ class AvaliacaoController extends Controller
     {
         $this->autorizarDocenteDaTurma($request, $avaliacao->turma);
 
-        if ($avaliacao->estado !== 'RASCUNHO') {
+        // O docente pode gravar o rascunho as vezes que precisar; so a
+        // publicacao fecha a avaliacao (a partir dai, so por rectificacao).
+        if ($avaliacao->estado === 'PUBLICADA') {
             return response()->json([
-                'mensagem' => 'Só é possível lançar classificações numa avaliação em rascunho.',
+                'mensagem' => 'Estas notas já foram publicadas. Para corrigir uma nota, peça uma rectificação.',
             ], 409);
         }
 
@@ -80,6 +108,12 @@ class AvaliacaoController extends Controller
             'classificacoes.*.valor' => ['nullable', 'numeric', 'min:0', 'max:20'],
             'classificacoes.*.faltou' => ['sometimes', 'boolean'],
         ]);
+
+        // So inscricoes desta turma: sem isto, o docente podia lancar notas
+        // noutra turma enviando o id de uma inscricao alheia.
+        $inscricoesDaTurma = $avaliacao->turma->inscricoes()->pluck('id')->all();
+        $alheias = array_diff(array_column($dados['classificacoes'], 'inscricao_id'), $inscricoesDaTurma);
+        abort_if($alheias !== [], 422, 'Há inscrições que não pertencem a esta turma.');
 
         $utilizador = $request->user();
 
@@ -107,17 +141,29 @@ class AvaliacaoController extends Controller
 
         $confirmarIncompleta = (bool) $request->boolean('confirmar_incompleta');
 
+        $estrutura = $avaliacao->turma->avaliacoes
+            ->map(fn (Avaliacao $a) => ['id' => (int) $a->id, 'tipo' => (string) $a->tipo, 'peso' => (float) $a->peso, 'estado' => (string) $a->estado])
+            ->values()
+            ->all();
+
+        // Tudo ou nada: antes, se o calculo falhasse a meio, as notas ficavam
+        // marcadas como publicadas (visiveis aos alunos) com a avaliacao ainda
+        // "em lancamento".
         try {
-            $resumo = $this->servicoAvaliacao->publicar($avaliacao, $confirmarIncompleta);
+            $resumo = app('db')->transaction(function () use ($avaliacao, $confirmarIncompleta, $estrutura) {
+                $resumo = $this->servicoAvaliacao->publicar($avaliacao, $confirmarIncompleta, $estrutura);
+
+                // "regulamento_avaliacao" foi atribuida acima so para o servico a ler;
+                // nao e uma coluna real de "avaliacoes" e nao pode entrar no UPDATE
+                // seguinte (ficaria marcada como "suja" pelo Eloquent).
+                unset($avaliacao->regulamento_avaliacao);
+                $avaliacao->update(['estado' => 'PUBLICADA']);
+
+                return $resumo;
+            });
         } catch (RegraNegocioViolada $e) {
             return response()->json($e->paraResposta(), 409);
         }
-
-        // "regulamento_avaliacao" foi atribuida acima so para o servico a ler;
-        // nao e uma coluna real de "avaliacoes" e nao pode entrar no UPDATE
-        // seguinte (ficaria marcada como "suja" pelo Eloquent).
-        unset($avaliacao->regulamento_avaliacao);
-        $avaliacao->update(['estado' => 'PUBLICADA']);
 
         $mediaTurma = round((float) collect($avaliacao->turma->inscricoes)->avg('classificacao_final'), 1);
 

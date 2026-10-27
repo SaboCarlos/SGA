@@ -10,6 +10,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $designacao
+ * @property int $capacidade_maxima
+ * @property int $disciplina_id
+ * @property int $periodo_lectivo_id
+ * @property string|null $docente_id
+ * @property-read Disciplina|null $disciplina
+ */
 class Turma extends Model
 {
     use HasFactory;

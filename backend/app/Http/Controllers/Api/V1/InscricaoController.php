@@ -63,9 +63,20 @@ class InscricaoController extends Controller
     public function index(Request $request)
     {
         $query = Inscricao::query()->with(['turma.disciplina', 'estudante']);
+        $utilizador = $request->user();
 
-        if ($request->filled('estudante_id')) {
-            $query->where('estudante_id', $request->string('estudante_id'));
+        // Traz notas: a direccao ve todas, o docente as das suas turmas e o
+        // estudante so as proprias, seja qual for o filtro pedido.
+        if ($utilizador->ehDireccao() || $utilizador->docente) {
+            if (! $utilizador->ehDireccao()) {
+                $query->whereHas('turma', fn ($q) => $q->where('docente_id', $utilizador->docente->id));
+            }
+            if ($request->filled('estudante_id')) {
+                $query->where('estudante_id', $request->string('estudante_id'));
+            }
+        } else {
+            abort_unless($utilizador->estudante, 403, 'Sem permissão para consultar inscrições.');
+            $query->where('estudante_id', $utilizador->estudante->id);
         }
 
         if ($request->filled('ano_lectivo') || $request->filled('semestre')) {

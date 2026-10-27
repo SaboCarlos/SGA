@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $codigo
+ * @property string $designacao
+ * @property int $creditos
+ */
 class Disciplina extends Model
 {
     protected $table = 'disciplinas';

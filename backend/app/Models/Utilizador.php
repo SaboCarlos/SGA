@@ -70,6 +70,37 @@ class Utilizador extends Authenticatable
         return $this->perfis->pluck('nome')->intersect($nomes)->isNotEmpty();
     }
 
+    /**
+     * Quem pode ver as notas de todos os inscritos de uma turma (pauta,
+     * classificacoes, lista de inscritos): o Administrador, o Coordenador e
+     * o docente responsavel pela turma. Um estudante nunca -- ve apenas as
+     * suas notas, em GET /notas.
+     */
+    public function gereTurma(Turma $turma): bool
+    {
+        return $this->ehDireccao()
+            || ($this->docente !== null && $this->docente->id === $turma->docente_id);
+    }
+
+    /**
+     * Direccao (Administrador e Coordenador): ve toda a instituicao. Os
+     * restantes perfis veem apenas o que lhes diz respeito -- o docente as
+     * suas turmas, o estudante o seu percurso.
+     */
+    public function ehDireccao(): bool
+    {
+        return $this->temPerfil('ADMINISTRADOR', 'COORDENADOR');
+    }
+
+    /** O estudante esta (ou esteve) inscrito numa turma deste docente. */
+    public function leccionaA(Estudante $estudante): bool
+    {
+        return $this->docente !== null
+            && $estudante->inscricoes()
+                ->whereHas('turma', fn (Builder $q) => $q->where('docente_id', $this->docente->id))
+                ->exists();
+    }
+
     public function temPermissao(string $codigo): bool
     {
         return $this->perfis->flatMap(fn (Perfil $p) => $p->permissoes->pluck('codigo'))->contains($codigo);

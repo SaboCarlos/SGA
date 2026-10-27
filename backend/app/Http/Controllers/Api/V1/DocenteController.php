@@ -17,9 +17,9 @@ class DocenteController extends Controller
 {
     public function index(Request $request)
     {
-        return response()->json(Docente::where('activo', true)->get()->map(
+        return $this->listar($request, Docente::where('activo', true)->orderBy('nome_completo')->get()->map(
             fn (Docente $d) => $this->paraResposta($d)
-        )->all());
+        ));
     }
 
     public function store(Request $request)

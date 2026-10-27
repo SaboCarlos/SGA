@@ -14,18 +14,34 @@ class TurmaController extends Controller
     public function index(Request $request)
     {
         $query = Turma::query()->with(['disciplina', 'docente']);
+        $utilizador = $request->user();
+
+        // A direccao ve a oferta toda; o docente so as turmas que lecciona; o
+        // estudante so aquelas em que esta inscrito (as que pode escolher vem
+        // de GET /inscricoes/disponiveis).
+        if (! $utilizador->ehDireccao()) {
+            if ($utilizador->docente) {
+                $query->where('docente_id', $utilizador->docente->id);
+            } elseif ($utilizador->estudante) {
+                $query->whereHas('inscricoes', fn ($q) => $q
+                    ->where('estudante_id', $utilizador->estudante->id)
+                    ->where('estado', '<>', 'ANULADA'));
+            } else {
+                abort(403, 'Sem permissão para consultar turmas.');
+            }
+        }
 
         $query->when($request->filled('periodo_lectivo_id'), fn ($q) => $q->where('periodo_lectivo_id', $request->integer('periodo_lectivo_id')));
         $query->when($request->filled('docente_id'), fn ($q) => $q->where('docente_id', $request->string('docente_id')));
         $query->when($request->filled('disciplina_id'), fn ($q) => $q->where('disciplina_id', $request->integer('disciplina_id')));
 
-        $turmas = $query->get();
+        $turmas = $query->orderBy('id')->get();
 
         if ($request->boolean('com_vagas')) {
             $turmas = $turmas->filter(fn (Turma $t) => $t->vagasDisponiveis() > 0)->values();
         }
 
-        return response()->json($turmas->map(fn (Turma $t) => $this->paraResposta($t))->all());
+        return $this->listar($request, $turmas->map(fn (Turma $t) => $this->paraResposta($t)));
     }
 
     public function store(Request $request)
@@ -43,13 +59,20 @@ class TurmaController extends Controller
         return response()->json($this->paraResposta($turma->load(['disciplina', 'docente'])), 201);
     }
 
-    public function show(Turma $turma)
+    public function show(Request $request, Turma $turma)
     {
+        $utilizador = $request->user();
+        $estaInscrito = $utilizador->estudante
+            && $turma->inscricoes()->where('estudante_id', $utilizador->estudante->id)->exists();
+        abort_unless($utilizador->gereTurma($turma) || $estaInscrito, 403, 'Sem acesso a esta turma.');
+
         return response()->json($this->paraResposta($turma->load(['disciplina', 'docente'])));
     }
 
-    public function inscritos(Turma $turma)
+    public function inscritos(Request $request, Turma $turma)
     {
+        abort_unless($request->user()->gereTurma($turma), 403, 'Sem acesso à lista de inscritos desta turma.');
+
         return response()->json(
             $turma->inscricoes()
                 ->where('estado', 'ACTIVA')
