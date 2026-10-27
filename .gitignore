@@ -1,3 +1,6 @@
 .env
+.env.producao
 .DS_Store
 .claude/
+.vercel
+copias/

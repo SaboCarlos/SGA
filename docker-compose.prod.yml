@@ -1,0 +1,110 @@
+# Sistema de Gestao Academica (SGA) -- ambiente de PRODUCAO (VPS).
+#
+# Arranque:  docker compose -f docker-compose.prod.yml --env-file .env.producao up -d --build
+# Ou, mais simples:  make publicar
+#
+# Diferencas face a docker-compose.yml (desenvolvimento):
+#   - imagem auto-suficiente (sem bind-mount do codigo);
+#   - so a porta do proxy e publicada, e apenas em 127.0.0.1 -- quem a
+#     expoe ao mundo e o Apache do host (deploy/apache-sga.conf);
+#   - sem mailpit (SMTP real) e sem base de dados de teste;
+#   - restart: unless-stopped em todos os servicos.
+
+# Nome de projecto e de contentores distintos dos de desenvolvimento: o
+# docker-compose.yml herda o nome "sga" da pasta, e sem esta separacao as
+# duas stacks partilhariam volumes e nomes de contentor -- levantar uma
+# substituia os contentores da outra e apontava-a para a base de dados errada.
+name: sga-producao
+
+services:
+
+  proxy:
+    image: nginx:1.27-alpine
+    container_name: sga-prod-proxy
+    # Escuta SO no loopback: nada nesta stack fica acessivel a partir da
+    # internet sem passar pelo Apache (e, logo, pelo TLS).
+    ports:
+      - "127.0.0.1:${PORTA_HTTP:-8100}:80"
+    volumes:
+      - ./docker/nginx/api.prod.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+    networks: [sga-net]
+
+  api:
+    build:
+      # Contexto na raiz: a imagem precisa de backend/ e de docker/.
+      context: .
+      dockerfile: docker/api.prod.Dockerfile
+    image: sga-api:producao
+    container_name: sga-prod-api
+    env_file: [./backend/.env.producao]
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+    restart: unless-stopped
+    networks: [sga-net]
+
+  # worker e scheduler reutilizam a imagem que o servico "api" constroi --
+  # sem bloco "build" proprio, para nao a construir tres vezes. Como
+  # dependem de "api", a imagem ja existe quando arrancam.
+  worker:
+    image: sga-api:producao
+    container_name: sga-prod-worker
+    command: php artisan queue:work --tries=3 --timeout=90 --max-time=3600
+    env_file: [./backend/.env.producao]
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+    networks: [sga-net]
+
+  # US-30: sem isto, o Schedule::command(...) de routes/console.php nunca corre.
+  scheduler:
+    image: sga-api:producao
+    container_name: sga-prod-scheduler
+    command: php artisan schedule:work
+    env_file: [./backend/.env.producao]
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+    networks: [sga-net]
+
+  db:
+    image: postgres:16-alpine
+    container_name: sga-prod-db
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-sga}
+      POSTGRES_USER: ${DB_USERNAME:-sga}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD em .env.producao}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-sga} -d ${DB_DATABASE:-sga}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks: [sga-net]
+
+  cache:
+    image: redis:7-alpine
+    container_name: sga-prod-cache
+    command: redis-server --save 60 1 --appendonly no
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+    networks: [sga-net]
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  sga-net:
+    driver: bridge

@@ -44,3 +44,56 @@ testes-frontend:  ## Suite Vitest do frontend
 
 dominio:          ## Verificacao das regras de dominio sem dependencias
 	php verificar-dominio.php
+
+repor-dados:      ## Apaga tudo e volta aos dados iniciais da instituicao
+	docker compose exec api php artisan migrate:fresh --drop-types --seed
+
+# ---------------------------------------------------------------------------
+# Producao (VPS). Ver docs/implantacao.md.
+# Todos estes alvos usam docker-compose.prod.yml -- nunca tocam no ambiente
+# de desenvolvimento acima.
+# ---------------------------------------------------------------------------
+
+PROD := docker compose -f docker-compose.prod.yml --env-file .env.producao
+
+.PHONY: instalar-producao publicar chave-producao estado-producao registos-producao parar-producao copia-seguranca
+
+instalar-producao: ## VPS: primeira instalacao (depois de preencher os .env.producao)
+	@test -f .env.producao || { echo "Falta .env.producao (cp .env.producao.example .env.producao)"; exit 1; }
+	@test -f backend/.env.producao || { echo "Falta backend/.env.producao"; exit 1; }
+	$(PROD) up -d --build
+	$(PROD) exec -T api php artisan migrate --force
+	$(PROD) exec -T api php artisan db:seed --force
+	@echo "SGA a correr em http://127.0.0.1 na porta definida em PORTA_HTTP"
+
+publicar:         ## VPS: publica a versao mais recente (pull, rebuild, migrar)
+	git pull --ff-only
+	$(PROD) up -d --build
+	$(PROD) exec -T api php artisan migrate --force
+	@echo "Publicado. Estado:" && $(PROD) ps
+
+chave-producao:   ## VPS: gera o APP_KEY e escreve-o em backend/.env.producao
+	@grep -q '^APP_KEY=.\+' backend/.env.producao \
+	  && echo "APP_KEY ja definido -- nao vou substituir (invalidaria dados cifrados)." \
+	  || $(PROD) run --rm --no-deps api php artisan key:generate --force --show \
+	     | tail -n1 | xargs -I{} sed -i 's|^APP_KEY=.*|APP_KEY={}|' backend/.env.producao
+	@grep '^APP_KEY=' backend/.env.producao
+
+estado-producao:  ## VPS: estado dos contentores
+	$(PROD) ps
+
+registos-producao: ## VPS: registos em tempo real (Ctrl-C para sair)
+	$(PROD) logs -f --tail=100
+
+parar-producao:   ## VPS: para a stack (os dados persistem nos volumes)
+	$(PROD) down
+
+copia-seguranca:  ## VPS: dump da base de dados para copias/
+	@mkdir -p copias
+	@# As credenciais vem de .env.producao, nao do ambiente da shell: sem
+	@# este "set -a; . ...", um DB_USERNAME personalizado era ignorado e o
+	@# pg_dump falhava com "role sga does not exist".
+	@set -a; . ./.env.producao; set +a; \
+	  $(PROD) exec -T db pg_dump -U "$$DB_USERNAME" "$$DB_DATABASE" \
+	  | gzip > copias/sga-$$(date +%Y%m%d-%H%M%S).sql.gz
+	@ls -lh copias | tail -n1

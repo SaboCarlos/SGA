@@ -50,6 +50,12 @@ jobs:
         working-directory: backend
         run: composer install --no-interaction --prefer-dist
 
+      # Fase 6 — análise de segurança das dependências: falha o pipeline se
+      # alguma biblioteca PHP instalada tiver uma vulnerabilidade publicada.
+      - name: Auditoria de segurança das dependências (Composer)
+        working-directory: backend
+        run: composer audit --no-interaction
+
       - name: Preparar ambiente
         working-directory: backend
         run: |
@@ -97,6 +103,13 @@ jobs:
       - name: Instalar dependências
         working-directory: frontend
         run: npm ci
+
+      # Só as dependências que entram no bundle servido ao utilizador. As de
+      # desenvolvimento (vite/vitest) têm avisos conhecidos e documentados como
+      # risco aceite em docs/fase6-devops-seguranca.md, secção 4.2.
+      - name: Auditoria de segurança das dependências de produção (npm)
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=moderate
 
       - name: Estilo de código (ESLint)
         working-directory: frontend

@@ -1,0 +1,5 @@
+# Sem isto, um "git clone" no Windows com core.autocrlf=true converte
+# init-test-db.sh para CRLF; o container Postgres falha a arrancar porque
+# o shebang passa a ser "#!/bin/sh\r".
+* text=auto eol=lf
+*.sh text eol=lf

@@ -1,0 +1,35 @@
+# O contexto de build da imagem de producao e a raiz do repositorio
+# (docker/api.prod.Dockerfile precisa de backend/ e de docker/). Sem este
+# ficheiro, o Docker enviava ~240 MB por build -- .git, node_modules e o
+# vendor local, nada disso usado na imagem.
+
+.git
+.github
+.claude
+.env
+.env.*
+!.env.producao.example
+
+# O frontend vai para o Vercel, nao para a imagem da API.
+frontend
+
+docs
+copias
+verificar-dominio.php
+
+backend/vendor
+backend/node_modules
+backend/.env
+backend/.env.*
+!backend/.env.producao.example
+# Nota: excluir "storage/framework/<x>/*" apagaria tambem os .gitignore que
+# mantem essas pastas no repositorio -- e sem as pastas o "view:cache" do
+# arranque falha. Excluem-se so os ficheiros gerados, por extensao, e o
+# Dockerfile garante a arvore com um mkdir -p.
+backend/storage/logs/*.log
+backend/storage/framework/cache/data
+backend/storage/framework/sessions/*.php
+backend/storage/framework/views/*.php
+backend/bootstrap/cache/*.php
+backend/.phpunit.result.cache
+backend/tests
