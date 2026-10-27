@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { api, ErroApi } from '@/servicos/api'
 import { Alerta } from '@/componentes/Alerta'
+import { Paginacao, usePaginacaoLocal } from '@/componentes/Paginacao'
 import type { PerfilDetalhe, PermissaoCatalogo } from '@/tipos/api'
 
 /** Gestão de perfis e permissões (US-03) — catálogo, distinto de atribuir perfis a um utilizador. */
@@ -16,6 +17,8 @@ export function Perfis() {
   const [erro, setErro] = useState<string | null>(null)
   const [erroPerfil, setErroPerfil] = useState<string | null>(null)
 
+  const pgPermissoes = usePaginacaoLocal(permissoes)
+  const pgPerfis = usePaginacaoLocal(perfis)
   useEffect(() => {
     carregarPerfis()
     carregarPermissoes()
@@ -130,7 +133,7 @@ export function Perfis() {
 
           <div className="cartao">
             {perfis === null && <p className="p-3 text-sm text-aco">A carregar…</p>}
-            {perfis?.map((p) => (
+            {pgPerfis.visiveis.map((p) => (
               <button
                 key={p.id}
                 onClick={() => abrirPerfil(p)}
@@ -145,6 +148,7 @@ export function Perfis() {
               </button>
             ))}
           </div>
+          <Paginacao coleccao={pgPerfis.coleccao} aoMudar={pgPerfis.setPagina} />
         </div>
 
         <div>
@@ -170,7 +174,7 @@ export function Perfis() {
           )}
 
           <ul className="cartao text-sm">
-            {permissoes.map((p) => (
+            {pgPermissoes.visiveis.map((p) => (
               <li key={p.id} className="border-t border-linha px-3 py-2 first:border-t-0">
                 <span className="font-mono text-xs text-texto">{p.codigo}</span>
                 {p.descricao && <span className="ml-2 text-aco">{p.descricao}</span>}
@@ -178,6 +182,7 @@ export function Perfis() {
             ))}
             {permissoes.length === 0 && <li className="px-3 py-4 text-center text-aco">Sem permissões no catálogo.</li>}
           </ul>
+          <Paginacao coleccao={pgPermissoes.coleccao} aoMudar={pgPermissoes.setPagina} />
         </div>
       </div>
 

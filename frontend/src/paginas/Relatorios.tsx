@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '@/servicos/api'
 import { Alerta } from '@/componentes/Alerta'
+import { Paginacao, usePaginacaoLocal } from '@/componentes/Paginacao'
 import type { LinhaRelatorioDisciplina } from '@/tipos/api'
 
 /** Relatório de aproveitamento por disciplina (UC29 / RF-55). */
@@ -8,6 +9,7 @@ export function Relatorios() {
   const [linhas, setLinhas] = useState<LinhaRelatorioDisciplina[] | null>(null)
   const [erro, setErro] = useState<string | null>(null)
 
+  const pgLinhas = usePaginacaoLocal(linhas)
   useEffect(() => {
     api
       .get<LinhaRelatorioDisciplina[]>('/relatorios/aproveitamento-disciplina')
@@ -57,7 +59,7 @@ export function Relatorios() {
               </tr>
             </thead>
             <tbody>
-              {linhas.map((l) => (
+              {pgLinhas.visiveis.map((l) => (
                 <tr key={`${l.codigo}-${l.ano_lectivo}-${l.semestre}`}>
                   <td>{l.codigo} — {l.disciplina}</td>
                   <td>{l.ano_lectivo} / S{l.semestre}</td>
@@ -75,6 +77,7 @@ export function Relatorios() {
           </table>
         </div>
       )}
+      <Paginacao coleccao={pgLinhas.coleccao} aoMudar={pgLinhas.setPagina} />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { api, ErroApi } from '@/servicos/api'
 import { Alerta } from '@/componentes/Alerta'
+import { Paginacao, usePaginacaoLocal } from '@/componentes/Paginacao'
 import type { Curso, Disciplina, ItemPlano } from '@/tipos/api'
 
 const ESTADO_INICIAL = { codigo: '', designacao: '', grau: 'Licenciatura', duracao_anos: '4', total_creditos: '240' }
@@ -18,6 +19,7 @@ export function Cursos() {
   const [erroPlano, setErroPlano] = useState<string | null>(null)
   const [aSubmeter, setASubmeter] = useState(false)
 
+  const pgCursos = usePaginacaoLocal(cursos)
   useEffect(() => {
     carregar()
     api.get<Disciplina[]>('/disciplinas').then(setDisciplinas).catch(() => undefined)
@@ -120,7 +122,7 @@ export function Cursos() {
               </tr>
             </thead>
             <tbody>
-              {cursos.map((c) => (
+              {pgCursos.visiveis.map((c) => (
                 <tr key={c.id}>
                   <td className="num">{c.codigo}</td>
                   <td>{c.designacao}</td>
@@ -136,6 +138,7 @@ export function Cursos() {
           </table>
         </div>
       )}
+      <Paginacao coleccao={pgCursos.coleccao} aoMudar={pgCursos.setPagina} />
 
       {cursoAberto && (
         <div className="cartao mt-6 p-4">

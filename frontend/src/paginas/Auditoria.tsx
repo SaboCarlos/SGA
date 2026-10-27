@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '@/servicos/api'
 import { Alerta } from '@/componentes/Alerta'
+import { Paginacao, usePaginacaoLocal } from '@/componentes/Paginacao'
 import type { RegistoAuditoria } from '@/tipos/api'
 
 /** Consulta do registo de auditoria (UC31) — apenas leitura (RNF-32). */
@@ -9,6 +10,7 @@ export function Auditoria() {
   const [entidade, setEntidade] = useState('')
   const [erro, setErro] = useState<string | null>(null)
 
+  const pgRegistos = usePaginacaoLocal(registos)
   useEffect(() => {
     const temporizador = setTimeout(() => carregar(), 300)
     return () => clearTimeout(temporizador)
@@ -48,7 +50,7 @@ export function Auditoria() {
               </tr>
             </thead>
             <tbody>
-              {registos.map((r) => (
+              {pgRegistos.visiveis.map((r) => (
                 <tr key={r.id}>
                   <td className="num">{new Date(r.criado_em).toLocaleString('pt-PT')}</td>
                   <td>{r.utilizador ?? '—'}</td>
@@ -64,6 +66,7 @@ export function Auditoria() {
           </table>
         </div>
       )}
+      <Paginacao coleccao={pgRegistos.coleccao} aoMudar={pgRegistos.setPagina} />
     </div>
   )
 }

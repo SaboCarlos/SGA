@@ -31,6 +31,27 @@
   --perigo-bg: #fcebea;
   --aviso: #8a6100;
   --aviso-bg: #fbf1da;
+
+  /*
+   * Paleta de series para os graficos do painel.
+   *
+   * Nao sai da paleta institucional por capricho: as cores de marca (tinta
+   * e dourado) sao duas, e um grafico precisa de classes distinguiveis por
+   * quem nao distingue vermelho de verde. Estes cinco tons foram validados
+   * -- separacao CVD (deuteranopia/protanopia/tritanopia), banda de
+   * luminosidade e contraste contra a superficie -- nos dois temas, e a
+   * ORDEM faz parte da validacao: e a ordem pela qual segmentos vizinhos de
+   * um anel ou de uma barra empilhada se tocam. Nao reordenar sem revalidar.
+   *
+   * Em tema claro, --serie-3/4/5 ficam abaixo de 3:1 contra o branco: por
+   * isso todos os graficos trazem rotulo e valor visiveis (legenda ou
+   * tabela), e nunca dependem so da cor.
+   */
+  --serie-1: #2a78d6;
+  --serie-2: #eb6834;
+  --serie-3: #1baf7a;
+  --serie-4: #eda100;
+  --serie-5: #e87ba4;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -49,6 +70,14 @@
     --perigo-bg: #3a1613;
     --aviso: #e0b84b;
     --aviso-bg: #3a2e0c;
+
+    /* As mesmas cinco cores, re-escalonadas para a superficie escura -- nao
+       um clarear automatico; ver a nota no bloco :root. */
+    --serie-1: #3987e5;
+    --serie-2: #d95926;
+    --serie-3: #199e70;
+    --serie-4: #c98500;
+    --serie-5: #d55181;
   }
 }
 
@@ -67,6 +96,14 @@
   --perigo-bg: #3a1613;
   --aviso: #e0b84b;
   --aviso-bg: #3a2e0c;
+
+  /* As mesmas cinco cores, re-escalonadas para a superficie escura -- nao
+     um clarear automatico; ver a nota no bloco :root. */
+  --serie-1: #3987e5;
+  --serie-2: #d95926;
+  --serie-3: #199e70;
+  --serie-4: #c98500;
+  --serie-5: #d55181;
 }
 
 body {
@@ -122,12 +159,32 @@ body {
   .tabela tbody td {
     @apply border-t border-linha px-4 py-2.5 text-texto;
   }
+  /* Raiado: em tabelas largas, o olho perde a linha entre a primeira e a
+     ultima coluna. O tom e o mesmo do hover, a meio caminho da superficie,
+     para nao competir com a linha seleccionada. */
+  .tabela tbody tr:nth-child(even) td {
+    background: color-mix(in srgb, var(--superficie-alt) 55%, var(--superficie));
+  }
   .tabela tbody tr:hover td {
     @apply bg-superficie-alt;
   }
+  /* Colunas numericas alinhadas a direita: e o que permite comparar
+     ordens de grandeza de relance (12 debaixo de 300, unidades sob
+     unidades). Alinhadas a esquerda, os digitos nao encostam. */
   .tabela td.num,
   .tabela th.num {
-    @apply tabular-nums text-aco;
+    @apply text-right tabular-nums;
+  }
+  .tabela td.num {
+    @apply text-aco;
+  }
+  /* Linha de estado vazio -- ver o padrao em uso nas paginas de listagem. */
+  .tabela tbody td.vazio {
+    @apply px-4 py-8 text-center text-sm text-aco;
+  }
+  /* Rodape de totais, quando existe. */
+  .tabela tfoot td {
+    @apply border-t-2 border-linha bg-superficie-alt px-4 py-2.5 text-sm font-semibold text-texto;
   }
 
   /* Selo de estado (badge). */

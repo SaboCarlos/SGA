@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, ErroApi } from '@/servicos/api'
 import { Alerta } from '@/componentes/Alerta'
+import { Paginacao } from '@/componentes/Paginacao'
 import type { ColeccaoPaginada, Curso, Estudante } from '@/tipos/api'
 
 const ESTADO_INICIAL = {
@@ -17,6 +18,8 @@ const ESTADO_INICIAL = {
 /** Cadastro de estudantes (UC05, UC06 / US-05, US-06). */
 export function Estudantes() {
   const [estudantes, setEstudantes] = useState<Estudante[] | null>(null)
+  const [coleccao, setColeccao] = useState<ColeccaoPaginada<Estudante> | null>(null)
+  const [pagina, setPagina] = useState(1)
   const [cursos, setCursos] = useState<Curso[]>([])
   const [pesquisa, setPesquisa] = useState('')
   const [aMostrarFormulario, setAMostrarFormulario] = useState(false)
@@ -31,13 +34,17 @@ export function Estudantes() {
   useEffect(() => {
     const temporizador = setTimeout(() => carregar(), 300)
     return () => clearTimeout(temporizador)
-  }, [pesquisa])
+  }, [pesquisa, pagina])
 
   function carregar() {
-    const parametros = pesquisa ? `?pesquisa=${encodeURIComponent(pesquisa)}` : ''
+    const parametros = new URLSearchParams({ pagina: String(pagina), por_pagina: '10' })
+    if (pesquisa) parametros.set('pesquisa', pesquisa)
     api
-      .get<ColeccaoPaginada<Estudante>>(`/estudantes${parametros}`)
-      .then((resposta) => setEstudantes(resposta.dados))
+      .get<ColeccaoPaginada<Estudante>>(`/estudantes?${parametros}`)
+      .then((resposta) => {
+        setEstudantes(resposta.dados)
+        setColeccao(resposta)
+      })
       .catch(() => setErro('Não foi possível carregar os estudantes.'))
   }
 
@@ -143,7 +150,10 @@ export function Estudantes() {
       <input
         placeholder="Pesquisar por nome ou número…"
         value={pesquisa}
-        onChange={(e) => setPesquisa(e.target.value)}
+        onChange={(e) => {
+          setPesquisa(e.target.value)
+          setPagina(1)
+        }}
         className="entrada mb-4 w-full max-w-sm"
       />
 
@@ -184,6 +194,7 @@ export function Estudantes() {
           </table>
         </div>
       )}
+      {coleccao && <Paginacao coleccao={coleccao} aoMudar={setPagina} />}
     </div>
   )
 }

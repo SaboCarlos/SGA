@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '@/servicos/api'
 import { Alerta } from '@/componentes/Alerta'
+import { Paginacao, usePaginacaoLocal } from '@/componentes/Paginacao'
 import type { Notificacao } from '@/tipos/api'
 
 /** Notificações do utilizador autenticado (RF-67, US-29). */
@@ -8,6 +9,7 @@ export function Notificacoes() {
   const [notificacoes, setNotificacoes] = useState<Notificacao[] | null>(null)
   const [erro, setErro] = useState<string | null>(null)
 
+  const pgNotificacoes = usePaginacaoLocal(notificacoes)
   useEffect(() => {
     carregar()
   }, [])
@@ -32,7 +34,7 @@ export function Notificacoes() {
 
       {notificacoes && (
         <div className="space-y-2">
-          {notificacoes.map((n) => (
+          {pgNotificacoes.visiveis.map((n) => (
             <button
               key={n.id}
               onClick={() => void marcarLida(n)}
@@ -48,6 +50,7 @@ export function Notificacoes() {
             </button>
           ))}
           {notificacoes.length === 0 && <p className="text-sm text-aco">Sem notificações.</p>}
+          <Paginacao coleccao={pgNotificacoes.coleccao} aoMudar={pgNotificacoes.setPagina} />
         </div>
       )}
     </div>

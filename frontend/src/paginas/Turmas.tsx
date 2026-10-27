@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { api, ErroApi } from '@/servicos/api'
 import { useAutenticacao } from '@/contextos/AutenticacaoContexto'
 import { Alerta } from '@/componentes/Alerta'
-import type { Disciplina, Docente, PeriodoLectivo, Turma } from '@/tipos/api'
+import { Paginacao } from '@/componentes/Paginacao'
+import type { ColeccaoPaginada, Disciplina, Docente, PeriodoLectivo, Turma } from '@/tipos/api'
 
 const ESTADO_INICIAL = { disciplina_id: '', periodo_lectivo_id: '', docente_id: '', designacao: 'A', capacidade_maxima: '30' }
 
@@ -11,6 +12,8 @@ const ESTADO_INICIAL = { disciplina_id: '', periodo_lectivo_id: '', docente_id: 
 export function Turmas() {
   const { temPerfil } = useAutenticacao()
   const [turmas, setTurmas] = useState<Turma[] | null>(null)
+  const [coleccao, setColeccao] = useState<ColeccaoPaginada<Turma> | null>(null)
+  const [pagina, setPagina] = useState(1)
   const [disciplinas, setDisciplinas] = useState<Disciplina[]>([])
   const [docentes, setDocentes] = useState<Docente[]>([])
   const [periodos, setPeriodos] = useState<PeriodoLectivo[]>([])
@@ -20,9 +23,14 @@ export function Turmas() {
   const [aSubmeter, setASubmeter] = useState(false)
 
   const podeGerir = temPerfil('ADMINISTRADOR')
+  // O servidor só devolve ao docente as turmas que lecciona.
+  const soAsMinhas = !temPerfil('ADMINISTRADOR', 'COORDENADOR')
 
   useEffect(() => {
     carregar()
+  }, [pagina])
+
+  useEffect(() => {
     if (podeGerir) {
       api.get<Disciplina[]>('/disciplinas').then(setDisciplinas).catch(() => undefined)
       api.get<Docente[]>('/docentes').then(setDocentes).catch(() => undefined)
@@ -37,7 +45,12 @@ export function Turmas() {
   }, [podeGerir])
 
   function carregar() {
-    api.get<Turma[]>('/turmas').then(setTurmas).catch(() => setErro('Não foi possível carregar as turmas.'))
+    api
+      .get<ColeccaoPaginada<Turma>>(`/turmas?pagina=${pagina}&por_pagina=10`)
+      .then((resposta) => {
+        setTurmas(resposta.dados)
+        setColeccao(resposta)
+      }).catch(() => setErro('Não foi possível carregar as turmas.'))
   }
 
   async function submeter(evento: FormEvent) {
@@ -65,7 +78,7 @@ export function Turmas() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="titulo-pagina">Turmas</h1>
+        <h1 className="titulo-pagina">{soAsMinhas ? 'As minhas disciplinas' : 'Turmas'}</h1>
         {podeGerir && (
           <button onClick={() => setAMostrarFormulario((v) => !v)} className="botao">
             {aMostrarFormulario ? 'Cancelar' : 'Nova turma'}
@@ -109,7 +122,13 @@ export function Turmas() {
 
       {turmas === null && <p className="text-sm text-aco">A carregar…</p>}
 
-      {turmas && (
+      {turmas && turmas.length === 0 && (
+        <p className="text-sm text-aco">
+          {soAsMinhas ? 'Ainda não tem disciplinas atribuídas neste período.' : 'Ainda não há turmas criadas.'}
+        </p>
+      )}
+
+      {turmas && turmas.length > 0 && (
         <div className="tabela-wrap">
           <table className="tabela">
             <thead>
@@ -129,7 +148,8 @@ export function Turmas() {
                   <td>{t.docente}</td>
                   <td className="num">{t.vagas} / {t.capacidade_maxima}</td>
                   <td className="space-x-3 text-right">
-                    <Link to={`/turmas/${t.id}/avaliacoes`} className="text-tinta hover:underline">Avaliações</Link>
+                    <Link to={`/turmas/${t.id}/inscritos`} className="text-tinta hover:underline">Alunos</Link>
+                    <Link to={`/turmas/${t.id}/avaliacoes`} className="botao inline-block px-3 py-1 text-sm">Lançar notas</Link>
                     <Link to={`/turmas/${t.id}/pauta`} className="text-tinta hover:underline">Pauta</Link>
                   </td>
                 </tr>
@@ -138,6 +158,7 @@ export function Turmas() {
           </table>
         </div>
       )}
+      {coleccao && <Paginacao coleccao={coleccao} aoMudar={setPagina} />}
     </div>
   )
 }

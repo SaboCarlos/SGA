@@ -1,7 +1,9 @@
 import { FormEvent, useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, ErroApi } from '@/servicos/api'
 import { useAutenticacao } from '@/contextos/AutenticacaoContexto'
 import { Alerta } from '@/componentes/Alerta'
+import { Paginacao, usePaginacaoLocal } from '@/componentes/Paginacao'
 import type { PedidoRectificacao } from '@/tipos/api'
 
 const NOVO_PEDIDO = { classificacao_id: '', valor_novo: '', justificacao: '' }
@@ -15,17 +17,30 @@ const ESTILO_ESTADO: Record<PedidoRectificacao['estado'], string> = {
 /** Solicitação e decisão de rectificações de nota (UC23, UC24 / US-19). */
 export function Rectificacoes() {
   const { temPerfil } = useAutenticacao()
+  // Vindo de "As minhas notas" (?classificacao=…&valor=…), o formulário abre
+  // já com a nota escolhida — o estudante não tem de saber o ID de nada.
+  const [parametros] = useSearchParams()
+  const navegar = useNavigate()
+  const classificacaoEscolhida = parametros.get('classificacao')
+  const valorActual = parametros.get('valor')
   const [pedidos, setPedidos] = useState<PedidoRectificacao[] | null>(null)
-  const [aMostrarFormulario, setAMostrarFormulario] = useState(false)
-  const [formulario, setFormulario] = useState(NOVO_PEDIDO)
+  // O pedido nasce em "As minhas notas", junto da nota em causa.
+  const aMostrarFormulario = classificacaoEscolhida !== null
+  const ehEstudante = temPerfil('ESTUDANTE') && !temPerfil('ADMINISTRADOR', 'COORDENADOR', 'DOCENTE')
+  const [formulario, setFormulario] = useState({ ...NOVO_PEDIDO, classificacao_id: classificacaoEscolhida ?? '' })
   const [motivos, setMotivos] = useState<Record<string, string>>({})
   const [erro, setErro] = useState<string | null>(null)
 
-  const podeDecidir = temPerfil('ADMINISTRADOR', 'COORDENADOR', 'DOCENTE')
 
+  const pgPedidos = usePaginacaoLocal(pedidos)
   useEffect(() => {
     carregar()
   }, [])
+
+  // Cada "Pedir rectificação" traz a sua nota no endereço.
+  useEffect(() => {
+    setFormulario({ ...NOVO_PEDIDO, classificacao_id: classificacaoEscolhida ?? '' })
+  }, [classificacaoEscolhida])
 
   function carregar() {
     api.get<PedidoRectificacao[]>('/rectificacoes').then(setPedidos).catch(() => setErro('Não foi possível carregar os pedidos.'))
@@ -38,7 +53,7 @@ export function Rectificacoes() {
     try {
       await api.post('/rectificacoes', { ...formulario, valor_novo: Number(formulario.valor_novo) })
       setFormulario(NOVO_PEDIDO)
-      setAMostrarFormulario(false)
+      navegar('/rectificacoes', { replace: true })
       carregar()
     } catch (e: unknown) {
       setErro(e instanceof ErroApi ? e.message : 'Não foi possível solicitar a rectificação.')
@@ -61,20 +76,26 @@ export function Rectificacoes() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="titulo-pagina">Rectificações</h1>
-          <p className="text-sm text-aco">Pedidos de correcção de notas já publicadas.</p>
+          <p className="text-sm text-aco">
+            {ehEstudante
+              ? 'Os seus pedidos de correcção de nota. Para fazer um pedido, vá a As minhas notas e carregue em Pedir rectificação, ao lado da nota.'
+              : 'Pedidos de correcção de notas já publicadas, das disciplinas que lecciona ou do curso que coordena. Só o Coordenador do curso decide.'}
+          </p>
         </div>
-        <button onClick={() => setAMostrarFormulario((v) => !v)} className="botao">
-          {aMostrarFormulario ? 'Cancelar' : 'Solicitar rectificação'}
-        </button>
+        {aMostrarFormulario && (
+          <button onClick={() => navegar('/rectificacoes', { replace: true })} className="botao-fantasma">
+            Cancelar
+          </button>
+        )}
       </div>
 
       {erro && <Alerta>{erro}</Alerta>}
 
       {aMostrarFormulario && (
         <form onSubmit={submeter} className="cartao mb-6 grid grid-cols-2 gap-3 p-4">
-          <input required placeholder="ID da classificação" value={formulario.classificacao_id}
-            onChange={(e) => setFormulario({ ...formulario, classificacao_id: e.target.value })}
-            className="entrada col-span-2" />
+          <p className="col-span-2 text-sm text-texto">
+            Nota actual: <strong>{valorActual || '—'}</strong>
+          </p>
           <input required type="number" min={0} max={20} step="0.1" placeholder="Valor novo"
             value={formulario.valor_novo}
             onChange={(e) => setFormulario({ ...formulario, valor_novo: e.target.value })}
@@ -92,10 +113,13 @@ export function Rectificacoes() {
 
       {pedidos && (
         <div className="space-y-3">
-          {pedidos.map((p) => (
+          {pgPedidos.visiveis.map((p) => (
             <div key={p.id} className="cartao p-4">
               <div className="mb-2 flex items-center justify-between">
-                <p className="text-sm font-medium text-texto">{p.estudante}</p>
+                <div>
+                  <p className="text-sm font-medium text-texto">{p.estudante}</p>
+                  <p className="text-xs text-aco">{p.disciplina} · {p.avaliacao}</p>
+                </div>
                 <span className={`selo ${ESTILO_ESTADO[p.estado]}`}>{p.estado}</span>
               </div>
               <p className="mb-1 text-sm text-texto">
@@ -103,7 +127,7 @@ export function Rectificacoes() {
               </p>
               <p className="mb-3 text-sm text-aco">{p.justificacao}</p>
 
-              {podeDecidir && p.estado === 'PENDENTE' && (
+              {p.pode_decidir && (
                 <div className="flex items-end gap-2">
                   <input
                     placeholder="Motivo (obrigatório se recusar)"
@@ -122,6 +146,7 @@ export function Rectificacoes() {
             </div>
           ))}
           {pedidos.length === 0 && <p className="text-sm text-aco">Sem pedidos de rectificação.</p>}
+          <Paginacao coleccao={pgPedidos.coleccao} aoMudar={pgPedidos.setPagina} />
         </div>
       )}
     </div>

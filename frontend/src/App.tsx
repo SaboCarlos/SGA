@@ -23,14 +23,16 @@ import { Notificacoes } from '@/paginas/Notificacoes'
 import { Auditoria } from '@/paginas/Auditoria'
 import { Utilizadores } from '@/paginas/Utilizadores'
 import { Perfis } from '@/paginas/Perfis'
+import { Notas } from '@/paginas/Notas'
+import { Inscritos } from '@/paginas/Inscritos'
 
 /**
  * Árvore de rotas. Tudo o que exige sessão vive dentro de <RotaProtegida>,
  * que por sua vez usa <Layout> para a casca comum (barra lateral, cabeçalho).
  *
- * Os perfis aqui só filtram a interface (usabilidade); a autorização real
- * está no servidor (RNF-08, RNF-10) e pode ser mais permissiva nalguns
- * destes endpoints — ver docs/fase5-testes.md, secção 8.2.
+ * Os perfis aqui só filtram a interface (usabilidade). A autorização real
+ * está no servidor (RNF-08, RNF-10), que aplica as mesmas regras ou mais
+ * estritas — ver docs/fase6-devops-seguranca.md, secção 3.
  */
 export function App() {
   return (
@@ -48,6 +50,7 @@ export function App() {
 
                 <Route element={<RotaProtegida perfisPermitidos={['ESTUDANTE']} />}>
                   <Route path="/inscricoes" element={<Inscricoes />} />
+                  <Route path="/notas" element={<Notas />} />
                 </Route>
 
                 <Route element={<RotaProtegida perfisPermitidos={['ADMINISTRADOR', 'COORDENADOR']} />}>
@@ -64,9 +67,15 @@ export function App() {
                   <Route path="/perfis" element={<Perfis />} />
                 </Route>
 
-                <Route path="/turmas" element={<Turmas />} />
-                <Route path="/turmas/:turmaId/avaliacoes" element={<Avaliacoes />} />
-                <Route path="/turmas/:turmaId/pauta" element={<Pautas />} />
+                {/* Turmas, inscritos, avaliações e pauta: direcção e docentes (o
+                    servidor limita o docente às suas turmas). O estudante vê
+                    as suas disciplinas e notas em /notas. */}
+                <Route element={<RotaProtegida perfisPermitidos={['ADMINISTRADOR', 'COORDENADOR', 'DOCENTE']} />}>
+                  <Route path="/turmas" element={<Turmas />} />
+                  <Route path="/turmas/:turmaId/inscritos" element={<Inscritos />} />
+                  <Route path="/turmas/:turmaId/avaliacoes" element={<Avaliacoes />} />
+                  <Route path="/turmas/:turmaId/pauta" element={<Pautas />} />
+                </Route>
                 <Route path="/rectificacoes" element={<Rectificacoes />} />
                 <Route path="/notificacoes" element={<Notificacoes />} />
 

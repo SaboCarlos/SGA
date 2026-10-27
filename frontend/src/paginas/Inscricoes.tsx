@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, ErroApi } from '@/servicos/api'
+import { Paginacao, usePaginacaoLocal } from '@/componentes/Paginacao'
 import type { ComprovativoInscricao, ErroNegocioApi, Turma } from '@/tipos/api'
 
 /**
@@ -19,6 +20,7 @@ export function Inscricoes() {
   const [comprovativo, setComprovativo] = useState<ComprovativoInscricao | null>(null)
   const [aSubmeter, setASubmeter] = useState(false)
 
+  const pgTurmas = usePaginacaoLocal(turmas)
   useEffect(() => {
     carregarDisponiveis()
   }, [])
@@ -134,7 +136,7 @@ export function Inscricoes() {
               </tr>
             </thead>
             <tbody>
-              {turmas.map((t) => (
+              {pgTurmas.visiveis.map((t) => (
                 <tr key={t.id}>
                   <td>
                     <input
@@ -162,6 +164,7 @@ export function Inscricoes() {
           </table>
         </div>
       )}
+      <Paginacao coleccao={pgTurmas.coleccao} aoMudar={pgTurmas.setPagina} />
 
       <button onClick={() => void submeter()} disabled={seleccionadas.size === 0 || aSubmeter} className="botao mt-4">
         {aSubmeter ? 'A inscrever…' : `Inscrever (${seleccionadas.size})`}

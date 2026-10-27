@@ -1,13 +1,16 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { api, ErroApi } from '@/servicos/api'
 import { Alerta } from '@/componentes/Alerta'
-import type { Docente } from '@/tipos/api'
+import { Paginacao } from '@/componentes/Paginacao'
+import type { ColeccaoPaginada, Docente } from '@/tipos/api'
 
 const ESTADO_INICIAL = { nome_completo: '', email: '', codigo: '', grau_academico: '', categoria: '' }
 
 /** Cadastro de docentes (UC07 / US-07). */
 export function Docentes() {
   const [docentes, setDocentes] = useState<Docente[] | null>(null)
+  const [coleccao, setColeccao] = useState<ColeccaoPaginada<Docente> | null>(null)
+  const [pagina, setPagina] = useState(1)
   const [aMostrarFormulario, setAMostrarFormulario] = useState(false)
   const [formulario, setFormulario] = useState(ESTADO_INICIAL)
   const [erro, setErro] = useState<string | null>(null)
@@ -15,10 +18,15 @@ export function Docentes() {
 
   useEffect(() => {
     carregar()
-  }, [])
+  }, [pagina])
 
   function carregar() {
-    api.get<Docente[]>('/docentes').then(setDocentes).catch(() => setErro('Não foi possível carregar os docentes.'))
+    api
+      .get<ColeccaoPaginada<Docente>>(`/docentes?pagina=${pagina}&por_pagina=10`)
+      .then((resposta) => {
+        setDocentes(resposta.dados)
+        setColeccao(resposta)
+      }).catch(() => setErro('Não foi possível carregar os docentes.'))
   }
 
   async function submeter(evento: FormEvent) {
@@ -98,6 +106,7 @@ export function Docentes() {
           </table>
         </div>
       )}
+      {coleccao && <Paginacao coleccao={coleccao} aoMudar={setPagina} />}
     </div>
   )
 }

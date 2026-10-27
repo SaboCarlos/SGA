@@ -2,9 +2,16 @@ import { FormEvent, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { api, ErroApi } from '@/servicos/api'
 import { Alerta } from '@/componentes/Alerta'
+import { Paginacao, usePaginacaoLocal } from '@/componentes/Paginacao'
 import type { Avaliacao, Classificacao, EstruturaAvaliacao, ResumoPublicacao, Turma } from '@/tipos/api'
 
 const NOVA_AVALIACAO = { designacao: '', tipo: 'TESTE' as Avaliacao['tipo'], peso: '20', data_prevista: '' }
+
+const ESTADO: Record<Avaliacao['estado'], { rotulo: string; estilo: string }> = {
+  RASCUNHO: { rotulo: 'Por lançar', estilo: 'selo-neutro' },
+  ACTIVA: { rotulo: 'Em lançamento', estilo: 'selo-aviso' },
+  PUBLICADA: { rotulo: 'Publicada', estilo: 'selo-sucesso' },
+}
 
 /** Avaliações de uma turma: definir, lançar classificações, publicar (UC19, UC20, UC21). */
 export function Avaliacoes() {
@@ -20,6 +27,14 @@ export function Avaliacoes() {
   const [resumo, setResumo] = useState<ResumoPublicacao | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [erroAvaliacao, setErroAvaliacao] = useState<string | null>(null)
+  const [gravado, setGravado] = useState(false)
+
+  // Notas publicadas só se consultam; a correcção é por rectificação.
+  const pgClassificacoes = usePaginacaoLocal(classificacoes)
+  const soLeitura = aberta?.estado === 'PUBLICADA'
+
+  const pesoExame = (estrutura?.avaliacoes ?? []).filter((a) => a.tipo === 'EXAME').reduce((t, a) => t + Number(a.peso), 0)
+  const pesoFrequencia = (estrutura?.avaliacoes ?? []).filter((a) => a.tipo !== 'EXAME').reduce((t, a) => t + Number(a.peso), 0)
 
   useEffect(() => {
     api.get<Turma>(`/turmas/${turmaId}`).then(setTurma).catch(() => undefined)
@@ -51,10 +66,21 @@ export function Avaliacoes() {
     setAberta(avaliacao)
     setResumo(null)
     setErroAvaliacao(null)
+    setGravado(false)
     api.get<Classificacao[]>(`/avaliacoes/${avaliacao.id}/classificacoes`).then((lista) => {
       setClassificacoes(lista)
       setValores(Object.fromEntries(lista.map((c) => [c.inscricao_id, c.valor?.toString() ?? ''])))
       setFaltas(Object.fromEntries(lista.map((c) => [c.inscricao_id, c.faltou])))
+    })
+  }
+
+  function gravarGrelha(avaliacao: Avaliacao, lista: Classificacao[]) {
+    return api.put(`/avaliacoes/${avaliacao.id}/classificacoes`, {
+      classificacoes: lista.map((c) => ({
+        inscricao_id: c.inscricao_id,
+        valor: faltas[c.inscricao_id] ? null : valores[c.inscricao_id] ? Number(valores[c.inscricao_id]) : null,
+        faltou: faltas[c.inscricao_id] ?? false,
+      })),
     })
   }
 
@@ -63,16 +89,12 @@ export function Avaliacoes() {
     setErroAvaliacao(null)
 
     try {
-      await api.put(`/avaliacoes/${aberta.id}/classificacoes`, {
-        classificacoes: classificacoes.map((c) => ({
-          inscricao_id: c.inscricao_id,
-          valor: faltas[c.inscricao_id] ? null : valores[c.inscricao_id] ? Number(valores[c.inscricao_id]) : null,
-          faltou: faltas[c.inscricao_id] ?? false,
-        })),
-      })
+      await gravarGrelha(aberta, classificacoes)
       abrirClassificacoes(aberta)
+      setGravado(true)
+      carregar()
     } catch (e: unknown) {
-      setErroAvaliacao(e instanceof ErroApi ? e.message : 'Não foi possível gravar as classificações.')
+      setErroAvaliacao(e instanceof ErroApi ? e.message : 'Não foi possível gravar as notas.')
     }
   }
 
@@ -81,15 +103,21 @@ export function Avaliacoes() {
     setErroAvaliacao(null)
 
     try {
+      // Grava primeiro o que está na grelha: quem escreve as notas e carrega
+      // logo em Publicar não as deve perder.
+      if (classificacoes && classificacoes.length > 0) {
+        await gravarGrelha(aberta, classificacoes)
+      }
       const resposta = await api.post<ResumoPublicacao>(`/avaliacoes/${aberta.id}/publicar`, {
         confirmar_incompleta: confirmarIncompleta,
       })
       setResumo(resposta)
+      setAberta({ ...aberta, estado: 'PUBLICADA' })
       carregar()
     } catch (e: unknown) {
-      if (e instanceof ErroApi && e.estado === 409) {
-        // US-18, fluxo A1: ha estudantes sem nota nem falta — pergunta-se
-        // explicitamente antes de publicar incompleto, em vez de recusar em silencio.
+      // US-18, fluxo A1: só a falta de notas se pode confirmar. As outras
+      // recusas (por exemplo, pesos que não somam 100%) mostram-se como erro.
+      if (e instanceof ErroApi && e.estado === 409 && e.codigoRegra === 'US-18') {
         if (window.confirm(`${e.message}\n\nPublicar mesmo assim?`)) {
           void publicar(true)
           return
@@ -101,23 +129,35 @@ export function Avaliacoes() {
 
   return (
     <div>
-      <h1 className="titulo-pagina">Avaliações</h1>
-      <p className="mb-6 text-sm text-aco">
+      <h1 className="titulo-pagina">Avaliações e notas</h1>
+      <p className="mb-2 text-sm text-aco">
         {turma ? `${turma.disciplina.codigo} — ${turma.disciplina.designacao}, turma ${turma.designacao}` : '…'}
+      </p>
+      <p className="mb-6 text-sm text-aco">
+        Em cada avaliação, carregue em <strong>Lançar notas</strong>, escreva as notas e carregue em{' '}
+        <strong>Publicar</strong>. Pode publicar uma avaliação de cada vez, à medida que as corrige.
       </p>
 
       {erro && <Alerta>{erro}</Alerta>}
 
       {estrutura && (
-        <div className="cartao mb-4 flex items-center justify-between px-4 py-3">
-          <p className="text-sm text-texto">
-            Soma dos pesos: <strong>{estrutura.soma_pesos}%</strong>{' '}
-            {estrutura.estrutura_valida ? (
-              <span className="selo selo-sucesso">estrutura válida</span>
-            ) : (
-              <span className="selo selo-aviso">falta chegar aos 100%</span>
-            )}
-          </p>
+        <div className="cartao mb-4 flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+          <div className="text-sm text-texto">
+            <p>
+              Testes e trabalhos: <strong>{pesoFrequencia}%</strong> · Exame: <strong>{pesoExame}%</strong> · Total:{' '}
+              <strong>{estrutura.soma_pesos}%</strong>{' '}
+              {estrutura.estrutura_valida ? (
+                <span className="selo selo-sucesso">pronto para publicar</span>
+              ) : (
+                <span className="selo selo-aviso">o total tem de ser 100%</span>
+              )}
+            </p>
+            <p className="mt-1 text-xs text-aco">
+              A frequência é a média dos testes e trabalhos (pelos seus pesos) e calcula-se quando estiverem todos
+              publicados. Com 14 ou mais, o aluno fica dispensado; de 10 a 13,9 vai a exame; abaixo de 10 fica
+              excluído. Para quem vai a exame, a nota final é a média entre a frequência e o exame.
+            </p>
+          </div>
           <button onClick={() => setAMostrarFormulario((v) => !v)} className="botao px-3 py-1.5">
             {aMostrarFormulario ? 'Cancelar' : 'Nova avaliação'}
           </button>
@@ -166,18 +206,22 @@ export function Avaliacoes() {
                   <td>{a.designacao}</td>
                   <td>{a.tipo}</td>
                   <td className="num">{a.peso}%</td>
-                  <td>{a.estado}</td>
+                  <td><span className={`selo ${ESTADO[a.estado].estilo}`}>{ESTADO[a.estado].rotulo}</span></td>
                   <td className="text-right">
-                    {a.estado !== 'PUBLICADA' && (
+                    {a.estado === 'PUBLICADA' ? (
                       <button onClick={() => abrirClassificacoes(a)} className="text-tinta hover:underline">
-                        Classificações
+                        Ver notas
+                      </button>
+                    ) : (
+                      <button onClick={() => abrirClassificacoes(a)} className="botao px-3 py-1 text-sm">
+                        Lançar notas
                       </button>
                     )}
                   </td>
                 </tr>
               ))}
               {estrutura.avaliacoes.length === 0 && (
-                <tr><td colSpan={5} className="py-6 text-center text-aco">Sem avaliações definidas.</td></tr>
+                <tr><td colSpan={5} className="py-6 text-center text-aco">Ainda não há avaliações. Carregue em <strong>Nova avaliação</strong> para criar a primeira (por exemplo, "Teste 1").</td></tr>
               )}
             </tbody>
           </table>
@@ -187,14 +231,20 @@ export function Avaliacoes() {
       {aberta && (
         <div className="cartao mt-6 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-display text-sm font-semibold text-texto">Classificações — {aberta.designacao}</h2>
+            <h2 className="font-display text-sm font-semibold text-texto">
+              Notas — {aberta.designacao}
+              {soLeitura && <span className="ml-2 font-normal text-aco">(publicadas; para corrigir, peça uma rectificação)</span>}
+            </h2>
             <button onClick={() => setAberta(null)} className="text-sm text-aco hover:underline">Fechar</button>
           </div>
 
           {erroAvaliacao && <Alerta>{erroAvaliacao}</Alerta>}
           {resumo && (
             <Alerta tipo="sucesso">
-              Publicado: {resumo.publicadas} · Dispensados: {resumo.dispensados} · Admitidos a exame: {resumo.admitidos_exame} · Reprovados por frequência: {resumo.reprovados_frequencia}
+              Notas publicadas — os alunos já as vêem.{' '}
+              {resumo.frequencia_calculada
+                ? `Frequência calculada: ${resumo.dispensados} dispensado(s), ${resumo.admitidos_exame} admitido(s) a exame, ${resumo.reprovados_frequencia} excluído(s).`
+                : 'A nota de frequência será calculada quando todos os testes e trabalhos estiverem publicados.'}
             </Alerta>
           )}
 
@@ -207,13 +257,13 @@ export function Avaliacoes() {
               </tr>
             </thead>
             <tbody>
-              {classificacoes?.map((c) => (
+              {pgClassificacoes.visiveis.map((c) => (
                 <tr key={c.inscricao_id}>
                   <td>{c.numero_estudante} — {c.nome_completo}</td>
                   <td>
                     <input
                       type="number" min={0} max={20} step="0.1"
-                      disabled={faltas[c.inscricao_id]}
+                      disabled={soLeitura || faltas[c.inscricao_id]}
                       value={valores[c.inscricao_id] ?? ''}
                       onChange={(e) => setValores({ ...valores, [c.inscricao_id]: e.target.value })}
                       className="entrada w-20 py-1 disabled:bg-superficie-alt"
@@ -222,6 +272,7 @@ export function Avaliacoes() {
                   <td>
                     <input
                       type="checkbox"
+                      disabled={soLeitura}
                       checked={faltas[c.inscricao_id] ?? false}
                       onChange={(e) => setFaltas({ ...faltas, [c.inscricao_id]: e.target.checked })}
                     />
@@ -233,15 +284,19 @@ export function Avaliacoes() {
               )}
             </tbody>
           </table>
+          <Paginacao coleccao={pgClassificacoes.coleccao} aoMudar={pgClassificacoes.setPagina} />
 
-          <div className="flex gap-2">
-            <button onClick={() => void lancarClassificacoes()} className="botao-fantasma">
-              Gravar rascunho
-            </button>
-            <button onClick={() => void publicar(false)} className="botao">
-              Publicar
-            </button>
-          </div>
+          {!soLeitura && (
+            <div className="flex flex-wrap items-center gap-2">
+              <button onClick={() => void lancarClassificacoes()} className="botao-fantasma">
+                Gravar notas
+              </button>
+              <button onClick={() => void publicar(false)} className="botao">
+                Publicar
+              </button>
+              {gravado && <span className="text-sm text-sucesso">Notas gravadas. Os alunos ainda não as vêem.</span>}
+            </div>
+          )}
         </div>
       )}
     </div>

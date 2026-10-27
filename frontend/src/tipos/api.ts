@@ -143,7 +143,8 @@ export interface EstruturaAvaliacao {
 }
 
 export interface Classificacao {
-  id: string
+  /** null enquanto ainda não foi lançada nota para este estudante. */
+  id: string | null
   inscricao_id: string
   numero_estudante: string
   nome_completo: string
@@ -158,6 +159,8 @@ export interface ResumoPublicacao {
   admitidos_exame: number
   reprovados_frequencia: number
   media_turma: number | null
+  /** Falso enquanto houver testes/trabalhos por publicar: a frequência ainda não se calcula. */
+  frequencia_calculada: boolean
 }
 
 export type EstadoPedido = 'PENDENTE' | 'APROVADO' | 'RECUSADO'
@@ -166,6 +169,10 @@ export interface PedidoRectificacao {
   id: string
   classificacao_id: string
   estudante: string
+  disciplina: string
+  avaliacao: string
+  /** O utilizador autenticado pode aprovar/recusar este pedido (Coordenador do curso ou Administrador). */
+  pode_decidir: boolean
   valor_anterior: number
   valor_novo: number
   justificacao: string
@@ -185,7 +192,16 @@ export interface Pauta {
   total_inscritos: number
   total_aprovados: number
   taxa_aprovacao: number
-  linhas: InscritoTurma[]
+  avaliacoes: Array<Pick<Avaliacao, 'id' | 'designacao' | 'tipo' | 'peso' | 'estado'>>
+  linhas: LinhaPauta[]
+}
+
+export interface LinhaPauta extends InscritoTurma {
+  /** Nota de cada avaliação, pelo id da avaliação; publicada=false é rascunho do docente. */
+  notas: Record<string, { valor: number | null; faltou: boolean; publicada: boolean }>
+  nota_exame: number | null
+  classificacao_final: number | null
+  situacao_final: SituacaoFinal
 }
 
 export interface LinhaRelatorioDisciplina {
@@ -270,6 +286,42 @@ export interface Aproveitamento {
   }>
 }
 
+/** Resposta de GET /notas: só as notas do estudante autenticado. */
+export interface NotasEstudante {
+  estudante: string
+  numero_estudante: string
+  curso: string | null
+  ano_lectivo_actual: string | null
+  /** Ano do curso em que o estudante está (1.º, 2.º…). */
+  ano_curricular: number | null
+  disciplinas: Array<{
+    inscricao_id: string
+    ano_curricular: number | null
+    codigo: string
+    disciplina: string
+    turma: string
+    docente: string | null
+    ano_lectivo: string
+    semestre: number
+    nota_frequencia: number | null
+    situacao_frequencia: SituacaoFrequencia
+    classificacao_final: number | null
+    situacao_final: SituacaoFinal
+    avaliacoes: Array<{
+      id: number
+      designacao: string
+      tipo: Avaliacao['tipo']
+      peso: number
+      data_prevista: string | null
+      /** Falso enquanto o docente não publicar: o valor ainda não é conhecido. */
+      publicada: boolean
+      classificacao_id: string | null
+      valor: number | null
+      faltou: boolean
+    }>
+  }>
+}
+
 export interface RegistoAuditoria {
   id: string
   utilizador: string | null
@@ -280,4 +332,80 @@ export interface RegistoAuditoria {
   valor_novo: Record<string, unknown> | null
   justificacao: string | null
   criado_em: string
+}
+
+/* ------------------------------------------------------------------ */
+/* Painel inicial (GET /painel, UC30)                                   */
+/* ------------------------------------------------------------------ */
+
+/** Uma classe de uma distribuição — o formato de todas as séries de anel. */
+export interface ContagemPorClasse {
+  /** Valor do enum do domínio (ACTIVO, EM_CURSO, …), não texto de interface. */
+  rotulo: string
+  total: number
+}
+
+export interface OcupacaoTurma {
+  turma: string
+  disciplina: string | null
+  codigo: string | null
+  inscritos: number
+  capacidade: number
+  /** Percentagem já calculada no servidor, para não divergir do relatório. */
+  ocupacao: number
+}
+
+export interface AproveitamentoDisciplina {
+  codigo: string
+  disciplina: string
+  inscritos: number
+  aprovados: number
+  reprovados: number
+  em_curso: number
+}
+
+export interface NotaDisciplina {
+  codigo: string
+  disciplina: string
+  nota: number
+  situacao: SituacaoFinal
+}
+
+export interface CursoCoordenado {
+  curso: string
+  total_estudantes: number
+  inscricoes_activas: number
+  rectificacoes_pendentes: number
+}
+
+/**
+ * Resposta de GET /painel. Praticamente tudo é opcional: o servidor devolve
+ * apenas as chaves que fazem sentido para os perfis do utilizador
+ * autenticado, e um utilizador com vários perfis recebe a união delas.
+ */
+export interface DadosPainel {
+  // Estudante
+  disciplinas_inscritas?: number
+  disciplinas_aprovadas?: number
+  estado?: EstadoEstudante
+  situacao_disciplinas?: ContagemPorClasse[]
+  notas_por_disciplina?: NotaDisciplina[]
+
+  // Docente
+  turmas_atribuidas?: number
+  avaliacoes_por_publicar?: number
+  avaliacoes_por_estado?: ContagemPorClasse[]
+  ocupacao_minhas_turmas?: OcupacaoTurma[]
+
+  // Coordenador (US-23)
+  cursos_coordenados?: CursoCoordenado[]
+
+  // Administrador e Coordenador (âmbito institucional ou dos cursos coordenados)
+  total_estudantes?: number
+  total_inscricoes_activas?: number
+  total_turmas?: number
+  estudantes_por_estado?: ContagemPorClasse[]
+  inscricoes_por_situacao?: ContagemPorClasse[]
+  ocupacao_turmas?: OcupacaoTurma[]
+  aproveitamento_disciplinas?: AproveitamentoDisciplina[]
 }

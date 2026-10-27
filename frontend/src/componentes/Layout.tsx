@@ -6,25 +6,45 @@ import { ROTULO_TEMA, useTema } from '@/contextos/TemaContexto'
 interface ItemNav {
   rota: string
   rotulo: string
+  grupo: string
   perfis?: string[]
-  grupo?: string
+  /** Rótulo para quem não é da direcção (o docente só vê as suas). */
+  rotuloDocente?: string
 }
 
+/**
+ * A navegação inteira, em ordem de leitura.
+ *
+ * Todos os itens declaram o grupo a que pertencem, incluindo o primeiro
+ * bloco: antes ficava sem título e a barra abria com cinco ligações soltas
+ * seguidas de duas secções nomeadas, o que fazia parecer que faltava lá
+ * qualquer coisa.
+ *
+ * `perfis` ausente significa "todos os perfis autenticados". O filtro aqui
+ * é só de usabilidade — a autorização real está no servidor (RNF-08,
+ * RNF-10) e é ela que decide.
+ */
 const ITENS_NAV: ItemNav[] = [
-  { rota: '/painel', rotulo: 'Painel' },
-  { rota: '/inscricoes', rotulo: 'Inscrições', perfis: ['ESTUDANTE'] },
-  { rota: '/estudantes', rotulo: 'Estudantes', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
-  { rota: '/docentes', rotulo: 'Docentes', perfis: ['ADMINISTRADOR'] },
-  { rota: '/cursos', rotulo: 'Cursos', perfis: ['ADMINISTRADOR'] },
-  { rota: '/disciplinas', rotulo: 'Disciplinas', perfis: ['ADMINISTRADOR'] },
-  { rota: '/turmas', rotulo: 'Turmas', perfis: ['ADMINISTRADOR', 'COORDENADOR', 'DOCENTE'] },
-  { rota: '/ano-lectivo', rotulo: 'Ano lectivo', perfis: ['ADMINISTRADOR'], grupo: 'Avaliação' },
+  { rota: '/painel', rotulo: 'Painel', grupo: 'Início' },
+
+  { rota: '/inscricoes', rotulo: 'Inscrições', grupo: 'Académico', perfis: ['ESTUDANTE'] },
+  { rota: '/notas', rotulo: 'As minhas notas', grupo: 'Académico', perfis: ['ESTUDANTE'] },
+  { rota: '/estudantes', rotulo: 'Estudantes', grupo: 'Académico', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
+  { rota: '/docentes', rotulo: 'Docentes', grupo: 'Académico', perfis: ['ADMINISTRADOR'] },
+  { rota: '/cursos', rotulo: 'Cursos', grupo: 'Académico', perfis: ['ADMINISTRADOR'] },
+  { rota: '/disciplinas', rotulo: 'Disciplinas', grupo: 'Académico', perfis: ['ADMINISTRADOR'] },
+  // A direcção vê todas as turmas; o docente só as que lecciona (filtro do
+  // servidor). O estudante não precisa: tem Inscrições e As minhas notas.
+  { rota: '/turmas', rotulo: 'Turmas', rotuloDocente: 'As minhas disciplinas', grupo: 'Académico', perfis: ['ADMINISTRADOR', 'COORDENADOR', 'DOCENTE'] },
+
+  { rota: '/ano-lectivo', rotulo: 'Ano lectivo', grupo: 'Avaliação', perfis: ['ADMINISTRADOR'] },
   { rota: '/rectificacoes', rotulo: 'Rectificações', grupo: 'Avaliação' },
-  { rota: '/relatorios', rotulo: 'Relatórios', perfis: ['ADMINISTRADOR', 'COORDENADOR'], grupo: 'Gestão' },
+  { rota: '/relatorios', rotulo: 'Relatórios', grupo: 'Avaliação', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
+
   { rota: '/notificacoes', rotulo: 'Notificações', grupo: 'Gestão' },
-  { rota: '/auditoria', rotulo: 'Auditoria', perfis: ['ADMINISTRADOR', 'COORDENADOR'], grupo: 'Gestão' },
-  { rota: '/utilizadores', rotulo: 'Utilizadores', perfis: ['ADMINISTRADOR'], grupo: 'Gestão' },
-  { rota: '/perfis', rotulo: 'Perfis e permissões', perfis: ['ADMINISTRADOR'], grupo: 'Gestão' },
+  { rota: '/auditoria', rotulo: 'Auditoria', grupo: 'Gestão', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
+  { rota: '/utilizadores', rotulo: 'Utilizadores', grupo: 'Gestão', perfis: ['ADMINISTRADOR'] },
+  { rota: '/perfis', rotulo: 'Perfis e permissões', grupo: 'Gestão', perfis: ['ADMINISTRADOR'] },
 ]
 
 /**
@@ -41,9 +61,22 @@ export function Layout() {
   const { tema, alternarTema } = useTema()
   const [menuAberto, setMenuAberto] = useState(false)
 
-  const itensVisiveis = ITENS_NAV.filter((item) => !item.perfis || temPerfil(...item.perfis))
+  const ehDireccao = temPerfil('ADMINISTRADOR', 'COORDENADOR')
+  const itensVisiveis = ITENS_NAV.filter((item) => !item.perfis || temPerfil(...item.perfis)).map((item) =>
+    item.rotuloDocente && !ehDireccao ? { ...item, rotulo: item.rotuloDocente } : item
+  )
 
-  let grupoAnterior: string | undefined
+  // Agrupa depois de filtrar: um grupo cujos itens foram todos escondidos
+  // pelo perfil não deve deixar o título orfão na barra.
+  const grupos = itensVisiveis.reduce<Array<{ grupo: string; itens: ItemNav[] }>>((acc, item) => {
+    const ultimo = acc[acc.length - 1]
+    if (ultimo?.grupo === item.grupo) {
+      ultimo.itens.push(item)
+    } else {
+      acc.push({ grupo: item.grupo, itens: [item] })
+    }
+    return acc
+  }, [])
 
   return (
     <div className="flex min-h-screen flex-col bg-bruma md:flex-row">
@@ -72,18 +105,15 @@ export function Layout() {
           </div>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-0.5 p-3">
-          {itensVisiveis.map((item) => {
-            const mostrarRotulo = item.grupo && item.grupo !== grupoAnterior
-            grupoAnterior = item.grupo
-            return (
-              <div key={item.rota}>
-                {mostrarRotulo && (
-                  <p className="px-3 pb-1.5 pt-3.5 text-[0.66rem] font-semibold uppercase tracking-wider text-white/40">
-                    {item.grupo}
-                  </p>
-                )}
+        <nav className="flex flex-1 flex-col p-3">
+          {grupos.map(({ grupo, itens }) => (
+            <div key={grupo} className="mb-1">
+              <p className="px-3 pb-1.5 pt-3 text-[0.66rem] font-semibold uppercase tracking-wider text-white/40">
+                {grupo}
+              </p>
+              {itens.map((item) => (
                 <NavLink
+                  key={item.rota}
                   to={item.rota}
                   onClick={() => setMenuAberto(false)}
                   className={({ isActive }) =>
@@ -96,9 +126,9 @@ export function Layout() {
                 >
                   {item.rotulo}
                 </NavLink>
-              </div>
-            )
-          })}
+              ))}
+            </div>
+          ))}
         </nav>
       </aside>
 

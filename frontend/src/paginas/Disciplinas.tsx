@@ -1,13 +1,18 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { api, ErroApi } from '@/servicos/api'
 import { Alerta } from '@/componentes/Alerta'
-import type { Disciplina } from '@/tipos/api'
+import { Paginacao } from '@/componentes/Paginacao'
+import type { ColeccaoPaginada, Disciplina } from '@/tipos/api'
 
 const ESTADO_INICIAL = { codigo: '', designacao: '', creditos: '6', carga_horaria: '90' }
 
 /** Cadastro de disciplinas e pré-requisitos (US-08, US-10). */
 export function Disciplinas() {
   const [disciplinas, setDisciplinas] = useState<Disciplina[] | null>(null)
+  const [coleccao, setColeccao] = useState<ColeccaoPaginada<Disciplina> | null>(null)
+  const [pagina, setPagina] = useState(1)
+  // Lista completa (sem paginação) para escolher pré-requisitos.
+  const [todas, setTodas] = useState<Disciplina[]>([])
   const [aMostrarFormulario, setAMostrarFormulario] = useState(false)
   const [formulario, setFormulario] = useState(ESTADO_INICIAL)
   const [aberta, setAberta] = useState<Disciplina | null>(null)
@@ -19,10 +24,16 @@ export function Disciplinas() {
 
   useEffect(() => {
     carregar()
-  }, [])
+  }, [pagina])
 
   function carregar() {
-    api.get<Disciplina[]>('/disciplinas').then(setDisciplinas).catch(() => setErro('Não foi possível carregar as disciplinas.'))
+    api.get<Disciplina[]>('/disciplinas').then(setTodas).catch(() => undefined)
+    api
+      .get<ColeccaoPaginada<Disciplina>>(`/disciplinas?pagina=${pagina}&por_pagina=10`)
+      .then((resposta) => {
+        setDisciplinas(resposta.dados)
+        setColeccao(resposta)
+      }).catch(() => setErro('Não foi possível carregar as disciplinas.'))
   }
 
   async function submeter(evento: FormEvent) {
@@ -129,6 +140,7 @@ export function Disciplinas() {
           </table>
         </div>
       )}
+      {coleccao && <Paginacao coleccao={coleccao} aoMudar={setPagina} />}
 
       {aberta && (
         <div className="cartao mt-6 p-4">
@@ -148,7 +160,7 @@ export function Disciplinas() {
             <select required value={novoPreRequisitoId} onChange={(e) => setNovoPreRequisitoId(e.target.value)}
               className="entrada">
               <option value="" disabled>Disciplina exigida…</option>
-              {disciplinas?.filter((d) => d.id !== aberta.id).map((d) => (
+              {todas.filter((d) => d.id !== aberta.id).map((d) => (
                 <option key={d.id} value={d.id}>{d.codigo} — {d.designacao}</option>
               ))}
             </select>

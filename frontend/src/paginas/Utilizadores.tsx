@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { api, ErroApi } from '@/servicos/api'
 import { Alerta } from '@/componentes/Alerta'
+import { Paginacao, usePaginacaoLocal } from '@/componentes/Paginacao'
 import type { Perfil, Utilizador } from '@/tipos/api'
 
 const PERFIS_DISPONIVEIS: Perfil[] = ['ADMINISTRADOR', 'COORDENADOR', 'DOCENTE', 'ESTUDANTE']
@@ -13,6 +14,7 @@ export function Utilizadores() {
   const [formulario, setFormulario] = useState(ESTADO_INICIAL)
   const [erro, setErro] = useState<string | null>(null)
 
+  const pgUtilizadores = usePaginacaoLocal(utilizadores)
   useEffect(() => {
     carregar()
   }, [])
@@ -102,7 +104,7 @@ export function Utilizadores() {
               </tr>
             </thead>
             <tbody>
-              {utilizadores.map((u) => (
+              {pgUtilizadores.visiveis.map((u) => (
                 <tr key={u.id}>
                   <td>{u.nome}</td>
                   <td>{u.email}</td>
@@ -118,6 +120,7 @@ export function Utilizadores() {
           </table>
         </div>
       )}
+      <Paginacao coleccao={pgUtilizadores.coleccao} aoMudar={pgUtilizadores.setPagina} />
     </div>
   )
 }

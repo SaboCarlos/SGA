@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { api, ErroApi } from '@/servicos/api'
 import { Alerta } from '@/componentes/Alerta'
+import { Paginacao, usePaginacaoLocal } from '@/componentes/Paginacao'
 import type { AnoLectivo as AnoLectivoTipo, PeriodoLectivo } from '@/tipos/api'
 
 const ESTADO_INICIAL = { designacao: '', data_inicio: '', data_fim: '' }
@@ -17,6 +18,7 @@ export function AnoLectivo() {
   const [erro, setErro] = useState<string | null>(null)
   const [erroAno, setErroAno] = useState<string | null>(null)
 
+  const pgAnos = usePaginacaoLocal(anos)
   useEffect(() => {
     carregar()
   }, [])
@@ -112,7 +114,7 @@ export function AnoLectivo() {
               </tr>
             </thead>
             <tbody>
-              {anos.map((a) => (
+              {pgAnos.visiveis.map((a) => (
                 <tr key={a.id}>
                   <td>{a.designacao}</td>
                   <td>{a.data_inicio} — {a.data_fim}</td>
@@ -136,6 +138,7 @@ export function AnoLectivo() {
           </table>
         </div>
       )}
+      <Paginacao coleccao={pgAnos.coleccao} aoMudar={pgAnos.setPagina} />
 
       {aberto && (
         <div className="cartao mt-6 p-4">
