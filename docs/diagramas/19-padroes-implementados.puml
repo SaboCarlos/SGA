@@ -1,0 +1,72 @@
+@startuml padroes-implementados
+!pragma layout smetana
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowColor #2C3E50
+skinparam ClassBorderColor #2C3E50
+skinparam ClassBackgroundColor #F8FAFC
+skinparam ClassAttributeIconSize 0
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title SGA - Padroes de desenho, tal como estao no codigo
+
+package "Strategy + Factory" {
+  interface RegulamentoAvaliacao {
+    +codigo(): string
+    +calcularFrequencia(notas): float
+    +determinarSituacaoFrequencia(nf): SituacaoFrequencia
+    +calcularClassificacaoFinal(nf, exame): ?float
+    +determinarSituacaoFinal(cf): SituacaoFinal
+    +calcularMediaCurso(aprovadas): ?float
+  }
+  class RegulamentoPadraoESCN {
+    -DISPENSA = 14.0
+    -MINIMO_EXAME = 10.0
+    -APROVACAO = 10.0
+  }
+  class RegulamentoSemExame
+  class FabricaRegulamento {
+    -REGULAMENTOS: map codigo => classe
+    +porCodigo(codigo): RegulamentoAvaliacao
+  }
+  RegulamentoAvaliacao <|.. RegulamentoPadraoESCN
+  RegulamentoAvaliacao <|.. RegulamentoSemExame
+  FabricaRegulamento ..> RegulamentoAvaliacao : cria
+}
+
+package "Repository (DIP)" {
+  interface RepositorioInscricao {
+    +porTurma(id): array
+    +guardar(inscricao)
+    +disciplinasAprovadas(estudante): array
+    +aprovadasComCreditos(estudante): array
+  }
+  class RepositorioInscricaoEloquent
+  class RepositorioInscricaoEmMemoria
+  RepositorioInscricao <|.. RepositorioInscricaoEloquent
+  RepositorioInscricao <|.. RepositorioInscricaoEmMemoria
+  class AppServiceProvider {
+    +register(): bind(interface, Eloquent)
+  }
+  AppServiceProvider ..> RepositorioInscricaoEloquent : liga
+}
+
+package "Observer (eventos Laravel)" {
+  class NotasPublicadas <<Event>> {
+    +avaliacao
+    +resumo: array
+  }
+  class NotificarEstudantes <<Listener, ShouldQueue>> {
+    +handle(NotasPublicadas)
+  }
+  NotificarEstudantes ..> NotasPublicadas : ouve
+}
+
+class ServicoAvaliacao <<Context>> {
+  +publicar(avaliacao, confirmar): array
+}
+ServicoAvaliacao --> FabricaRegulamento
+ServicoAvaliacao --> RepositorioInscricao
+ServicoAvaliacao ..> NotasPublicadas : event()
+@enduml

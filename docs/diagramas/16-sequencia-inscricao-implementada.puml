@@ -1,0 +1,63 @@
+@startuml sequencia-inscricao-implementada
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam ArrowColor #2C3E50
+skinparam ParticipantBorderColor #2C3E50
+skinparam ParticipantBackgroundColor #F8FAFC
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title UC14 - Inscricao, tal como implementada (POST /api/v1/inscricoes)
+
+actor Estudante as EST
+participant "Inscricoes.tsx\n(SPA React)" as UI
+participant "auth:sanctum\n<<middleware>>" as AUTH
+participant "InscricaoController::store" as CTRL
+participant "ValidadorInscricao\n<<dominio>>" as VAL
+participant "RepositorioInscricao\n(Eloquent)" as REPO
+participant "ServicoAuditoria" as AUD
+database "PostgreSQL" as DB
+
+EST -> UI : selecciona turmas e confirma
+UI -> AUTH : POST /api/v1/inscricoes\n{turmas:[...]}\nAuthorization: Bearer <token>
+activate AUTH
+AUTH -> CTRL : utilizador autenticado
+deactivate AUTH
+activate CTRL
+CTRL -> CTRL : $request->validate()\n(turmas existem, uuid valido)
+CTRL -> DB : turmas + pre-requisitos + periodo\nplano curricular do estudante
+CTRL -> REPO : disciplinasAprovadas(estudante)
+
+loop para cada turma
+  CTRL -> CTRL : new ContextoInscricao(...)
+  CTRL -> VAL : validar(contexto)
+  activate VAL
+  VAL -> VAL : RN-05 periodo aberto
+  VAL -> VAL : RN-01 plano curricular
+  VAL -> VAL : RN-02 pre-requisitos
+  VAL -> VAL : RN-03 duplicacao
+  VAL -> VAL : RN-04 capacidade
+  VAL --> CTRL : ResultadoValidacao
+  deactivate VAL
+  alt regra violada
+    CTRL --> UI : 422 {codigo:"RN-02", mensagem, campo}
+    UI --> EST : mensagem explicita (Alerta)
+  end
+end
+
+CTRL -> DB : BEGIN
+loop para cada turma
+  CTRL -> REPO : guardar(new Inscricao)
+  REPO -> DB : INSERT inscricoes
+  note right of DB
+    UNIQUE (estudante, turma) -> RN-03
+    trigger de capacidade -> RN-04
+    (ADR-008: defesa contra concorrencia)
+  end note
+  CTRL -> AUD : registar("inscricao.criada", ...)
+  AUD -> DB : INSERT registos_auditoria
+end
+CTRL -> DB : COMMIT
+CTRL --> UI : 201 Created + comprovativo
+deactivate CTRL
+UI --> EST : comprovativo com data e hora
+@enduml

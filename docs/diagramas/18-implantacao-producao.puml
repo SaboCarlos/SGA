@@ -1,0 +1,47 @@
+@startuml implantacao-producao
+!pragma layout smetana
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam ArrowColor #2C3E50
+skinparam NodeBorderColor #2C3E50
+skinparam NodeBackgroundColor #F8FAFC
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title SGA - Implantacao em producao (Vercel + VPS com Docker)
+
+node "Navegador do utilizador" as NAV {
+  artifact "SPA React\n(token Bearer)" as SPA
+}
+
+cloud "Vercel" as VER {
+  artifact "frontend/dist\n(ficheiros estaticos)" as DIST
+}
+
+node "VPS Linux" as VPS {
+  node "Apache do host\nTLS Let's Encrypt" as APACHE
+  node "docker-compose.prod.yml" as DC {
+    node "sga-prod-proxy\nnginx:1.27-alpine\n127.0.0.1:8100" as PX
+    node "sga-prod-api\nPHP-FPM 8.3" as API
+    node "worker\nqueue:work" as WK
+    node "scheduler\nschedule:work" as SCH
+    database "db\npostgres:16-alpine\nvolume pgdata" as DB
+    node "cache\nredis:7-alpine" as RD
+  }
+}
+
+NAV --> VER : HTTPS (descarrega a SPA)
+SPA --> APACHE : HTTPS XHR /api/v1/*
+APACHE --> PX : proxy http://127.0.0.1:8100
+PX --> API : FastCGI
+API --> DB
+API --> RD : filas / cache
+WK --> RD
+WK --> DB
+SCH --> DB : notificacoes de prazos
+
+note bottom of DC
+  Nenhum contentor publica portas para a Internet:
+  a unica entrada e o Apache (RNF-07).
+  Copias de seguranca: make copia-seguranca (pg_dump, cron diario).
+end note
+@enduml

@@ -1,0 +1,65 @@
+@startuml estrutura-codigo
+!pragma layout smetana
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam ArrowColor #2C3E50
+skinparam ClassBorderColor #2C3E50
+skinparam ClassBackgroundColor #F8FAFC
+skinparam ClassAttributeIconSize 0
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+hide empty members
+left to right direction
+title SGA - Estrutura do codigo implementado (backend/app), por camada
+
+package "Camada 2 - Interface: App\\Http (19 controladores REST, middleware ExigePerfil)" as HTTP {
+  class InscricaoController
+  class AvaliacaoController
+  class RectificacaoController
+}
+package "Camada 3 - Aplicacao: App\\Servicos" as SRV {
+  class ServicoAvaliacao
+  class ServicoAuditoria
+}
+package "Camada 4 - Dominio: App\\Dominio (sem Laravel)" as DOM {
+  class ValidadorInscricao
+  class FabricaRegulamento <<Factory>>
+  interface RegulamentoAvaliacao <<Strategy>>
+  interface RepositorioInscricao
+  interface RepositorioClassificacao
+}
+package "Camada 5 - Infra-estrutura: App\\Infraestrutura" as INF {
+  class RepositorioInscricaoEloquent
+  class RepositorioClassificacaoEloquent
+  class RepositorioInscricaoEmMemoria <<testes>>
+}
+package "App\\Models (19 modelos Eloquent) -> PostgreSQL" as MOD {
+  class Inscricao
+  class Classificacao
+  class Turma
+}
+
+InscricaoController --> ValidadorInscricao
+InscricaoController --> ServicoAuditoria
+AvaliacaoController --> ServicoAvaliacao
+RectificacaoController --> ServicoAvaliacao
+ServicoAvaliacao --> ServicoAuditoria
+ServicoAvaliacao --> FabricaRegulamento
+ServicoAvaliacao --> RepositorioInscricao
+ServicoAvaliacao --> RepositorioClassificacao
+FabricaRegulamento ..> RegulamentoAvaliacao : cria
+RepositorioInscricao <|.. RepositorioInscricaoEloquent
+RepositorioInscricao <|.. RepositorioInscricaoEmMemoria
+RepositorioClassificacao <|.. RepositorioClassificacaoEloquent
+RepositorioInscricaoEloquent --> Inscricao
+RepositorioInscricaoEloquent --> Turma
+RepositorioClassificacaoEloquent --> Classificacao
+
+note bottom of DOM
+  Regra de dependencia 2 -> 3 -> 4 <- 5:
+  o Dominio nao importa Illuminate\Database,
+  App\Models nem App\Http
+  (tests/Arquitectura/CamadasTest.php, no CI).
+end note
+@enduml

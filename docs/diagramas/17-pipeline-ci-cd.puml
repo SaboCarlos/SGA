@@ -1,0 +1,41 @@
+@startuml pipeline-ci-cd
+skinparam backgroundColor White
+skinparam shadowing false
+skinparam ArrowColor #2C3E50
+skinparam ActivityBorderColor #2C3E50
+skinparam ActivityBackgroundColor #F8FAFC
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+title SGA - Pipeline de CI/CD (.github/workflows/ci.yml)
+
+start
+:git push / pull request\npara main;
+fork
+  partition "Job backend (ubuntu + postgres:16)" {
+    :php verificar-dominio.php\n(regras sem framework);
+    :composer install;
+    :php artisan migrate;
+    :Pint ~--test (estilo);
+    :PHPStan / Larastan (analise estatica);
+    :Pest ~--coverage ~--min=70\n(arquitectura + unitarios + API);
+  }
+fork again
+  partition "Job frontend (Node 22)" {
+    :npm ci;
+    :ESLint;
+    :Vitest;
+    :vite build (producao);
+  }
+end fork
+if (todos os passos verdes?) then (sim)
+  :merge permitido;
+  partition "Entrega (CD)" {
+    :Vercel: build e publicacao da SPA;
+    :VPS: docker compose -f docker-compose.prod.yml\nup -d --build (api, worker, scheduler);
+  }
+  stop
+else (nao)
+  :build falha;\ncommit bloqueado;
+  stop
+endif
+@enduml

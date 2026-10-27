@@ -27,13 +27,14 @@ corrigido assim que deixou de ser verdade.
 | **Especificado, por escrever** | Existe como critério de aceitação, sem código de teste | ⬜ |
 
 **Resumo antecipado:** os quatro tipos de teste exigidos pelo enunciado correm hoje.
-**161 testes, 357 asserções, 0 falhas** — unitários (script autónomo + Pest), arquitectura,
+**177 testes, 424 asserções, 0 falhas** no backend, mais **16 testes de frontend** (Vitest) — unitários (script autónomo + Pest), arquitectura,
 integração da base de dados (Fase 2), integração da API (Models, autenticação com bloqueio
 de conta e recuperação de palavra-passe por e-mail, e 18 controladores ligados ao domínio já
 testado na Fase 4 — incluindo ano lectivo/períodos, o painel do Coordenador, o agendador de
 notificações de período, gestão de perfis e permissões, exportação em PDF/CSV de pautas e
 relatórios), e a corrida real de duas inscrições concorrentes pela última vaga (UC14-A7,
-secção 4.5). A cobertura de código cumpre a meta do RNF-24: **83,8% global** (≥ 70% exigido).
+secção 4.5), e os testes de controlo de acesso por perfil (secção 4.6). A cobertura de código
+cumpre a meta do RNF-24: **88,4% global** (≥ 70% exigido).
 Os testes funcionais, no sentido estrito de "um caso de uso com todos os fluxos alternativos",
 continuam por escrever como artefacto formal — mas os testes de integração da API já cobrem,
 na prática, o caminho principal e os principais desvios de quase todos os casos de uso. A
@@ -88,7 +89,7 @@ A fase apoia-se em quatro decisões já tomadas, e todas continuam válidas:
                ╱         ╲    — por escrever como artefacto formal (secção 5)
               ╱───────────╲
              ╱             ╲  Integração (API + domínio + Postgres real)
-            ╱───────────────╲ — 16 controladores, 106 testes, sem simulação
+            ╱───────────────╲ — 19 controladores, 127 testes, sem simulação
            ╱                 ╲
           ╱───────────────────╲ Unitários (domínio puro + arquitectura)
          ╱_____________________╲ — 56 + 42 testes, rápidos, sem I/O
@@ -104,11 +105,12 @@ construir — não por bloqueio, desta vez, mas porque é o próximo passo natur
 
 | Camada | Ferramenta | Estado |
 |---|---|---|
-| Unitários e integração (PHP) | **Pest 4** sobre PHPUnit 12 | Em uso, 148 testes |
+| Unitários e integração (PHP) | **Pest 4** sobre PHPUnit 12 | Em uso, 177 testes |
 | Arquitectura | **Pest Arch** (`tests/Arquitectura/CamadasTest.php`) | Em uso — apanhou dois erros de camadas nos controladores novos (secção 4.4) |
-| Cobertura | **pcov** + `pest --coverage` | Em uso, 83,7% |
-| Frontend | **Vitest** | Configurado, sem testes escritos ainda |
-| API | **Pest + `pest-plugin-laravel`** (`getJson`, `postJson`, `actingAs`) | Em uso em 19 ficheiros `tests/Feature/*ApiTest.php` |
+| Cobertura | **pcov** + `pest --coverage` | Em uso, 88,4% |
+| Frontend | **Vitest** + Testing Library | Em uso, 16 testes em 3 ficheiros (`Alerta`, `Login`, cliente da API) |
+| Análise estática | **Larastan/PHPStan** | Em uso no CI e em `make lint` |
+| API | **Pest + `pest-plugin-laravel`** (`getJson`, `postJson`, `actingAs`) | Em uso em 24 ficheiros `tests/Feature/*Test.php` |
 | Verificação sem ambiente | **`verificar-dominio.php`** | Continua útil para validar o domínio em segundos, sem Docker |
 
 ### 2.3 e 2.4 — inalteradas desde a versão anterior
@@ -236,6 +238,32 @@ também, porque ficaram mesmo escritos (commit real) e o `rollback` automático 
 
 ---
 
+### 4.6. Controlo de acesso por perfil — a lacuna que a Fase 6 encontrou
+
+A análise de segurança da Fase 6 mostrou que os testes de integração cobriam quem **tinha**
+permissão, mas quase nunca quem **não tinha**. Com o token de uma estudante era possível ler a
+pauta inteira da turma, criar cursos ou homologar pautas. O detalhe está em
+[fase6-devops-seguranca.md](fase6-devops-seguranca.md), secção 4.3.
+
+`tests/Feature/AcessoEstudanteApiTest.php` (8 testes) fixa agora as regras:
+
+| Teste | O que garante |
+|---|---|
+| Recusa pauta, classificações e inscritos | Estudante recebe 403 nos três endpoints com notas da turma |
+| Recusa homologar uma pauta | 403, e o estado da pauta fica `PROVISORIA` |
+| Recusa definir avaliações e operações de gestão | 403 em onze pedidos de escrita/listagem de gestão |
+| Só vê as suas inscrições | Mesmo pedindo `?estudante_id=<outro>`, só recebe as próprias |
+| Só pede rectificação de nota sua | 403 sobre a nota de um colega; não vê os pedidos dos outros |
+| `GET /notas` mostra só as notas publicadas | Uma nota em rascunho aparece como "por publicar"; nenhuma nota de outro estudante aparece |
+| `GET /notas` recusado a quem não é estudante | 403 para um docente |
+| O docente continua a ver a pauta | Regressão inversa: as restrições não bloquearam quem deve ter acesso |
+
+`tests/Feature/AcessoDocenteApiTest.php` (8 testes) fixa a visibilidade por perfil: o docente
+só lista e abre as turmas que lecciona, só vê os estudantes e as inscrições dessas turmas e não
+lista os docentes; a direcção vê todas as turmas; o estudante só lista as turmas em que está
+inscrito; `GET /notas` indica o curso, o ano em que o estudante está e o ano curricular de cada
+disciplina.
+
 ## 5. Testes funcionais
 
 Continuam por escrever como artefacto formal e dedicado — no sentido estrito adoptado neste
@@ -311,8 +339,9 @@ UC14-A7 dentro de US-13 — foram todas fechadas.
 | Unitários (domínio, Pest) | 35 | 35 (100%) |
 | Arquitectura (Pest Arch) | 7 | 7 (100%) |
 | Integração (BD, Fase 2) | 11 | 11 (100%) — conceptual, coberto dentro dos testes de API abaixo, não somado ao total |
-| Integração (API, incl. concorrência) | 119 | 119 (100%) |
-| **Total Pest** | **161** (357 asserções) | **161 (100%)** |
+| Integração (API, incl. concorrência e controlo de acesso) | 135 | 135 (100%) |
+| **Total Pest** | **177** (424 asserções) | **177 (100%)** |
+| Frontend (Vitest) | 16 | 16 (100%) |
 | Funcionais (artefacto formal) | 0 | — (secção 5) |
 | Aceitação (critérios com teste executável) | 137 de 137 | 100% dos executáveis |
 
@@ -329,12 +358,13 @@ docker compose up -d --build                            # ambiente completo
 docker compose exec api composer install
 docker compose exec api php artisan migrate --seed
 
-docker compose exec api ./vendor/bin/pest                # 161 passed (357 assertions)
-docker compose exec api ./vendor/bin/pest --coverage --min=70   # passa: 83,8%
+docker compose exec api ./vendor/bin/pest                # 177 passed (424 assertions)
+docker compose exec api ./vendor/bin/pest --coverage --min=70   # passa: 88,4%
+cd frontend && npm test                                    # 16 passed
 ```
 
 Confirmado em instalação limpa nesta entrega: `docker compose down`, remoção do volume da
-base de dados, `make instalar` do zero — os 161 testes continuam verdes, sem qualquer ajuste
+base de dados, `make instalar` do zero — os testes continuam verdes, sem qualquer ajuste
 manual.
 
 ### 7.3. Defeitos conhecidos e não corrigidos
@@ -355,15 +385,15 @@ fechado nesta entrega; ver secção 4.5.
 
 ```
 $ docker compose exec api ./vendor/bin/pest --coverage --min=70
-Total: 83.8 %                                            ← passa (meta: 70%)
+Total: 88.4 %                                            ← passa (meta: 70%)
 ```
 
 | Camada | Cobertura | Observação |
 |---|---|---|
 | 4 — Domínio | 90–100% nas classes principais (`ValidadorInscricao`, `RegulamentoAvaliacao`: 100%; `RegulamentoPadraoESCN`: 93%) | `RegulamentoSemExame` fica a 13,8% — pouco exercitado pelos testes de API, que usam sobretudo o regulamento padrão |
 | 3 — Serviços | `ServicoAvaliacao` 93,8%, `ServicoAuditoria` 100% | |
-| 2 — Interface (API) | Maioria dos controladores entre 77% e 100% | `InscricaoController` fica a 41% — o mais complexo, com ramos de erro ainda não todos exercitados |
-| 1 — Apresentação (React) | Sem testes | Vitest configurado, nada escrito |
+| 2 — Interface (API) | Maioria dos controladores entre 80% e 100%; `NotaController`, `PautaController` e o middleware `ExigePerfil` a 100% | `InscricaoController` fica a 75% — o mais complexo, com ramos de erro ainda não todos exercitados |
+| 1 — Apresentação (React) | 16 testes de componentes e do cliente HTTP | Ecrãs maiores (avaliações, pautas) sem teste automático |
 | 5 — Infra-estrutura | `RepositorioInscricaoEloquent` 87,5%, `RepositorioClassificacaoEloquent` 100% | |
 | — | `Notifications/RedefinirPalavraPasse` 100% | Novo nesta entrega |
 
@@ -373,9 +403,8 @@ anteriores deste documento relatavam.
 
 ### 8.2. O que ainda não tem teste nenhum
 
-- Componentes React — Vitest configurado, sem testes escritos.
-- `phpstan`/Larastan — `make lint` continua a referir-se a uma ferramenta não instalada
-  (gap identificado na Fase 4, ainda não fechado).
+- Ecrãs React maiores (avaliações, pautas, notas) — só os componentes base e o login têm
+  testes Vitest.
 
 Todos os grupos de endpoints construídos nesta entrega já têm ecrã correspondente no frontend
 (estudantes, docentes, cursos, disciplinas, turmas, avaliações, pautas, rectificações,
@@ -396,8 +425,8 @@ endpoints sem ecrã correspondente. Se for pedido um teste de aceitação de pon
 autenticação (incluindo o bloqueio de conta e a recuperação de palavra-passe), inscrição,
 publicação de notas, rectificação, pauta em PDF, ano lectivo, painel do Coordenador — a
 resposta é `docker compose exec api ./vendor/bin/pest --filter=<nome>`, ao vivo, com o
-resultado real, ou o ecrã correspondente no frontend. O risco que resta é a ausência de testes
-automatizados do lado do frontend (secção 8.2) — se a defesa pedir para alterar um ecrã, não há
+resultado real, ou o ecrã correspondente no frontend. O risco que resta é a cobertura ainda
+parcial do frontend (secção 8.2) — se a defesa pedir para alterar um ecrã, não há
 uma suite que apanhe uma regressão de interface antes de a mostrar ao vivo.
 
 ---
@@ -419,7 +448,7 @@ sga/
     └── tests/
         ├── Unit/            (35 testes — inalterado)
         ├── Arquitectura/    (7 testes — inalterado)
-        └── Feature/         (22 ficheiros, 119 casos)
+        └── Feature/         (24 ficheiros, 135 casos)
 ```
 
 **Reproduzir:**
@@ -438,9 +467,8 @@ docker compose exec api ./vendor/bin/pest --coverage --min=70
 
 1. **Testes funcionais formais**, organizados por caso de uso (secção 5), reaproveitando a
    lógica já validada nos testes de integração.
-2. **Testes de componentes React** (Vitest) — configurado, nada escrito ainda.
-3. **`phpstan`/Larastan**, para `make lint` deixar de se referir a uma ferramenta ausente.
-4. Recálculo em cascata numa rectificação que afecta um pré-requisito já validado — depende de
+2. **Testes de componentes React** para os ecrãs de avaliações, pautas e notas.
+3. Recálculo em cascata numa rectificação que afecta um pré-requisito já validado — depende de
    uma regra de negócio ainda por decidir (Fase 2, secção 13).
 
 ---
@@ -454,6 +482,7 @@ docker compose exec api ./vendor/bin/pest --coverage --min=70
 | 1.2 | 2026-08-20 | Grupo 2 | Camada HTTP construída (Models, Auth, 14 controladores); suite completa passou de 50 para 127 testes, todos verdes; cobertura mede 81,8%, acima da meta de 70% do RNF-24; cinco defeitos reais encontrados e corrigidos durante a escrita dos testes |
 | 1.3 | 2026-08-20 | Grupo 2 | Fechadas as últimas lacunas administrativas: bloqueio de conta (US-01), e-mail real via Mailpit (US-04), CRUD de ano lectivo/períodos (US-12), painel do Coordenador (US-23), agendador de notificações (US-30), exportação PDF/CSV de pautas e relatórios; repositório Git inicializado e pipeline de CI (GitHub Actions) criado; suite cresceu de 127 para 148 testes (83,7% de cobertura); mais dois defeitos reais corrigidos (integração com o `PasswordBroker`, nome de ficheiro do PDF) |
 | 1.4 | 2026-08-21 | Grupo 2 | Gestão de perfis e permissões (funcionalidade #12) fechada, com `PerfilApiTest`/`PermissaoApiTest`; ecrãs de frontend construídos para todos os 13 grupos de endpoints que só tinham API, e verificados num browser real (Playwright), não só por `npm run build`; páginas de recuperação/redefinição de palavra-passe ligadas ao link que antes era morto; bug real encontrado nesse teste — o cliente HTTP do frontend ignorava mensagens de erro de validação do Laravel fora do formato de erro de regra de negócio, mostrando sempre "erro inesperado" — corrigido; UC14-A7 (defeito #2) fechado com `InscricaoConcorrenciaApiTest`, prova real com duas ligações concorrentes à base de dados; suite cresceu de 148 para 161 testes (83,8% de cobertura); CI confirmado verde no GitHub Actions |
+| 1.5 | 2026-10-27 | Grupo 2 | Testes de controlo de acesso por perfil (secção 4.6), na sequência das falhas encontradas na Fase 6; suite cresceu de 161 para 169 testes (88,4% de cobertura); números de frontend (16 testes Vitest) e de análise estática (Larastan no CI) corrigidos, porque as versões anteriores ainda os davam como inexistentes |
 
 **Documento anterior:** Fase 4 — Implementação
 **Documento seguinte:** Fase 6 — DevOps e Segurança (20/10 – 29/10, em paralelo)
