@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { api } from '@/servicos/api'
 import { useAutenticacao } from '@/contextos/AutenticacaoContexto'
 import { Alerta } from '@/componentes/Alerta'
+import { Icone, type NomeIcone } from '@/componentes/Icone'
 import { CartaoGrafico } from '@/componentes/graficos/CartaoGrafico'
 import { GraficoAnel } from '@/componentes/graficos/GraficoAnel'
 import { GraficoBarras } from '@/componentes/graficos/GraficoBarras'
@@ -55,30 +56,28 @@ interface Atalho {
   rota: string
   rotulo: string
   descricao: string
+  icone: NomeIcone
   perfis?: Perfil[]
 }
 
+/** Quantos atalhos cabem no Acesso rápido; o resto está na barra lateral. */
+const MAX_ATALHOS = 5
+
 /**
- * Acesso rápido: um atalho por secção a que o utilizador tem acesso, e não
- * uma selecção. A barra lateral já ordena a navegação por grupo; esta lista
- * existe para o caso oposto — quem chega ao painel e não sabe onde procurar
- * precisa de ver o mapa inteiro, não de adivinhar o que ficou de fora.
+ * Acesso rápido: as secções que cada perfil usa no dia a dia, por ordem de
+ * uso, até MAX_ATALHOS. Não repete a navegação inteira — essa está na barra
+ * lateral, e uma lista com tudo deixava o painel do administrador comprido.
  */
 const ATALHOS: Atalho[] = [
-  { rota: '/inscricoes', rotulo: 'Inscrever-me', descricao: 'Escolher turmas do semestre', perfis: ['ESTUDANTE'] },
-  { rota: '/notas', rotulo: 'As minhas notas', descricao: 'Notas de cada disciplina', perfis: ['ESTUDANTE'] },
-  { rota: '/turmas', rotulo: 'Turmas', descricao: 'Avaliações, pautas e inscritos', perfis: ['ADMINISTRADOR', 'COORDENADOR', 'DOCENTE'] },
-  { rota: '/estudantes', rotulo: 'Estudantes', descricao: 'Cadastro, pesquisa e aproveitamento', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
-  { rota: '/docentes', rotulo: 'Docentes', descricao: 'Corpo docente e atribuições', perfis: ['ADMINISTRADOR'] },
-  { rota: '/cursos', rotulo: 'Cursos', descricao: 'Planos curriculares', perfis: ['ADMINISTRADOR'] },
-  { rota: '/disciplinas', rotulo: 'Disciplinas', descricao: 'Créditos e pré-requisitos', perfis: ['ADMINISTRADOR'] },
-  { rota: '/ano-lectivo', rotulo: 'Ano lectivo', descricao: 'Períodos de inscrição e notas', perfis: ['ADMINISTRADOR'] },
-  { rota: '/rectificacoes', rotulo: 'Rectificações', descricao: 'Pedidos de correcção de notas' },
-  { rota: '/relatorios', rotulo: 'Relatórios', descricao: 'Aproveitamento por disciplina', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
-  { rota: '/notificacoes', rotulo: 'Notificações', descricao: 'Avisos do sistema' },
-  { rota: '/auditoria', rotulo: 'Auditoria', descricao: 'Registo de acções sensíveis', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
-  { rota: '/utilizadores', rotulo: 'Utilizadores', descricao: 'Contas e perfis atribuídos', perfis: ['ADMINISTRADOR'] },
-  { rota: '/perfis', rotulo: 'Perfis e permissões', descricao: 'Matriz de autorizações', perfis: ['ADMINISTRADOR'] },
+  { rota: '/inscricoes', rotulo: 'Inscrever-me', descricao: 'Escolher turmas do semestre', icone: 'inscricoes', perfis: ['ESTUDANTE'] },
+  { rota: '/notas', rotulo: 'As minhas notas', descricao: 'Notas de cada disciplina', icone: 'notas', perfis: ['ESTUDANTE'] },
+  { rota: '/turmas', rotulo: 'Turmas', descricao: 'Avaliações, pautas e inscritos', icone: 'turmas', perfis: ['ADMINISTRADOR', 'COORDENADOR', 'DOCENTE'] },
+  { rota: '/estudantes', rotulo: 'Estudantes', descricao: 'Cadastro, pesquisa e aproveitamento', icone: 'estudantes', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
+  { rota: '/rectificacoes', rotulo: 'Rectificações', descricao: 'Pedidos de correcção de notas', icone: 'rectificacoes' },
+  { rota: '/relatorios', rotulo: 'Relatórios', descricao: 'Aproveitamento por disciplina', icone: 'relatorios', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
+  { rota: '/notificacoes', rotulo: 'Notificações', descricao: 'Avisos do sistema', icone: 'notificacoes' },
+  { rota: '/docentes', rotulo: 'Docentes', descricao: 'Corpo docente e atribuições', icone: 'docentes', perfis: ['ADMINISTRADOR'] },
+  { rota: '/ano-lectivo', rotulo: 'Ano lectivo', descricao: 'Períodos de inscrição e notas', icone: 'calendario', perfis: ['ADMINISTRADOR'] },
 ]
 
 /**
@@ -122,7 +121,7 @@ export function Painel() {
     a.rota === '/turmas' && !temPerfil('ADMINISTRADOR', 'COORDENADOR')
       ? { ...a, rotulo: 'As minhas disciplinas', descricao: 'Alunos inscritos, lançamento de notas e pautas' }
       : a
-  )
+  ).slice(0, MAX_ATALHOS)
   const naoLidas = notificacoes?.filter((n) => !n.lida_em).length ?? 0
 
   const ocupacao = dados?.ocupacao_turmas ?? dados?.ocupacao_minhas_turmas ?? []
@@ -481,9 +480,12 @@ export function Painel() {
               </div>
               <div className="divide-y divide-linha">
                 {atalhos.map((a) => (
-                  <Link key={a.rota} to={a.rota} className="block p-3 hover:bg-superficie-alt">
-                    <p className="text-sm font-medium text-texto">{a.rotulo}</p>
-                    <p className="text-xs text-aco">{a.descricao}</p>
+                  <Link key={a.rota} to={a.rota} className="flex items-center gap-3 p-3 hover:bg-superficie-alt">
+                    <Icone nome={a.icone} className="h-5 w-5 text-tinta" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-texto">{a.rotulo}</p>
+                      <p className="truncate text-xs text-aco">{a.descricao}</p>
+                    </div>
                   </Link>
                 ))}
               </div>

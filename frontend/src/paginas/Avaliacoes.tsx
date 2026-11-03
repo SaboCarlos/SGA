@@ -33,8 +33,7 @@ export function Avaliacoes() {
   const pgClassificacoes = usePaginacaoLocal(classificacoes)
   const soLeitura = aberta?.estado === 'PUBLICADA'
 
-  const pesoExame = (estrutura?.avaliacoes ?? []).filter((a) => a.tipo === 'EXAME').reduce((t, a) => t + Number(a.peso), 0)
-  const pesoFrequencia = (estrutura?.avaliacoes ?? []).filter((a) => a.tipo !== 'EXAME').reduce((t, a) => t + Number(a.peso), 0)
+  const temExame = (estrutura?.avaliacoes ?? []).some((a) => a.tipo === 'EXAME')
 
   useEffect(() => {
     api.get<Turma>(`/turmas/${turmaId}`).then(setTurma).catch(() => undefined)
@@ -53,7 +52,7 @@ export function Avaliacoes() {
     setErro(null)
 
     try {
-      await api.post(`/turmas/${turmaId}/avaliacoes`, { ...formulario, peso: Number(formulario.peso) })
+      await api.post(`/turmas/${turmaId}/avaliacoes`, { ...formulario, peso: formulario.tipo === 'EXAME' ? 100 : Number(formulario.peso) })
       setFormulario(NOVA_AVALIACAO)
       setAMostrarFormulario(false)
       carregar()
@@ -144,15 +143,16 @@ export function Avaliacoes() {
         <div className="cartao mb-4 flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div className="text-sm text-texto">
             <p>
-              Testes e trabalhos: <strong>{pesoFrequencia}%</strong> · Exame: <strong>{pesoExame}%</strong> · Total:{' '}
-              <strong>{estrutura.soma_pesos}%</strong>{' '}
+              Testes e trabalhos: <strong>{estrutura.soma_pesos}%</strong>{' '}
               {estrutura.estrutura_valida ? (
                 <span className="selo selo-sucesso">pronto para publicar</span>
               ) : (
-                <span className="selo selo-aviso">o total tem de ser 100%</span>
+                <span className="selo selo-aviso">têm de somar 100%</span>
               )}
+              {' · '}Exame: <strong>{temExame ? 'definido' : 'por definir'}</strong> (conta à parte)
             </p>
             <p className="mt-1 text-xs text-aco">
+              Os pesos repartem a frequência entre os testes e trabalhos (somam 100%); o exame não entra nessa soma.
               A frequência é a média dos testes e trabalhos (pelos seus pesos) e calcula-se quando estiverem todos
               publicados. Com 14 ou mais, o aluno fica dispensado; de 10 a 13,9 vai a exame; abaixo de 10 fica
               excluído. Para quem vai a exame, a nota final é a média entre a frequência e o exame.
@@ -176,9 +176,13 @@ export function Avaliacoes() {
             <option value="PRATICA">Prática</option>
             <option value="EXAME">Exame</option>
           </select>
-          <input required type="number" step="0.01" placeholder="Peso (%)" value={formulario.peso}
-            onChange={(e) => setFormulario({ ...formulario, peso: e.target.value })}
-            className="entrada" />
+          {formulario.tipo === 'EXAME' ? (
+            <p className="entrada flex items-center text-aco">O exame não tem peso: conta à parte na nota final</p>
+          ) : (
+            <input required type="number" step="0.01" placeholder="Peso na frequência (%)" value={formulario.peso}
+              onChange={(e) => setFormulario({ ...formulario, peso: e.target.value })}
+              className="entrada" />
+          )}
           <input type="date" value={formulario.data_prevista}
             onChange={(e) => setFormulario({ ...formulario, data_prevista: e.target.value })}
             className="entrada" />
@@ -205,7 +209,7 @@ export function Avaliacoes() {
                 <tr key={a.id}>
                   <td>{a.designacao}</td>
                   <td>{a.tipo}</td>
-                  <td className="num">{a.peso}%</td>
+                  <td className="num">{a.tipo === 'EXAME' ? 'à parte' : `${a.peso}%`}</td>
                   <td><span className={`selo ${ESTADO[a.estado].estilo}`}>{ESTADO[a.estado].rotulo}</span></td>
                   <td className="text-right">
                     {a.estado === 'PUBLICADA' ? (

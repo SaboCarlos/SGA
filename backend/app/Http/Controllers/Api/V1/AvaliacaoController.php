@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Dominio\Enums\TipoAvaliacao;
 use App\Dominio\Excepcoes\RegraNegocioViolada;
 use App\Dominio\Repositorios\RepositorioClassificacao;
 use App\Http\Controllers\Controller;
@@ -29,7 +30,10 @@ class AvaliacaoController extends Controller
         abort_unless($utilizador->gereTurma($turma) || $estaInscrito, 403, 'Sem acesso às avaliações desta turma.');
 
         $avaliacoes = $turma->avaliacoes;
-        $soma = round((float) $avaliacoes->sum('peso'), 2);
+        // RN-06: so os testes, trabalhos e praticas somam 100%; o exame conta a parte.
+        $soma = round((float) $avaliacoes
+            ->filter(fn ($a) => TipoAvaliacao::from((string) $a->getAttribute('tipo'))->contaParaFrequencia())
+            ->sum('peso'), 2);
 
         return response()->json([
             'soma_pesos' => $soma,

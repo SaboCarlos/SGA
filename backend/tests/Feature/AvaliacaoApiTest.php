@@ -148,16 +148,16 @@ it('recusa lancar notas para uma inscricao de outra turma', function () {
 });
 
 /*
- * Fluxo real de um semestre: Teste 30% + Trabalho 20% + Exame 50%, cada um
+ * Fluxo real de um semestre: Teste 60% + Trabalho 40% e o Exame a parte, cada um
  * publicado quando e corrigido. Antes, publicar o Trabalho sozinho falhava
  * com "a soma dos pesos das avaliacoes de frequencia e 20%".
  */
 function estruturaDoSemestre(Turma $turma): array
 {
     return [
-        'teste' => $turma->avaliacoes()->create(['designacao' => 'Teste 1', 'tipo' => 'TESTE', 'peso' => 30, 'estado' => 'RASCUNHO']),
-        'trabalho' => $turma->avaliacoes()->create(['designacao' => 'Trabalho', 'tipo' => 'TRABALHO', 'peso' => 20, 'estado' => 'RASCUNHO']),
-        'exame' => $turma->avaliacoes()->create(['designacao' => 'Exame', 'tipo' => 'EXAME', 'peso' => 50, 'estado' => 'RASCUNHO']),
+        'teste' => $turma->avaliacoes()->create(['designacao' => 'Teste 1', 'tipo' => 'TESTE', 'peso' => 60, 'estado' => 'RASCUNHO']),
+        'trabalho' => $turma->avaliacoes()->create(['designacao' => 'Trabalho', 'tipo' => 'TRABALHO', 'peso' => 40, 'estado' => 'RASCUNHO']),
+        'exame' => $turma->avaliacoes()->create(['designacao' => 'Exame', 'tipo' => 'EXAME', 'peso' => 100, 'estado' => 'RASCUNHO']),
     ];
 }
 
@@ -196,6 +196,18 @@ it('a nota do exame entra na classificacao final de quem foi admitido', function
     expect($inscricao->nota_exame)->toBe(14.0)
         ->and($inscricao->classificacao_final)->toBe(13.6)
         ->and($inscricao->situacao_final)->toBe('APROVADO');
+});
+
+it('o exame conta a parte: testes e trabalhos a 100% e exame a 100% e uma estrutura valida', function () {
+    $this->turma->avaliacoes()->create(['designacao' => 'Teste 1', 'tipo' => 'TESTE', 'peso' => 50, 'estado' => 'RASCUNHO']);
+    $this->turma->avaliacoes()->create(['designacao' => 'Teste 2', 'tipo' => 'TESTE', 'peso' => 30, 'estado' => 'RASCUNHO']);
+    $this->turma->avaliacoes()->create(['designacao' => 'Trabalho', 'tipo' => 'TRABALHO', 'peso' => 20, 'estado' => 'RASCUNHO']);
+    $this->turma->avaliacoes()->create(['designacao' => 'Exame', 'tipo' => 'EXAME', 'peso' => 100, 'estado' => 'RASCUNHO']);
+
+    $this->actingAs($this->docente)->getJson("/api/v1/turmas/{$this->turma->id}/avaliacoes")
+        ->assertOk()
+        ->assertJsonPath('soma_pesos', 100)
+        ->assertJsonPath('estrutura_valida', true);
 });
 
 it('recusa publicar enquanto os pesos da disciplina nao somam 100%', function () {

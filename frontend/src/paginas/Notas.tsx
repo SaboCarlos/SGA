@@ -115,7 +115,7 @@ export function Notas() {
               {d.avaliacoes.map((a) => (
                 <tr key={a.id}>
                   <td>{a.designacao}</td>
-                  <td className="num">{a.peso}%</td>
+                  <td className="num">{a.tipo === 'EXAME' ? 'à parte' : `${a.peso}%`}</td>
                   <td className="num">
                     {!a.publicada ? (
                       <span className="text-aco-suave">por publicar</span>

@@ -38,7 +38,7 @@
                 <th>Nº Estudante</th>
                 <th>Nome</th>
                 @foreach ($pauta['avaliacoes'] as $avaliacao)
-                    <th class="num">{{ $avaliacao['designacao'] }} ({{ rtrim(rtrim(number_format($avaliacao['peso'], 2, ',', ''), '0'), ',') }}%)</th>
+                    <th class="num">{{ $avaliacao['designacao'] }} ({{ $avaliacao['tipo'] === 'EXAME' ? 'à parte' : rtrim(rtrim(number_format($avaliacao['peso'], 2, ',', ''), '0'), ',').'%' }})</th>
                 @endforeach
                 <th class="num">Frequência</th>
                 <th class="num">Final</th>

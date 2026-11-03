@@ -39,8 +39,9 @@ confirmação é sempre a mesma, exista ou não uma conta com esse e-mail.
 
 ## 2. O ecrã principal
 
-- **Barra lateral (à esquerda):** só mostra as opções do seu perfil. No telemóvel, abre-se com o
-  botão **Menu**.
+- **Barra lateral (à esquerda):** só mostra as opções do seu perfil, cada uma com o seu ícone. O
+  botão **Recolher**, no fundo da barra, deixa só os ícones (o nome aparece ao passar o rato) e
+  o sistema lembra-se da escolha. No telemóvel, a barra abre-se com o botão **Menu**.
 - **Cabeçalho:** o seu nome e perfil, o botão de tema (claro, escuro ou o do sistema) e
   **Terminar sessão**.
 - **Painel:** a página inicial, com indicadores e atalhos próprios do seu perfil. Quem tem mais
@@ -103,7 +104,9 @@ lançar as notas) e **Pauta**. Disciplinas de outros docentes não aparecem nem 
    (Teste, Trabalho, Prática ou Exame), o peso em percentagem e a data prevista.
 3. Carregue em **Definir avaliação**.
 
-No topo aparece a soma dos pesos. A estrutura só é válida quando somar **100%**.
+No topo aparece a soma dos pesos dos testes e trabalhos, que tem de dar **100%**. O exame não
+tem peso nem entra nessa soma: conta à parte, e a nota final de quem vai a exame é a média entre
+a frequência e o exame.
 
 Só o docente responsável pela turma (ou o Administrador) pode definir avaliações e lançar notas.
 

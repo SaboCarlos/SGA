@@ -93,7 +93,7 @@ export function Pautas() {
               {pauta.avaliacoes.map((a) => (
                 <th key={a.id} className="num">
                   {a.designacao}
-                  <span className="block text-[0.65rem] font-normal normal-case opacity-70">{Number(a.peso)}%</span>
+                  <span className="block text-[0.65rem] font-normal normal-case opacity-70">{a.tipo === 'EXAME' ? 'à parte' : `${Number(a.peso)}%`}</span>
                 </th>
               ))}
               <th className="num">Frequência</th>

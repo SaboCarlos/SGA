@@ -2,11 +2,15 @@ import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAutenticacao } from '@/contextos/AutenticacaoContexto'
 import { ROTULO_TEMA, useTema } from '@/contextos/TemaContexto'
+import { Icone, type NomeIcone } from '@/componentes/Icone'
+
+const CHAVE_RECOLHIDA = 'sga_barra_recolhida'
 
 interface ItemNav {
   rota: string
   rotulo: string
   grupo: string
+  icone: NomeIcone
   perfis?: string[]
   /** Rótulo para quem não é da direcção (o docente só vê as suas). */
   rotuloDocente?: string
@@ -25,26 +29,26 @@ interface ItemNav {
  * RNF-10) e é ela que decide.
  */
 const ITENS_NAV: ItemNav[] = [
-  { rota: '/painel', rotulo: 'Painel', grupo: 'Início' },
+  { rota: '/painel', rotulo: 'Painel', grupo: 'Início', icone: 'painel' },
 
-  { rota: '/inscricoes', rotulo: 'Inscrições', grupo: 'Académico', perfis: ['ESTUDANTE'] },
-  { rota: '/notas', rotulo: 'As minhas notas', grupo: 'Académico', perfis: ['ESTUDANTE'] },
-  { rota: '/estudantes', rotulo: 'Estudantes', grupo: 'Académico', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
-  { rota: '/docentes', rotulo: 'Docentes', grupo: 'Académico', perfis: ['ADMINISTRADOR'] },
-  { rota: '/cursos', rotulo: 'Cursos', grupo: 'Académico', perfis: ['ADMINISTRADOR'] },
-  { rota: '/disciplinas', rotulo: 'Disciplinas', grupo: 'Académico', perfis: ['ADMINISTRADOR'] },
+  { rota: '/inscricoes', rotulo: 'Inscrições', grupo: 'Académico', icone: 'inscricoes', perfis: ['ESTUDANTE'] },
+  { rota: '/notas', rotulo: 'As minhas notas', grupo: 'Académico', icone: 'notas', perfis: ['ESTUDANTE'] },
+  { rota: '/estudantes', rotulo: 'Estudantes', grupo: 'Académico', icone: 'estudantes', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
+  { rota: '/docentes', rotulo: 'Docentes', grupo: 'Académico', icone: 'docentes', perfis: ['ADMINISTRADOR'] },
+  { rota: '/cursos', rotulo: 'Cursos', grupo: 'Académico', icone: 'cursos', perfis: ['ADMINISTRADOR'] },
+  { rota: '/disciplinas', rotulo: 'Disciplinas', grupo: 'Académico', icone: 'disciplinas', perfis: ['ADMINISTRADOR'] },
   // A direcção vê todas as turmas; o docente só as que lecciona (filtro do
   // servidor). O estudante não precisa: tem Inscrições e As minhas notas.
-  { rota: '/turmas', rotulo: 'Turmas', rotuloDocente: 'As minhas disciplinas', grupo: 'Académico', perfis: ['ADMINISTRADOR', 'COORDENADOR', 'DOCENTE'] },
+  { rota: '/turmas', rotulo: 'Turmas', rotuloDocente: 'As minhas disciplinas', grupo: 'Académico', icone: 'turmas', perfis: ['ADMINISTRADOR', 'COORDENADOR', 'DOCENTE'] },
 
-  { rota: '/ano-lectivo', rotulo: 'Ano lectivo', grupo: 'Avaliação', perfis: ['ADMINISTRADOR'] },
-  { rota: '/rectificacoes', rotulo: 'Rectificações', grupo: 'Avaliação' },
-  { rota: '/relatorios', rotulo: 'Relatórios', grupo: 'Avaliação', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
+  { rota: '/ano-lectivo', rotulo: 'Ano lectivo', grupo: 'Avaliação', icone: 'calendario', perfis: ['ADMINISTRADOR'] },
+  { rota: '/rectificacoes', rotulo: 'Rectificações', grupo: 'Avaliação', icone: 'rectificacoes' },
+  { rota: '/relatorios', rotulo: 'Relatórios', grupo: 'Avaliação', icone: 'relatorios', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
 
-  { rota: '/notificacoes', rotulo: 'Notificações', grupo: 'Gestão' },
-  { rota: '/auditoria', rotulo: 'Auditoria', grupo: 'Gestão', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
-  { rota: '/utilizadores', rotulo: 'Utilizadores', grupo: 'Gestão', perfis: ['ADMINISTRADOR'] },
-  { rota: '/perfis', rotulo: 'Perfis e permissões', grupo: 'Gestão', perfis: ['ADMINISTRADOR'] },
+  { rota: '/notificacoes', rotulo: 'Notificações', grupo: 'Gestão', icone: 'notificacoes' },
+  { rota: '/auditoria', rotulo: 'Auditoria', grupo: 'Gestão', icone: 'auditoria', perfis: ['ADMINISTRADOR', 'COORDENADOR'] },
+  { rota: '/utilizadores', rotulo: 'Utilizadores', grupo: 'Gestão', icone: 'utilizadores', perfis: ['ADMINISTRADOR'] },
+  { rota: '/perfis', rotulo: 'Perfis e permissões', grupo: 'Gestão', icone: 'perfis', perfis: ['ADMINISTRADOR'] },
 ]
 
 /**
@@ -60,6 +64,26 @@ export function Layout() {
   const { utilizador, terminarSessao, temPerfil } = useAutenticacao()
   const { tema, alternarTema } = useTema()
   const [menuAberto, setMenuAberto] = useState(false)
+  // Só no ecrã largo: a barra encolhe para os ícones. A escolha fica no
+  // browser; se o armazenamento falhar, abre expandida.
+  const [recolhida, setRecolhida] = useState(() => {
+    try {
+      return localStorage.getItem(CHAVE_RECOLHIDA) === '1'
+    } catch {
+      return false
+    }
+  })
+
+  function alternarBarra() {
+    setRecolhida((v) => {
+      try {
+        localStorage.setItem(CHAVE_RECOLHIDA, v ? '0' : '1')
+      } catch {
+        // sem armazenamento: vale só para esta sessão
+      }
+      return !v
+    })
+  }
 
   const ehDireccao = temPerfil('ADMINISTRADOR', 'COORDENADOR')
   const itensVisiveis = ITENS_NAV.filter((item) => !item.perfis || temPerfil(...item.perfis)).map((item) =>
@@ -93,43 +117,74 @@ export function Layout() {
       </header>
 
       <aside
-        className={`w-full shrink-0 bg-tinta-profunda md:flex md:w-60 md:flex-col ${menuAberto ? 'flex flex-col' : 'hidden'}`}
+        className={`w-full shrink-0 bg-tinta-profunda md:sticky md:top-0 md:flex md:h-screen md:flex-col md:transition-[width] ${
+          recolhida ? 'md:w-16' : 'md:w-60'
+        } ${menuAberto ? 'flex flex-col' : 'hidden'}`}
       >
-        <div className="hidden items-center gap-3 border-b border-white/10 px-5 py-4 md:flex">
+        <div
+          className={`hidden items-center border-b border-white/10 py-4 md:flex ${
+            recolhida ? 'justify-center px-2' : 'gap-3 px-5'
+          }`}
+        >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-dourado font-display text-sm font-semibold text-dourado">
             S
           </span>
-          <div>
-            <p className="font-display text-sm font-semibold leading-tight text-white">SGA</p>
-            <p className="text-[0.68rem] leading-tight text-white/55">Gestão Académica</p>
-          </div>
+          {!recolhida && (
+            <div>
+              <p className="font-display text-sm font-semibold leading-tight text-white">SGA</p>
+              <p className="text-[0.68rem] leading-tight text-white/55">Gestão Académica</p>
+            </div>
+          )}
         </div>
 
-        <nav className="flex flex-1 flex-col p-3">
+        <nav className={`flex flex-1 flex-col overflow-y-auto ${recolhida ? 'p-3 md:px-2' : 'p-3'}`}>
           {grupos.map(({ grupo, itens }) => (
             <div key={grupo} className="mb-1">
-              <p className="px-3 pb-1.5 pt-3 text-[0.66rem] font-semibold uppercase tracking-wider text-white/40">
+              {/* Recolhida, o título do grupo dá lugar a um separador. */}
+              <p
+                className={`px-3 pb-1.5 pt-3 text-[0.66rem] font-semibold uppercase tracking-wider text-white/40 ${
+                  recolhida ? 'md:hidden' : ''
+                }`}
+              >
                 {grupo}
               </p>
+              {recolhida && <hr className="mx-2 my-2 hidden border-white/10 md:block" />}
               {itens.map((item) => (
                 <NavLink
                   key={item.rota}
                   to={item.rota}
                   onClick={() => setMenuAberto(false)}
+                  title={recolhida ? item.rotulo : undefined}
+                  aria-label={recolhida ? item.rotulo : undefined}
                   className={({ isActive }) =>
-                    `block border-l-2 px-3 py-2 text-sm transition ${
+                    `flex items-center gap-3 border-l-2 px-3 py-2 text-sm transition ${
+                      recolhida ? 'md:justify-center md:px-0' : ''
+                    } ${
                       isActive
                         ? 'border-dourado bg-white/10 font-semibold text-white'
                         : 'border-transparent text-white/70 hover:bg-white/5 hover:text-white'
                     }`
                   }
                 >
-                  {item.rotulo}
+                  <Icone nome={item.icone} />
+                  <span className={recolhida ? 'md:hidden' : ''}>{item.rotulo}</span>
                 </NavLink>
               ))}
             </div>
           ))}
         </nav>
+
+        <button
+          onClick={alternarBarra}
+          aria-label={recolhida ? 'Expandir a barra lateral' : 'Recolher a barra lateral'}
+          title={recolhida ? 'Expandir' : 'Recolher'}
+          className={`hidden items-center gap-3 border-t border-white/10 py-3 text-sm text-white/60 transition hover:bg-white/5 hover:text-white md:flex ${
+            recolhida ? 'justify-center' : 'px-6'
+          }`}
+        >
+          <Icone nome={recolhida ? 'expandir' : 'recolher'} />
+          {!recolhida && <span>Recolher</span>}
+        </button>
       </aside>
 
       <div className="flex items-center gap-2.5 bg-tinta-profunda px-4 py-2.5 md:hidden">
@@ -171,7 +226,8 @@ export function Layout() {
             >
               {ROTULO_TEMA[tema]}
             </button>
-            <button onClick={() => void terminarSessao()} className="botao-fantasma text-sm">
+            <button onClick={() => void terminarSessao()} className="botao-fantasma flex items-center gap-2 text-sm">
+              <Icone nome="sair" className="h-4 w-4" />
               Terminar sessão
             </button>
           </div>

@@ -41,18 +41,22 @@ final class ServicoAvaliacao
      *    admitido) ou logo com a frequencia (dispensados e excluidos).
      *
      * @param  list<array{id: int, tipo: string, peso: float, estado: string}>  $estrutura
-     *                                                                                      todas as avaliacoes da turma (RN-06: os pesos somam 100%, incluindo o exame)
+     *                                                                                      todas as avaliacoes da turma (RN-06: as de frequencia somam 100%; o exame conta a parte)
      * @return array{publicadas: int, dispensados: int, admitidos_exame: int, reprovados_frequencia: int, frequencia_calculada: bool}
      */
     public function publicar(object $avaliacao, bool $confirmarIncompleta = false, array $estrutura = []): array
     {
-        // RN-06: sem a estrutura completa, os pesos de cada nota nao tem sentido.
-        $somaPesos = round(array_sum(array_column($estrutura, 'peso')), 2);
+        // RN-06: os testes, trabalhos e praticas (frequencia) somam 100%. O
+        // exame fica de fora: conta a parte na nota final, (frequencia + exame) / 2.
+        $somaPesos = round(array_sum(array_column(
+            array_filter($estrutura, static fn (array $a) => TipoAvaliacao::from($a['tipo'])->contaParaFrequencia()),
+            'peso'
+        )), 2);
         if ($estrutura !== [] && abs($somaPesos - 100.0) > 0.01) {
             throw new RegraNegocioViolada(
                 'RN-06',
                 sprintf(
-                    'As avaliações desta disciplina somam %s%%. Ajuste os pesos para somarem 100%% (incluindo o exame) antes de publicar.',
+                    'Os testes e trabalhos desta disciplina somam %s%%. Ajuste os pesos para somarem 100%% antes de publicar (o exame conta à parte).',
                     rtrim(rtrim(number_format($somaPesos, 2, ',', ''), '0'), ',')
                 ),
                 'peso'
